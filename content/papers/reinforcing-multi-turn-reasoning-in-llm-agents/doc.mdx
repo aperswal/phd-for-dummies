@@ -1,0 +1,180 @@
+# Reinforcing Multi-Turn Reasoning in LLM Agents via Turn-Level Reward Design
+
+_Instead of grading a multi-step agent on its final answer alone, score every step it takes, so the reward lands on the exact move that earned it and training stops collapsing._
+
+![Three pixel-art relay runners pass a baton toward a finish line, a clay-orange star floating over each runner instead of one trophy at the end, with an ink arrow labelled credit curving back from the finish to tag each runner, showing that turn-level rewards hand credit to the exact step that earned it.](/papers/reinforcing-multi-turn-reasoning-in-llm-agents/hero.webp)
+
+## Read at your level
+
+Start where you're comfortable and climb as far as you like.
+
+- [For a 5-year-old](#for-a-5-year-old)
+- [For a high schooler](#for-a-high-schooler)
+- [For a college student](#for-a-college-student)
+- [For an industry pro](#for-an-industry-pro)
+- [For a PhD candidate](#for-a-phd-candidate)
+- [For a peer researcher](#for-a-peer-researcher)
+
+## Executive summary
+
+An agent that answers a hard question takes several turns. It thinks, searches, reads the result, searches again, then answers. The old way to train it with reinforcement learning gives one reward at the very end, based only on whether the final answer was right, and spreads that single number evenly over every turn. So a turn with a great search query and a turn with a useless one get the same credit. When the final answer happens to be right, the bad search gets praised. When it's wrong, the good search gets blamed. Training wobbles, and the agent often forgets how to search at all. This paper scores each turn on its own, then extends GRPO and PPO to use those per-turn scores. The result is steadier training, faster convergence, and higher accuracy across six question-answering datasets, with answer correctness rising to 0.447 on average against 0.432 for the best baseline and format correctness hitting 99.9%. The cost is that the GRPO version needs a tree of rollouts that grows with the number of turns, so the PPO version, which leans on a critic instead, is the one that scales.
+
+## Try it
+
+Load the **MT-GRPO: stable** preset and press play. Watch the tool-use curve climb and hold while answer accuracy keeps rising. Now, while it runs, switch the algorithm to **GRPO-OR** and keep watching. Tool use starts to slide because turn 1 just lost the only signal that was keeping it alive. Then load **GRPO-OR: collapse** to see the same failure from the start, the search behavior fading out exactly like Figure 1 in the paper.
+
+<Visualization />
+
+## For a 5-year-old
+
+Imagine a relay race with three runners on a team. They pass a baton, and the last runner crosses the finish line. The team wins a prize.
+
+Here's the question. Who gets the prize? The old way gives one big trophy to the whole team and says "good job, everybody." But maybe the first runner was super fast and the second runner tripped. The trophy doesn't know that. It just says everybody did great, even the runner who tripped.
+
+The new way gives each runner their own little star, just for their part of the race. The fast runner gets a shiny star. The runner who tripped gets a dull one. Now each runner knows exactly how they did, so next time the tripping runner knows to practice and the fast runner knows to keep going.
+
+A computer helper that answers questions is like that relay team. It takes turns. First it looks something up. Then it reads what it found. Then it answers. The old way told it "good job" or "bad job" only at the very end. The new way gives it a star after every turn, so it learns which turn it did well and which turn it messed up.
+
+The stars aren't really stars. They're numbers the computer adds up. But the idea is the same. Tell each runner how their own leg went, not just whether the team won.
+
+## For a high schooler
+
+You've used a chatbot that looks things up before answering. To answer a hard question it does several things in a row. It decides what to search for, it searches, it reads the results, and then it writes an answer. Each of those is a turn.
+
+Now think about how you'd teach it to get better. You can only teach by rewarding good behavior. Here's the one new idea for this section. A **reward** is a score you hand the agent after it does something, and the agent learns to do more of whatever earns a high score. The old approach gives one reward at the end, based only on the final answer, and splits it equally across all the turns.
+
+That sounds fair until you do the math. Say the agent ran four turns and the answer came out right, so the final reward is 1. Split evenly, each turn gets credit of 0.25, including the turn where it searched for something dumb that happened not to matter. So the dumb search gets rewarded. Flip it around. The answer comes out wrong, final reward 0, and now the turn where it found the perfect document gets zero credit too. The good move gets ignored.
+
+The paper's fix is to score each turn separately. A search turn earns points for actually running the tool, more points if the search brings back the right answer, a little for using the correct format, and loses a small amount for every extra search it wastes. The final answer turn earns the big reward for being correct. Add up the right pieces for each turn and you've told the agent which specific move helped.
+
+When you do that, the agent stops forgetting how to search and keeps getting more accurate.
+
+## For a college student
+
+You should care because this is about credit assignment, the oldest hard problem in reinforcement learning, applied to the LLM agents everyone is building right now. The agent takes a sequence of actions and only finds out much later whether the whole thing worked. The core question is which action deserves the credit.
+
+Set it up as a Markov decision process over turns. The agent's trajectory is `[l1, f1, l2, f2, ..., lK, fK]`, where `l_k` is the text the model writes on turn `k` (its reasoning plus a search query) and `f_k` is the environment's feedback (the documents the search returns). At turn `k` the state `s_k` is the history so far, the action `a_k` is what the model writes, and it earns a turn-level reward `R(s_k, a_k)`. The objective is the usual discounted return.
+
+```text
+max  E[ sum_{k=1}^{K}  gamma^k  R(s_k, a_k) ]
+```
+
+If every intermediate reward is zero and only the final turn pays out, this collapses to a contextual bandit: one decision, one reward, the entire multi-turn structure ignored. That's the single-turn formulation prior work used, and it's the thing this paper is fixing.
+
+GRPO is the algorithm to fix first. It skips the value function. For one input it samples a group of `G` full trajectories, scores each with a trajectory-level reward `R_i`, and computes each one's advantage by normalizing within the group.
+
+```text
+A_i = ( R_i - mean(R_1..R_G) ) / std(R_1..R_G)
+```
+
+Then it applies that one number `A_i` to every token in trajectory `i`. That last step is the flaw. Every turn of trajectory `i` gets the same advantage, so the algorithm can't tell a good search from a bad one inside a trajectory that ended well.
+
+![A two-panel pixel-art comparison: on the left three relay runners share one big clay-orange trophy with credit arrows blurred across all of them, on the right each runner has their own star and arrow, showing trajectory-level credit smears one reward over every step while turn-level credit gives each step its own.](/papers/reinforcing-multi-turn-reasoning-in-llm-agents/credit-split.webp)
+
+MT-GRPO fixes it by normalizing turn by turn. For a two-turn agent it samples a group, gets each trajectory's intermediate reward `R^I_i` (how the search turn went) and outcome reward `R^O_i` (how the answer turn went), and normalizes each separately.
+
+```text
+A^I_i = ( R^I_i - mean(R^I) ) / std(R^I)     # intermediate advantage
+A^O_i = ( R^O_i - mean(R^O) ) / std(R^O)     # outcome advantage
+```
+
+The turn-1 tokens get a blend of both, and the turn-2 tokens get the outcome advantage alone.
+
+```text
+A_{turn 1} = A^I + alpha * A^O
+A_{turn 2} = A^O
+```
+
+The `alpha` weights how much the future outcome bleeds back into the search turn. Set `alpha` to 0 and the search turn is judged purely on its own merits. Set it to 1 and a good search that led to a wrong answer still loses some credit.
+
+This is why the simulation's turn-1 signal stays alive under MT-GRPO and dies under GRPO-OR. When every trajectory in a group lands the same final reward, the outcome advantage is zero for all of them, so GRPO-OR hands turn 1 nothing. MT-GRPO still has the intermediate advantage, which separates the good searches from the bad ones even when the final answers tie.
+
+The limitation falls straight out of the math. To compute the intermediate advantage at turn `k`, MT-GRPO needs `G` rollout samples branching from each state, so over `K` turns it needs `G^(K-1)` trajectories. That grows exponentially, which is why the search agent case study stays at two turns and why the paper turns to PPO for the general case.
+
+## For an industry pro
+
+The problem this solves is the one that makes training agents miserable. You build a multi-turn agent, wire up RL with a final-answer reward, and the training run looks fine for a hundred steps and then the agent quietly stops using its tools. The tool-use curve falls off a cliff and your final accuracy degrades. The cause is that an outcome-only reward gives the tool-calling turn no signal of its own, so under the slightest noise the model drifts away from a behavior it was never directly paid for.
+
+The fix is to reward each turn for what that turn is supposed to do. For a search agent that means a small reward when the tool actually executes (0.2), a larger one when the search brings back the ground-truth answer (0.3 to 0.5), a little for correct format (+0.1, or -0.2 for broken format), and a penalty per search to stop the agent from spamming the tool. The final turn pays the big reward for an exact-match answer (1.0), a small consolation for being well-formatted but wrong (0.2), and a penalty for broken format (-1.0).
+
+Deployment cost has two shapes depending on which algorithm you pick. The GRPO variant is accurate but needs a branching tree of rollouts that explodes with turn count, so it's only practical at two or three turns. The PPO variant uses a learned critic (GAE) to spread the turn rewards down to the token level, which costs you the critic's training and memory but scales to any number of turns. If you're already running PPO, MT-PPO is a reward-shaping change, not a new algorithm.
+
+The payoff is real and not marginal. Average answer correctness across six datasets went from 0.432 (best PPO baseline) to 0.447, with the biggest jumps on multi-hop questions where there are more turns to get credit wrong. Format correctness went to 99.9%, basically perfect, which matters because a malformed answer fails evaluation no matter how right it is. The failure mode to plan around is the search penalty weight. The ablation shows that removing it entirely (`lambda_s = 0`) brings the collapse right back, the agent over-searches and training destabilizes, so that one knob is load-bearing.
+
+## For a PhD candidate
+
+The contribution is the first systematic treatment of turn-level reward design for multi-turn LLM-agent RL, and the extension of both GRPO and PPO to consume those rewards. The framing positions the multi-turn agent task as a turn-level MDP rather than the contextual bandit that recent search-agent work (Search-R1, and the GRPO-MR style of merging rewards) implicitly assumed. The delta is fine-grained credit assignment: where prior work merges intermediate and outcome rewards into a single trajectory-level scalar before normalizing, this paper keeps them separate and assigns advantage at turn granularity.
+
+The methodological choices reward scrutiny. MT-GRPO's per-turn group normalization (equations 10 to 12) is clean but pays an exponential rollout cost, `G^(K-1)` trajectories over `K` turns, because the intermediate advantage at each state needs its own group of branches. The authors are honest that this caps the method at short horizons and that it forces every rollout in a group to have the same number of turns, a constraint they enforce through the system prompt. MT-PPO sidesteps both by assigning the turn rewards as the token-level reward `r_t` at the last token of each turn (the outcome reward at the trajectory's final token, the intermediate reward at each intermediate turn's last token, zero elsewhere) and letting GAE do the temporal credit assignment with a critic. That's the scalable path, and the granularity table makes the tradeoff explicit: GRPO is trajectory reward plus trajectory advantage, MT-PPO is turn reward plus token advantage.
+
+The reward design itself splits into verifiable and LLM-as-judge tracks. The verifiable rewards are rule-based and cheap but rigid; the LLM-as-judge track uses a generative reasoning model with rubric-based scoring to grade format, reasoning quality, retrieval relevance, and a search penalty per turn, which catches answers that are correct but differ in surface form from the gold string.
+
+Threats to validity worth probing. The headline results live on a single base model, Qwen2.5-7B, and a search-only task family, so the "broad applicability beyond search" claim in the conclusion is asserted rather than shown. The MT-GRPO experiments cap at two turns, so the exponential-cost limitation means the GRPO half of the contribution is never tested at the horizons where credit assignment matters most. And the comparison against PPO baselines is partly against checkpoints taken at or just before collapse, which flatters the stability story even though the underlying instability is genuine and visible in the curves.
+
+## For a peer researcher
+
+The delta against Search-R1's PPO-MR and against the GRPO-MR baseline is that intermediate and outcome rewards stay separate through normalization instead of being summed into one trajectory-level signal. That separation is the whole game. Merging is a linear combination before the nonlinearity that normalization introduces, so a merged reward can't recover the per-turn advantage that MT-GRPO computes directly. The clearest way to see it: when a group's trajectories all land the same outcome reward, the outcome advantage vanishes for everyone, and any outcome-only or outcome-merged scheme gives the search turn zero gradient, while MT-GRPO's intermediate advantage still discriminates among the searches. The simulation makes that exact degeneracy pokeable.
+
+The choices read as deliberate tradeoffs. MT-GRPO buys exact per-turn group-relative advantages at an exponential rollout cost and a fixed-turn constraint, which is why it's a two-turn case study and not the deployed method. MT-PPO trades the critic-free property of GRPO for a value function, and in return gets token-level advantage estimation at linear cost and arbitrary horizons. The reward components are conservative on purpose: retrieval correctness is weighted below answer correctness, and the search penalty is small, both to reduce reward hacking, and the ablation confirms the penalty is necessary rather than cosmetic, since dropping it reintroduces the over-search collapse.
+
+What would change my mind on the central claim. If a trajectory-level method with a strong enough critic matched MT-PPO's stability and accuracy at the same compute, the turn-level reward design would look like a convenience rather than a necessity. The evidence leans the other way: the PPO baselines collapse and MT-PPO doesn't, and the gap widens on multi-hop tasks with more turns. The open question the paper leaves is whether per-turn rewards generalize past search, where the turn boundaries and the intermediate verifier are unusually clean, to agent tasks where defining a good intermediate reward is itself the hard part.
+
+## How it works
+
+**The problem and why prior approaches failed.** A multi-turn agent makes a sequence of decisions and only learns whether they worked at the end. The dominant RL methods, GRPO and PPO, were applied with a single trajectory-level reward that scores the final answer and gets spread uniformly over the whole trajectory. The paper calls this what it is, a contextual bandit, a one-shot decision wearing a multi-turn costume. It ignores the intermediate signals that are right there: whether a tool call executed, whether a search returned the answer, whether the format held. Without those, the advantage estimate is coarse and the same number lands on a turn that helped and a turn that hurt.
+
+**The key idea.** Score each turn on its own and assign advantage at turn granularity. A reward becomes a function of the turn's state and action, `R(s_k, a_k)`, not just the trajectory's final outcome. Then both GRPO and PPO get extended to consume these per-turn rewards so credit reaches the specific turn that earned it.
+
+**Methodology.** The case study is a two-turn reasoning-augmented search agent over a Wikipedia corpus. Turn 1 reasons and issues a search; the environment returns documents; turn 2 reasons over them and answers. Each turn earns a verifiable reward built from named pieces.
+
+The turn-1 (intermediate) reward adds up tool execution, retrieval, and format, then subtracts a search penalty.
+
+```text
+R^I = R^I_retrieval + R^I_format + R^I_search
+R^I_retrieval = 0.3 if the search result contains a ground-truth answer, else 0
+R^I_format    = +0.1 if the <think><search><information> format is correct, else -0.2
+R^I_search    = -lambda_s * (number of searches so far)
+```
+
+![A pixel-art balance scale tilting toward a stack of clay-orange reward coins with a plus sign, while a single sage-green weight with a minus sign pulls the other pan, showing that a turn's reward is good moves like tool use and retrieval added up minus a penalty for wasted searches.](/papers/reinforcing-multi-turn-reasoning-in-llm-agents/turn-rewards.webp)
+
+The turn-2 (outcome) reward keys off exact match and format.
+
+```text
+R^O = 1    if the answer is an exact match and the format is correct
+R^O = 0.2  if the format is correct but the answer is wrong
+R^O = -1   if the format is broken
+```
+
+The search penalty is the load-bearing piece. Drag it to zero in the simulation and the agent has no reason to stop searching, so it over-searches and the run destabilizes, which is exactly the ablation result.
+
+**MT-GRPO.** For a group of trajectories, normalize the intermediate rewards and the outcome rewards separately, then combine.
+
+```text
+A^I_{i,(k)} = ( R^I_{i,(k)} - mean over group ) / std over group
+A^O_i       = ( R^O_i - mean over group ) / std over group
+
+A_{i,(k)} = sum_{l=k}^{K-1} alpha^{l-k} A^I_{i,(l)}  +  alpha^{K-k} A^O_i
+```
+
+For `K = 2` this is just `A_{turn 1} = A^I + alpha * A^O` and `A_{turn 2} = A^O`. Computing the intermediate advantage needs `G` branches per state, so the full method costs `G^(K-1)` rollouts, which is why it stays at two turns.
+
+**MT-PPO.** Skip the branching. Assign the turn rewards as a token-level reward and let GAE spread them.
+
+```text
+r_t = R^O   if t is the last token of the whole trajectory
+r_t = R^I   if t is the last token of an intermediate turn
+r_t = 0     otherwise
+```
+
+The critic turns those sparse per-turn payouts into a smooth token-level advantage at linear cost and any horizon. This is the version that scales and the one behind the benchmark numbers.
+
+**Results with effect sizes.** Across six QA datasets, MT-PPO reached 0.447 average answer correctness against 0.432 for the best PPO baseline and 0.414 for the best GRPO baseline, with the largest gains on multi-hop tasks (HotpotQA 0.453, 2Wiki 0.424). Format correctness hit 0.999 average, against 0.895 for PPO-OR. The training curves show MT-PPO converging in the first 100 steps and holding steady while the PPO baselines spike, degrade, and on HotpotQA collapse. The GRPO baselines crashed during training and are reported from their papers. The ablation confirms the search penalty (`lambda_s = 0.1`) is necessary for stability and that the method is robust to the turn limit between 4 and 6.
+
+**Limitations and open questions.** MT-GRPO's exponential rollout cost caps it at short horizons and forces equal turn counts within a group. The strong results are on one base model and the search task family, so applicability to other agent domains is claimed but untested. And defining a good intermediate reward outside search, where verifiers are clean, is left open.
+
+## My assessment
+
+The authors found a real bug and named it precisely. Spreading one final reward over every turn is genuinely broken, and the collapse it causes is not subtle, you can watch the tool-use curve fall in their Figure 1 and in the simulation here. The split into a separate intermediate advantage and outcome advantage is the right move, and the cleanest evidence for it is the degenerate case where every trajectory ties on the outcome: a merged reward gives the search turn nothing, while the separated version still tells good searches from bad ones. That's not a tuning trick, it's a structural property, and it's the strongest part of the paper.
+
+Where the paper is weaker is the gap between the two halves of its own contribution. MT-GRPO is derived in full generality but only tested at two turns because the cost explodes, so the GRPO story is more of a teaching example than a deployable method. MT-PPO is the one that actually scales and carries every benchmark number, which makes the GRPO derivation feel like scaffolding. The honest read is that the contribution is "assign turn-level rewards and let a critic spread them," and PPO already had the machinery for that, so the novelty is the careful reward design more than the algorithm. The reward components are sensible and the search penalty earning its keep in the ablation is a nice touch. The claim that this generalizes far beyond search is the part I'd hold loosely, because search is exactly the case where you get a clean intermediate verifier for free, and most agent tasks don't. The core idea is right and will stick. Reward each step for what that step was for, and the agent stops forgetting how to do its job.

@@ -1,0 +1,42 @@
+{
+  "slug": "deepseekmath-pushing-the-limits",
+  "title": "DeepSeekMath: Pushing the Limits of Mathematical Reasoning in Open Language Models",
+  "headline": "A 7B open model reaches near-GPT-4 math scores by mining 120 billion math tokens from the web and training with GRPO, a cheaper reinforcement learning method that grades a group of answers against their own average instead of paying for a separate critic model.",
+  "abstract": "Mathematical reasoning poses a significant challenge for language models due to its complex and structured nature. In this paper, we introduce DeepSeekMath 7B, which continues pre-training DeepSeek-Coder-Base-v1.5 7B with 120B math-related tokens sourced from Common Crawl, together with natural language and code data. DeepSeekMath 7B has achieved an impressive score of 51.7% on the competition-level MATH benchmark without relying on external toolkits and voting techniques, approaching the performance level of Gemini-Ultra and GPT-4. Self-consistency over 64 samples from DeepSeekMath 7B achieves 60.9% on MATH. The mathematical reasoning capability of DeepSeekMath is attributed to two key factors: First, we harness the significant potential of publicly available web data through a meticulously engineered data selection pipeline. Second, we introduce Group Relative Policy Optimization (GRPO), a variant of Proximal Policy Optimization (PPO), that enhances mathematical reasoning abilities while concurrently optimizing the memory usage of PPO.",
+  "date": "2026-05-24",
+  "tags": [
+    "reinforcement learning",
+    "GRPO",
+    "large language models",
+    "mathematical reasoning",
+    "policy optimization"
+  ],
+  "source": {
+    "name": "arXiv 2402.03300",
+    "url": "https://arxiv.org/abs/2402.03300"
+  },
+  "images": [
+    {
+      "src": "/papers/deepseekmath-pushing-the-limits/hero.webp",
+      "alt": "A field-journal page with two rows. The top row labelled PPO shows an answer scroll feeding into a sage robot judge holding a gavel. The bottom row labelled GRPO shows a clay-orange group of answer scrolls with a dashed average line through them and, where the judge would sit, only an empty outline crossed out, showing that GRPO drops the separate judge and grades answers against their own group average.",
+      "width": 2752,
+      "height": 1536,
+      "caption": "PPO pays for a separate judge model; GRPO throws it out and uses the group's own average as the bar."
+    },
+    {
+      "src": "/papers/deepseekmath-pushing-the-limits/group-baseline.webp",
+      "alt": "Four pixel-art answer scrolls of different heights standing for their reward scores, with a dashed line marking the group average running across them; scrolls above the line get an ink arrow pushing up and scrolls below get an arrow pushing down, showing that an answer's advantage is its reward measured against the group average.",
+      "width": 2400,
+      "height": 1792,
+      "caption": "An answer's advantage is just its score minus the group average, so above-average answers get pushed up and below-average ones get pushed down."
+    },
+    {
+      "src": "/papers/deepseekmath-pushing-the-limits/maj-not-pass.webp",
+      "alt": "Two crates of answer tokens labelled before and after. The before crate holds a scattered mix where only a couple of tokens are the clay-orange correct one. The after crate holds the same distinct token shapes but now the correct clay-orange token is stacked tall, showing that the model picks the correct answer far more often without gaining any new answer it could not already produce.",
+      "width": 2400,
+      "height": 1792,
+      "caption": "RL stacks the model's votes onto a correct answer it already knew, so Maj@K climbs while Pass@K coverage barely moves."
+    }
+  ],
+  "hasVisualization": true
+}

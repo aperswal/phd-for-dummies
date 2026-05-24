@@ -1,0 +1,49 @@
+{
+  "slug": "statistical-gradient-following",
+  "title": "Simple Statistical Gradient-Following Algorithms for Connectionist Reinforcement Learning",
+  "headline": "A learner can climb toward more reward by doing more of whatever random move just beat its own recent average, and although it never measures a slope or maps its world, averaging these blind tweaks over many tries points it in the exact uphill direction of expected reward.",
+  "abstract": "This article presents a general class of associative reinforcement learning algorithms for connectionist networks containing stochastic units. These algorithms, called REINFORCE algorithms, are shown to make weight adjustments in a direction that lies along the gradient of expected reinforcement in both immediate-reinforcement tasks and certain limited forms of delayed-reinforcement tasks, and they do this without explicitly computing gradient estimates or even storing information from which such estimates could be computed. Specific examples of such algorithms are presented, some of which bear a close relationship to certain existing algorithms while others are novel but potentially interesting in their own right. Also given are results that show how such algorithms can be naturally integrated with backpropagation. We close with a brief discussion of a number of additional issues surrounding the use of such algorithms, including what is known about their limiting behaviors as well as further considerations that might be used to help develop similar but potentially more powerful reinforcement learning algorithms.",
+  "date": "2026-05-24",
+  "tags": [
+    "reinforcement learning",
+    "policy gradient",
+    "REINFORCE",
+    "gradient ascent",
+    "stochastic units"
+  ],
+  "source": {
+    "name": "Machine Learning 8, 229-256 (1992)",
+    "url": "https://doi.org/10.1007/BF00992696"
+  },
+  "images": [
+    {
+      "src": "/papers/statistical-gradient-following/hero.webp",
+      "alt": "A pixel hillside half hidden in soft fog on aged parchment, a glowing clay-orange peak near its top, a loose scatter of thrown darts across the slope with the ones that landed on bright ground glowing orange, and thin ink arrows tugging a central aim marker uphill toward them, showing that a learner finds high ground it cannot see by throwing spread-out tries and leaning toward the ones that scored higher.",
+      "width": 2752,
+      "height": 1536,
+      "caption": "Throw a spread of tries onto ground you cannot see, then lean toward the ones that scored higher, and you drift uphill."
+    },
+    {
+      "src": "/papers/statistical-gradient-following/reinforce-update.webp",
+      "alt": "A central aim crosshair on parchment with a dashed ink line marking the average score, one clay-orange dart that beat the average pulling the aim toward it with a solid arrow, and one slate dart below average pushing the aim away with a hollow arrow, showing that the update nudges the aim toward tries that scored above the running average and away from tries that scored below it.",
+      "width": 2400,
+      "height": 1792,
+      "caption": "Tries that beat your average score pull the aim toward them; tries below it push the aim away."
+    },
+    {
+      "src": "/papers/statistical-gradient-following/exploration-spread.webp",
+      "alt": "A wide slate scatter of darts flung outward on the left, a tight clay-orange cluster of darts hitting a small bright peak on the right, and a curved ink arrow with a shrinking bracket sweeping between them, showing that the unit scatters its tries wide while it is doing poorly and tightens its spread as it homes in on the peak.",
+      "width": 2400,
+      "height": 1792,
+      "caption": "Scatter wide while you are lost, tighten the grouping as you home in on the peak."
+    },
+    {
+      "src": "/papers/statistical-gradient-following/gradient-without-map.webp",
+      "alt": "A pixel hill with its top lost in slate fog on parchment, a faint thin ink arrow on the slope marking the true uphill direction, and a bold clay-orange arrow built from a fan of averaged random tries pointing the same way up the slope, showing that averaging many random tries points uphill even though the slope was never measured.",
+      "width": 2400,
+      "height": 1792,
+      "caption": "Averaging many random tries points uphill even though no slope was ever measured."
+    }
+  ],
+  "hasVisualization": true
+}

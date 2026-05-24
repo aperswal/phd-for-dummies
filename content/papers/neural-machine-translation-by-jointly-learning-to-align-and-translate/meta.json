@@ -1,0 +1,36 @@
+{
+  "slug": "neural-machine-translation-by-jointly-learning-to-align-and-translate",
+  "title": "Neural Machine Translation by Jointly Learning to Align and Translate",
+  "headline": "Instead of cramming a whole sentence into one fixed summary, the translator re-reads the source and decides which words to look at for every word it writes.",
+  "abstract": "Neural machine translation is a recently proposed approach to machine translation. Unlike the traditional statistical machine translation, the neural machine translation aims at building a single neural network that can be jointly tuned to maximize the translation performance. The models proposed recently for neural machine translation often belong to a family of encoder-decoders and encode a source sentence into a fixed-length vector from which a decoder generates a translation. In this paper, we conjecture that the use of a fixed-length vector is a bottleneck in improving the performance of this basic encoder-decoder architecture, and propose to extend this by allowing a model to automatically (soft-)search for parts of a source sentence that are relevant to predicting a target word, without having to form these parts as a hard segment explicitly. With this new approach, we achieve a translation performance comparable to the existing state-of-the-art phrase-based system on the task of English-to-French translation. Furthermore, qualitative analysis reveals that the (soft-)alignments found by the model agree well with our intuition.",
+  "date": "2026-05-24",
+  "tags": ["attention", "machine translation", "sequence modeling", "encoder-decoder", "deep learning"],
+  "source": {
+    "name": "arXiv 1409.0473",
+    "url": "https://arxiv.org/abs/1409.0473"
+  },
+  "images": [
+    {
+      "src": "/papers/neural-machine-translation-by-jointly-learning-to-align-and-translate/hero.webp",
+      "alt": "On the left a pixel translator squeezes a long scroll down into one tiny crumpled note marked with a faded question mark, while on the right the same translator keeps the scroll fully open and a clay-orange ink arrow glances from the pen back to one glowing line, showing that re-reading the source beats memorizing it as a single fixed summary.",
+      "width": 2048,
+      "height": 1152,
+      "caption": "A fixed summary forgets the start of a long sentence; glancing back at the right source word fixes it."
+    },
+    {
+      "src": "/papers/neural-machine-translation-by-jointly-learning-to-align-and-translate/alignment.webp",
+      "alt": "A row of pixel source-word tiles sits above one glowing clay-orange target-word tile, with thin ink lines of different thickness fanning up from the target word to the source words, thickest to the two it reads hardest, showing that each output word draws a weighted blend from a few source words instead of the whole sentence.",
+      "width": 2048,
+      "height": 1536,
+      "caption": "Each word the model writes draws a weighted blend from a few source words, like a spotlight sliding along the open letter."
+    },
+    {
+      "src": "/papers/neural-machine-translation-by-jointly-learning-to-align-and-translate/length-cliff.webp",
+      "alt": "Two ink curves climb together over a row of pixel sentence tiles that grow longer to the right, then the sage fixed-summary curve falls off a cliff past the thirty-word mark while the clay-orange attention curve stays flat, showing that the bottleneck breaks on long sentences and re-reading does not.",
+      "width": 2048,
+      "height": 1536,
+      "caption": "The fixed-summary model falls off a cliff past 30 words; the re-reading model holds steady."
+    }
+  ],
+  "hasVisualization": true
+}

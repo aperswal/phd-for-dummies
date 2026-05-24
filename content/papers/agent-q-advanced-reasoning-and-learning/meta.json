@@ -1,0 +1,49 @@
+{
+  "slug": "agent-q-advanced-reasoning-and-learning",
+  "title": "Agent Q: Advanced Reasoning and Learning for Autonomous AI Agents",
+  "headline": "A web agent that searches a tree of possible web pages, uses one model as both the actor that proposes clicks and the critic that grades them, and learns from both its wins and its mistakes.",
+  "abstract": "Large Language Models (LLMs) have shown remarkable capabilities in natural language tasks requiring complex reasoning, yet their application in agentic, multi-step reasoning within interactive environments remains a difficult challenge. Traditional supervised pre-training on static datasets falls short in enabling autonomous agent capabilities needed to perform complex decision-making in dynamic settings like web navigation. Previous attempts to bridge this gap through supervised fine-tuning on curated expert demonstrations often suffer from compounding errors and limited exploration data, resulting in sub-optimal policy outcomes. To overcome these challenges, we propose a framework that combines guided Monte Carlo Tree Search (MCTS) search with a self-critique mechanism and iterative fine-tuning on agent interactions using an off-policy variant of the Direct Preference Optimization (DPO) algorithm. Our method allows LLM agents to learn effectively from both successful and unsuccessful trajectories, thereby improving their generalization in complex, multi-step reasoning tasks. We validate our approach in the WebShop environment, a simulated e-commerce platform, where it consistently outperforms behavior cloning and reinforced fine-tuning baseline, and beats average human performance when equipped with the capability to do online search. In real-world booking scenarios, our methodology boosts Llama-3 70B model's zero-shot performance from 18.6% to 81.7% success rate (a 340% relative increase) after a single day of data collection, and further to 95.4% with online search. We believe this represents a substantial leap forward in the capabilities of autonomous agents, paving the way for more sophisticated and reliable decision-making in real-world settings.",
+  "date": "2026-05-24",
+  "tags": [
+    "llm agents",
+    "monte carlo tree search",
+    "direct preference optimization",
+    "reinforcement learning",
+    "web navigation"
+  ],
+  "source": {
+    "name": "arXiv 2408.07199",
+    "url": "https://arxiv.org/abs/2408.07199"
+  },
+  "images": [
+    {
+      "src": "/papers/agent-q-advanced-reasoning-and-learning/hero.webp",
+      "alt": "An explorer stands at the top room of a downward-branching tree of pixel-art rooms, a sage-green lantern guide pointing one ink arrow toward the right branch while the room at the end of that path glows clay-orange and carries a small inked star, showing that the agent searches many possible web pages, listens to a critic that points at the promising branch, and remembers which path reached the goal.",
+      "width": 2752,
+      "height": 1536,
+      "caption": "The agent searches a tree of possible web pages, follows a critic that points at the promising branch, and remembers which path reached the goal."
+    },
+    {
+      "src": "/papers/agent-q-advanced-reasoning-and-learning/actor-critic.webp",
+      "alt": "One pixel-art wizard shown twice, on the left sketching three doorways onto the page and on the right writing rank numbers one, two, three beside the same three doors with a quill, the top-ranked door glowing clay-orange, showing that a single model plays both the actor that proposes the next clicks and the critic that grades them.",
+      "width": 2048,
+      "height": 2048,
+      "caption": "The same model wears two hats: it proposes the candidate clicks, then ranks them to give itself process feedback."
+    },
+    {
+      "src": "/papers/agent-q-advanced-reasoning-and-learning/mcts-loop.webp",
+      "alt": "A branching tree of pixel-art rooms with a black ink arrow going down the left branch from the START room to a chest marked RESULT, and a curved arrow carrying a small clay-orange token back up to the start, showing the search picking a path, trying it all the way to a result, then carrying the score back up the tree.",
+      "width": 2400,
+      "height": 1792,
+      "caption": "One search round picks a path down the tree, tries it to a result, then carries the score back up so every node above learns from the outcome."
+    },
+    {
+      "src": "/papers/agent-q-advanced-reasoning-and-learning/preference-pair.webp",
+      "alt": "Two sibling pixel-art doorways at different heights share one room below, an ink brace measures the gap between them, the taller clay-orange door gets a star marked CHOSEN PATH and the shorter sage door gets a cross marked REJECTED PATH, showing that where two sibling moves differ in value by more than a threshold the better one becomes the preferred example and the worse one the rejected example for fine-tuning.",
+      "width": 2400,
+      "height": 1792,
+      "caption": "Where two sibling moves differ enough in value, the better one becomes the preferred example and the worse one the rejected example the agent trains on."
+    }
+  ],
+  "hasVisualization": true
+}

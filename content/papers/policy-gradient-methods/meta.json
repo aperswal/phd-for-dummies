@@ -1,0 +1,49 @@
+{
+  "slug": "policy-gradient-methods",
+  "title": "Policy Gradient Methods for Reinforcement Learning with Function Approximation",
+  "headline": "Instead of memorizing the worth of every situation and acting greedily, tune the policy's dials directly along the gradient of expected reward, a gradient you can estimate from experience that never depends on how your tuning shifts which situations you face, and which a value critic shaped to match the policy reproduces with zero bias.",
+  "abstract": "Function approximation is essential to reinforcement learning, but the standard approach of approximating a value function and determining a policy from it has so far proven theoretically intractable. In this paper we explore an alternative approach in which the policy is explicitly represented by its own function approximator, independent of the value function, and is updated according to the gradient of expected reward with respect to the policy parameters. Williams's REINFORCE method and actor-critic methods are examples of this approach. Our main new result is to show that the gradient can be written in a form suitable for estimation from experience aided by an approximate action-value or advantage function. Using this result, we prove for the first time that a version of policy iteration with arbitrary differentiable function approximation is convergent to a locally optimal policy.",
+  "date": "2026-05-24",
+  "tags": [
+    "reinforcement learning",
+    "policy gradient",
+    "actor-critic",
+    "function approximation",
+    "convergence"
+  ],
+  "source": {
+    "name": "NeurIPS 12 (2000), pp. 1057-1063",
+    "url": "https://proceedings.neurips.cc/paper/1999/hash/464d828b85b0bed98e80ade0a5c43b0f-Abstract.html"
+  },
+  "images": [
+    {
+      "src": "/papers/policy-gradient-methods/hero.webp",
+      "alt": "A pixel control board of slider levers each capped with a direction arrow, one clay-orange lever glowing and pushed up by an inked nudge arrow, beside a faint maze where a small robot walks toward a goal star, showing that a policy is a set of dials you tune directly, pushing up the moves that beat the situation's average instead of memorizing the worth of every spot.",
+      "width": 2752,
+      "height": 1536,
+      "caption": "A policy is a board of dials you tune directly, nudging up whichever move beat the situation's average."
+    },
+    {
+      "src": "/papers/policy-gradient-methods/value-vs-policy.webp",
+      "alt": "A split field-journal page, on the left two doors topped by tall value bars with a hard arrow snapping to the taller under the word flip, on the right the same two doors with two smooth clay-orange dials under the word smooth, showing that picking the highest-valued action flips the choice abruptly while tuning the policy's own dials changes behavior gently.",
+      "width": 2400,
+      "height": 1792,
+      "caption": "Grabbing the highest-valued door flips the choice abruptly; tuning the policy's dials changes behavior gently."
+    },
+    {
+      "src": "/papers/policy-gradient-methods/policy-gradient-theorem.webp",
+      "alt": "Three maze panels shaded from pale to deep green by how often each is visited, one opened to two action dials where the better dial is pushed up in clay-orange by a learning-nudge arrow, and a faint crossed-out ignored-shift arrow to the side, showing that the gradient nudges each action by its advantage weighted by how often you stand there and never by how the tuning shifts which spots you visit.",
+      "width": 2400,
+      "height": 1792,
+      "caption": "Nudge each action by its advantage, weighted by how often you stand there; the shift in which spots you visit drops out."
+    },
+    {
+      "src": "/papers/policy-gradient-methods/compatible-critic.webp",
+      "alt": "A central slider lever wired to two round gauges, a clay-orange matched meter whose needle lands on a check mark and a slate mismatched meter whose needle swings off to a cross, showing that a value critic built from the policy's own dials reads the advantage exactly right while a mismatched critic gives biased advice.",
+      "width": 2400,
+      "height": 1792,
+      "caption": "A critic built from the policy's own features reads the advantage exactly; a mismatched one biases the gradient."
+    }
+  ],
+  "hasVisualization": true
+}

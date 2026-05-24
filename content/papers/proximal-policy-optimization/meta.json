@@ -1,0 +1,42 @@
+{
+  "slug": "proximal-policy-optimization",
+  "title": "Proximal Policy Optimization Algorithms",
+  "headline": "A way to train a policy that gets trust-region reliability from plain gradient steps, by clipping the objective so the reward goes flat once the policy strays too far from where it started, which lets you safely reuse one batch of experience for many cheap updates.",
+  "abstract": "We propose a new family of policy gradient methods for reinforcement learning, which alternate between sampling data through interaction with the environment, and optimizing a \"surrogate\" objective function using stochastic gradient ascent. Whereas standard policy gradient methods perform one gradient update per data sample, we propose a novel objective function that enables multiple epochs of minibatch updates. The new methods, which we call proximal policy optimization (PPO), have some of the benefits of trust region policy optimization (TRPO), but they are much simpler to implement, more general, and have better sample complexity (empirically). Our experiments test PPO on a collection of benchmark tasks, including simulated robotic locomotion and Atari game playing, and we show that PPO outperforms other online policy gradient methods, and overall strikes a favorable balance between sample complexity, simplicity, and wall-time.",
+  "date": "2026-05-24",
+  "tags": [
+    "reinforcement learning",
+    "policy gradient",
+    "trust region",
+    "clipped objective",
+    "deep reinforcement learning"
+  ],
+  "source": {
+    "name": "arXiv 1707.06347",
+    "url": "https://arxiv.org/abs/1707.06347"
+  },
+  "images": [
+    {
+      "src": "/papers/proximal-policy-optimization/hero.webp",
+      "alt": "A pixel-art dog mid-stride on a taut clay-orange leash held by a hand, the leash ending at an inked stop-bracket beyond which a faint sage ghost dog runs free, showing that a clipped objective keeps an eager learner on a short leash so it cannot bolt too far in one update even when the reward would pull it all the way to the unleashed goal.",
+      "width": 2752,
+      "height": 1536,
+      "caption": "The clip is a leash on an eager learner; the reward would pull it all the way to the ghost dog, but past the leash's end pulling harder does nothing."
+    },
+    {
+      "src": "/papers/proximal-policy-optimization/clip-surrogate.webp",
+      "alt": "A pixel hill path that climbs steadily and then levels into a flat plateau with a clay-orange flag planted at the kink, an inked line tracing the slope up and then running flat, showing that the clipped objective rewards the policy for improving up to a fixed point and then goes flat, so there is no gain left from straying further.",
+      "width": 2400,
+      "height": 1792,
+      "caption": "The clipped objective climbs with the policy up to the edge of the band, then goes flat, so straying further earns nothing."
+    },
+    {
+      "src": "/papers/proximal-policy-optimization/many-epochs.webp",
+      "alt": "Two pixel paths up a hill, a tangled clay-orange greedy path that overshoots the goal and tumbles off a cliff beside a calm sage clipped path that arrives neatly at the goal flag, showing that reusing one batch of experience for many unclipped greedy steps overshoots and collapses while the clipped step stays steady and reaches the goal.",
+      "width": 2400,
+      "height": 1792,
+      "caption": "Reuse one batch for many greedy steps and the policy overshoots off a cliff; the clipped step reuses the same batch and still arrives."
+    }
+  ],
+  "hasVisualization": true
+}

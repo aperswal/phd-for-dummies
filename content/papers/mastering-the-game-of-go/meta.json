@@ -1,0 +1,43 @@
+{
+  "slug": "mastering-the-game-of-go",
+  "title": "Mastering the Game of Go with Deep Neural Networks and Tree Search",
+  "headline": "A Go program that beats a human professional by using one neural network to guess which moves are worth trying and a second to guess who is winning, then searching only the few futures that matter.",
+  "abstract": "The game of Go has long been viewed as the most challenging of classic games for artificial intelligence owing to its enormous search space and the difficulty of evaluating board positions and moves. Here we introduce a new approach to computer Go that uses 'value networks' to evaluate board positions and 'policy networks' to select moves. These deep neural networks are trained by a novel combination of supervised learning from human expert games, and reinforcement learning from games of self-play. Without any lookahead search, the neural networks play Go at the level of state-of-the-art Monte Carlo tree search programs that simulate thousands of random games of self-play. We also introduce a new search algorithm that combines Monte Carlo simulation with value and policy networks. Using this search algorithm, our program AlphaGo achieved a 99.8% winning rate against other Go programs, and defeated the human European Go champion by 5 games to 0. This is the first time that a computer program has defeated a human professional player in the full-sized game of Go, a feat previously thought to be at least a decade away.",
+  "date": "2026-05-24",
+  "tags": ["reinforcement learning", "monte carlo tree search", "deep learning", "game playing", "self-play"],
+  "source": {
+    "name": "Nature 529 (2016)",
+    "url": "https://www.nature.com/articles/nature16961"
+  },
+  "images": [
+    {
+      "src": "/papers/mastering-the-game-of-go/hero.webp",
+      "alt": "A huge pale pixel-art tree of tiny Go-board futures where only two or three branches glow clay-orange, a coach hand points at them and a small inked eye reads one board, showing that the program searches just a few promising lines instead of every possible game.",
+      "width": 2752,
+      "height": 1536,
+      "caption": "Out of a near-endless tree of possible games, the program follows only the few lines a coach points to and a judge rates highest."
+    },
+    {
+      "src": "/papers/mastering-the-game-of-go/two-networks.webp",
+      "alt": "On the left a pixel coach hand points at two or three highlighted points on a board, on the right a calm pixel eye reads a full board with a clay-orange winner bar, showing that the policy network picks moves worth trying while the value network calls who is ahead.",
+      "width": 2400,
+      "height": 1792,
+      "caption": "The policy network narrows the moves worth thinking about; the value network glances at a board and calls who is winning."
+    },
+    {
+      "src": "/papers/mastering-the-game-of-go/mcts-loop.webp",
+      "alt": "Four small pixel Go-board tiles arranged in a ring joined by a clay-orange circular arrow through select, expand, judge, and back-up, with a sage-green node budding off the ring, showing the four-step loop the search repeats thousands of times to grow its tree.",
+      "width": 2048,
+      "height": 2048,
+      "caption": "Each simulation walks down to a leaf, grows a new node, scores it, and pushes the score back up; thousands of these loops build the tree."
+    },
+    {
+      "src": "/papers/mastering-the-game-of-go/lambda-mix.webp",
+      "alt": "A balance scale weighing a pixel eye on one pan against a fast pixel rolling die on the other, with the inked pointer resting in the middle, showing that the best estimate of who is winning blends the value network's glance with a quick random playout.",
+      "width": 2400,
+      "height": 1792,
+      "caption": "The leaf score blends two opinions, the value network's glance and a fast random playout, and the paper found a 50/50 mix works best."
+    }
+  ],
+  "hasVisualization": true
+}

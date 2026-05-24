@@ -1,0 +1,43 @@
+{
+  "slug": "high-dimensional-continuous-control-using-gae",
+  "title": "High-Dimensional Continuous Control Using Generalized Advantage Estimation",
+  "headline": "One dial slides a reinforcement-learning agent's reward estimate between a noisy-but-honest guess and a calm-but-biased one, and the sweet spot in the middle teaches simulated robots to run and stand up.",
+  "abstract": "Policy gradient methods are an appealing approach in reinforcement learning because they directly optimize the cumulative reward and can straightforwardly be used with nonlinear function approximators such as neural networks. The two main challenges are the large number of samples typically required, and the difficulty of obtaining stable and steady improvement despite the nonstationarity of the incoming data. We address the first challenge by using value functions to substantially reduce the variance of policy gradient estimates at the cost of some bias, with an exponentially-weighted estimator of the advantage function that is analogous to TD(lambda). We address the second challenge by using trust region optimization procedure for both the policy and the value function, which are represented by neural networks. Our approach yields strong empirical results on highly challenging 3D locomotion tasks, learning running gaits for bipedal and quadrupedal simulated robots, and learning a policy for getting the biped to stand up from starting out lying on the ground. In contrast to a body of prior work that uses hand-crafted policy representations, our neural network policies map directly from raw kinematics to joint torques. Our algorithm is fully model-free, and the amount of simulated experience required for the learning tasks on 3D bipeds corresponds to 1-2 weeks of real time.",
+  "date": "2026-05-24",
+  "tags": ["reinforcement learning", "policy gradient", "advantage estimation", "continuous control", "variance reduction"],
+  "source": {
+    "name": "arXiv 1506.02438",
+    "url": "https://arxiv.org/abs/1506.02438"
+  },
+  "images": [
+    {
+      "src": "/papers/high-dimensional-continuous-control-using-gae/hero.webp",
+      "alt": "A clay-orange dial labelled lambda sits between a jittery sage needle on the left marked noisy and a steady but tilted slate needle on the right marked biased, showing that one knob slides the reward estimate between a noisy honest guess and a calm but biased one.",
+      "width": 2752,
+      "height": 1536,
+      "caption": "One dial slides between a noisy but honest estimate and a calm but biased one."
+    },
+    {
+      "src": "/papers/high-dimensional-continuous-control-using-gae/td-residual.webp",
+      "alt": "A pixel car partway along a winding road, with a clay-orange signpost at the start marked guess and a sage signpost one step ahead marked next, an ink arrow arcing between them marked delta, showing that the surprise is the gap between this guess and the next.",
+      "width": 2400,
+      "height": 1792,
+      "caption": "The TD residual is the surprise: this step's reward plus the next guess, minus the guess you started with."
+    },
+    {
+      "src": "/papers/high-dimensional-continuous-control-using-gae/lambda-ladder.webp",
+      "alt": "Three clay-orange estimate tiles of shrinking size stacked under an ink brace that gathers them into a single sage tile marked blend, showing that GAE blends a one-step, two-step, and longer estimate with weights that fade as the horizon grows.",
+      "width": 2400,
+      "height": 1792,
+      "caption": "GAE blends the one-step, two-step, and longer estimates, trusting each a little less than the last."
+    },
+    {
+      "src": "/papers/high-dimensional-continuous-control-using-gae/sweet-spot.webp",
+      "alt": "A sage U-shaped valley curve with a clay-orange marker resting at the lowest point and an ink arrow marked best pointing to it, showing that error is high at both extremes of lambda and lowest at an intermediate value.",
+      "width": 2400,
+      "height": 1792,
+      "caption": "Error is worst at the two extremes and lowest in the middle, so the best lambda sits around 0.95."
+    }
+  ],
+  "hasVisualization": true
+}

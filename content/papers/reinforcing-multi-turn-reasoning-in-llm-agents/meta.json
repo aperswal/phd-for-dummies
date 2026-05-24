@@ -1,0 +1,36 @@
+{
+  "slug": "reinforcing-multi-turn-reasoning-in-llm-agents",
+  "title": "Reinforcing Multi-Turn Reasoning in LLM Agents via Turn-Level Reward Design",
+  "headline": "Instead of grading a multi-step agent on its final answer alone, score every step it takes, so the reward lands on the exact move that earned it and training stops collapsing.",
+  "abstract": "This paper investigates Reinforcement Learning (RL) approaches to enhance the reasoning capabilities of Large Language Model (LLM) agents in long-horizon, multi-turn scenarios. Although RL algorithms such as Group Relative Policy Optimization (GRPO) and Proximal Policy Optimization (PPO) have been widely applied to train multi-turn LLM agents, they typically rely only on sparse outcome rewards and lack dense intermediate signals across multiple decision steps, limiting their performance on complex reasoning tasks. To bridge this gap, we present the first systematic study of turn-level reward design for multi-turn RL algorithms and agent applications. By integrating turn-level rewards, we extend GRPO and PPO to their respective multi-turn variants, enabling fine-grained credit assignment. We conduct case studies on multi-turn reasoning-augmented search agents, where we carefully design two types of turn-level rewards: verifiable and LLM-as-judge. Our experiments on multi-turn search tasks demonstrate that incorporating well-designed turn-level rewards enables RL algorithms to significantly outperform baseline methods with trajectory-level rewards. Both training and validation reward curves illustrate that our method achieves greater stability, faster convergence, and higher accuracy. Numerical results across diverse question-answering datasets further show that our approach consistently delivers highest answer correctness and 100% format correctness.",
+  "date": "2026-05-24",
+  "tags": ["reinforcement learning", "llm agents", "credit assignment", "multi-turn reasoning", "reward design", "GRPO", "PPO"],
+  "source": {
+    "name": "arXiv 2505.11821",
+    "url": "https://arxiv.org/abs/2505.11821"
+  },
+  "images": [
+    {
+      "src": "/papers/reinforcing-multi-turn-reasoning-in-llm-agents/hero.webp",
+      "alt": "Three pixel-art relay runners pass a baton toward a finish line, a clay-orange star floating over each runner instead of one trophy at the end, with an ink arrow labelled credit curving back from the finish to tag each runner, showing that turn-level rewards hand credit to the exact step that earned it.",
+      "width": 2752,
+      "height": 1536,
+      "caption": "Credit for the win goes back to the runner who ran each leg, not just to whoever crossed the line."
+    },
+    {
+      "src": "/papers/reinforcing-multi-turn-reasoning-in-llm-agents/credit-split.webp",
+      "alt": "A two-panel pixel-art comparison: on the left three relay runners share one big clay-orange trophy with credit arrows blurred across all of them, on the right each runner has their own star and arrow, showing trajectory-level credit smears one reward over every step while turn-level credit gives each step its own.",
+      "width": 2400,
+      "height": 1792,
+      "caption": "Trajectory-level credit hands the whole team one trophy; turn-level credit gives each runner a star of their own."
+    },
+    {
+      "src": "/papers/reinforcing-multi-turn-reasoning-in-llm-agents/turn-rewards.webp",
+      "alt": "A pixel-art balance scale tilting toward a stack of clay-orange reward coins with a plus sign, while a single sage-green weight with a minus sign pulls the other pan, showing that a turn's reward is good moves like tool use and retrieval added up minus a penalty for wasted searches.",
+      "width": 2400,
+      "height": 1792,
+      "caption": "One turn's reward adds up the good moves and subtracts a small penalty for searching more than needed."
+    }
+  ],
+  "hasVisualization": true
+}

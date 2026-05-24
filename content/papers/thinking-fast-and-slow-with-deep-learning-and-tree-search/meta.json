@@ -1,0 +1,50 @@
+{
+  "slug": "thinking-fast-and-slow-with-deep-learning-and-tree-search",
+  "title": "Thinking Fast and Slow with Deep Learning and Tree Search",
+  "headline": "Split learning into a slow planner that searches and a fast net that copies it, and let each one make the other stronger every round until the pair beats the reigning champion.",
+  "abstract": "Sequential decision making problems, such as structured prediction, robotic control, and game playing, require a combination of planning policies and generalisation of those plans. In this paper, we present Expert Iteration (ExIt), a novel reinforcement learning algorithm which decomposes the problem into separate planning and generalisation tasks. Planning new policies is performed by tree search, while a deep neural network generalises those plans. Subsequently, tree search is improved by using the neural network policy to guide search, increasing the strength of new plans. In contrast, standard deep Reinforcement Learning algorithms rely on a neural network not only to generalise plans, but to discover them too. We show ExIt outperforms REINFORCE for training a neural network to play the board game Hex, and our final tree search agent, trained tabula rasa, defeats MoHex 1.0, the most recent Olympiad Champion player to be publicly released.",
+  "date": "2026-05-24",
+  "tags": [
+    "reinforcement learning",
+    "tree search",
+    "imitation learning",
+    "monte carlo tree search",
+    "self-play",
+    "game playing"
+  ],
+  "source": {
+    "name": "arXiv 1705.08439",
+    "url": "https://arxiv.org/abs/1705.08439"
+  },
+  "images": [
+    {
+      "src": "/papers/thinking-fast-and-slow-with-deep-learning-and-tree-search/hero.webp",
+      "alt": "A small clay-orange pixel lantern labelled fast sits across from a sage-green pixel tree labelled slow, joined by two curved ink arrows into a loop, showing a quick intuition and a slow search taking turns making each other stronger.",
+      "width": 2752,
+      "height": 1536,
+      "caption": "A fast intuition and a slow search take turns making each other stronger."
+    },
+    {
+      "src": "/papers/thinking-fast-and-slow-with-deep-learning-and-tree-search/exit-loop.webp",
+      "alt": "A clay-orange pixel notebook and a sage-green pixel tree pass a baton around an ink loop labelled copy and plan, showing that each round the fast learner copies the stronger planner and the planner then plans with the sharper learner.",
+      "width": 2400,
+      "height": 1792,
+      "caption": "Each round the learner copies a stronger planner, and the planner plans with a sharper learner."
+    },
+    {
+      "src": "/papers/thinking-fast-and-slow-with-deep-learning-and-tree-search/uct-bias.webp",
+      "alt": "A sage-green pixel tree with one clay-orange branch lit up and an ink arrow labelled hunch pointing at it, showing the learner's hunch steering where the slow search spends most of its effort.",
+      "width": 2400,
+      "height": 1792,
+      "caption": "The learner's hunch steers where the slow search spends its effort."
+    },
+    {
+      "src": "/papers/thinking-fast-and-slow-with-deep-learning-and-tree-search/gap-climb.webp",
+      "alt": "A clay-orange rising path labelled ExIt climbs above a sage-green path, while a flat jagged ink line labelled old stays near the bottom, showing that splitting planning from learning climbs faster and steadier than learning both at once.",
+      "width": 2400,
+      "height": 1792,
+      "caption": "Splitting planning from learning climbs faster and steadier than learning both at once."
+    }
+  ],
+  "hasVisualization": true
+}

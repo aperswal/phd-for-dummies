@@ -1,0 +1,10 @@
+node_modules
+.next
+out
+build
+pnpm-lock.yaml
+public
+Script-Image-Gen
+content
+*.md
+*.mdx

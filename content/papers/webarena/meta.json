@@ -1,0 +1,43 @@
+{
+  "slug": "webarena",
+  "title": "WebArena: A Realistic Web Environment for Building Autonomous Agents",
+  "headline": "A self-hostable web world plus 812 everyday tasks that score an agent on whether the website actually reached the goal, not whether its clicks matched a script, and the best GPT-4 agent finishes only 14% of what humans finish 78% of.",
+  "abstract": "With advances in generative AI, there is now potential for autonomous agents to manage daily tasks via natural language commands. However, current agents are primarily created and tested in simplified synthetic environments, leading to a disconnect with real-world scenarios. In this paper, we build an environment for language-guided agents that is highly realistic and reproducible. Specifically, we focus on agents that perform tasks on the web, and create an environment with fully functional websites from four common domains: e-commerce, social forum discussions, collaborative software development, and content management. Our environment is enriched with tools (e.g., a map) and external knowledge bases (e.g., user manuals) to encourage human-like task-solving. Building upon our environment, we release a set of benchmark tasks focusing on evaluating the functional correctness of task completions. The tasks in our benchmark are diverse, long-horizon, and designed to emulate tasks that humans routinely perform on the internet. We experiment with several baseline agents, integrating recent techniques such as reasoning before acting. The results demonstrate that solving complex tasks is challenging: our best GPT-4-based agent only achieves an end-to-end task success rate of 14.41%, significantly lower than the human performance of 78.24%. These results highlight the need for further development of robust agents, that current state-of-the-art large language models are far from perfect performance in these real-life tasks, and that WebArena can be used to measure such progress.",
+  "date": "2026-05-24",
+  "tags": ["autonomous agents", "web agents", "benchmark", "large language models", "functional correctness"],
+  "source": {
+    "name": "arXiv 2307.13854",
+    "url": "https://arxiv.org/abs/2307.13854"
+  },
+  "images": [
+    {
+      "src": "/papers/webarena/hero.webp",
+      "alt": "A pixel-art robot worker hands a finished web page with a filled cart and a completed task to a pixel-art inspector who stamps it approved with a magnifying glass, showing that WebArena scores an agent on whether the website actually reached the goal rather than on whether its clicks matched a script.",
+      "width": 2752,
+      "height": 1536,
+      "caption": "An agent is judged by whether the website's world actually reached the goal, not by whether its clicks matched a reference script."
+    },
+    {
+      "src": "/papers/webarena/two-paths.webp",
+      "alt": "Two hand-inked routes branch from one start tile and rejoin at one finished page, with an outcome stamp passing both in sage green and a script stamp failing the alternate in clay-orange, showing that functional scoring accepts any correct path while surface-form matching only accepts the reference.",
+      "width": 2400,
+      "height": 1792,
+      "caption": "Two correct paths reach the same end state; the outcome check passes both, the script check fails the alternate."
+    },
+    {
+      "src": "/papers/webarena/gap.webp",
+      "alt": "A tall sage-green pixel bar for humans towers over a short clay-orange pixel bar for the AI agent, with a dashed ink bracket marking the gap, showing that the best agent finishes only about a sixth of the everyday web tasks a human finishes.",
+      "width": 2400,
+      "height": 1792,
+      "caption": "On the same everyday tasks, the best GPT-4 agent finishes 14% where humans finish 78%."
+    },
+    {
+      "src": "/papers/webarena/ua-hint.webp",
+      "alt": "A pixel-art robot holding a question-mark flag faces a chained locked door it correctly skips with a sage check and an open inviting door it wrongly skips with a clay-orange cross, showing that the permission to give up rescues impossible tasks but makes the agent quit feasible ones.",
+      "width": 2400,
+      "height": 1792,
+      "caption": "The give-up hint rescues truly impossible tasks but makes the agent wrongly quit feasible ones."
+    }
+  ],
+  "hasVisualization": true
+}

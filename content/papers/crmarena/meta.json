@@ -1,0 +1,36 @@
+{
+  "slug": "crmarena",
+  "title": "CRMArena: Understanding the Capacity of LLM Agents to Perform Professional CRM Tasks in Realistic Environments",
+  "headline": "A benchmark that drops AI agents into a realistic Salesforce org and finds that even the best ones solve fewer than two-thirds of everyday customer-service tasks.",
+  "abstract": "Customer Relationship Management (CRM) systems are vital for modern enterprises, providing a foundation for managing customer interactions and data. Integrating AI agents into CRM systems can automate routine processes and enhance personalized service. However, deploying and evaluating these agents is challenging due to the lack of realistic benchmarks that reflect the complexity of real-world CRM tasks. To address this issue, we introduce CRMArena, a novel benchmark designed to evaluate AI agents on realistic tasks grounded on professional work environments. We worked with CRM experts to design nine customer service tasks distributed across three personas: service agent, analyst, and manager. We synthesize a large-scale simulated organization, populating 16 commonly-used industrial objects (e.g., account, order, knowledge article, case) with high interconnectivity, and uploading it into a real Salesforce CRM organization. UI and API access to the CRM is provided to systems that attempt to complete the tasks in CRMArena. Experimental results reveal that state-of-the-art LLM agents succeed in less than 58% of the tasks with ReAct prompting, and less than 65% even when provided manually-crafted function-calling tools. Our findings highlight the need for enhanced agent capabilities in function-calling and rule-following to be deployed in real-world work environment. CRMArena is an open challenge to the community: systems that can reliably complete tasks showcase direct business value in a popular work environment.",
+  "date": "2026-05-24",
+  "tags": ["llm agents", "benchmark", "tool use", "function calling", "crm"],
+  "source": {
+    "name": "arXiv 2411.02305",
+    "url": "https://arxiv.org/abs/2411.02305"
+  },
+  "images": [
+    {
+      "src": "/papers/crmarena/hero.webp",
+      "alt": "A pixel-art help-desk agent at a desk pulls a chain of linked record cards from a filing cabinet toward a customer's question bubble, with ink arrows tracing the dependency from card to card, showing that answering a real CRM question means chaining many connected lookups in order.",
+      "width": 2752,
+      "height": 1536,
+      "caption": "A real CRM task is a chain of connected lookups, and the agent has to thread them in order to answer the customer."
+    },
+    {
+      "src": "/papers/crmarena/dependency-chain.webp",
+      "alt": "Four pixel record cards in a row joined by a chain, with the second link snapped in clay-orange and the two cards after it faded gray, showing that one wrong call early in a dependent chain wastes everything that comes after it.",
+      "width": 2400,
+      "height": 1792,
+      "caption": "One wrong call early breaks the link, and every step that depended on it falls apart."
+    },
+    {
+      "src": "/papers/crmarena/tools-backfire.webp",
+      "alt": "A skilled pixel worker wields a gear-shaped tool smoothly on the left while a clumsy worker fumbles the very same tool on the right, with an up arrow over the skilled side and a down arrow over the clumsy one, showing that a handed tool helps a strong agent but trips up a weak one.",
+      "width": 2400,
+      "height": 1792,
+      "caption": "The same task-specific function lifts a strong model and drags down a weak one that can't call it cleanly."
+    }
+  ],
+  "hasVisualization": true
+}

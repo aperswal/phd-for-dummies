@@ -1,0 +1,42 @@
+{
+  "slug": "mastering-chess-and-shogi-by-self-play",
+  "title": "Mastering Chess and Shogi by Self-Play with a General Reinforcement Learning Algorithm",
+  "headline": "One algorithm that knows only the rules teaches itself chess, shogi, and Go from scratch by playing against itself, and beats the best handcrafted programs in each within a day.",
+  "abstract": "The game of chess is the most widely-studied domain in the history of artificial intelligence. The strongest programs are based on a combination of sophisticated search techniques, domain-specific adaptations, and handcrafted evaluation functions that have been refined by human experts over several decades. In contrast, the AlphaGo Zero program recently achieved superhuman performance in the game of Go, by tabula rasa reinforcement learning from games of self-play. In this paper, we generalise this approach into a single AlphaZero algorithm that can achieve, tabula rasa, superhuman performance in many challenging domains. Starting from random play, and given no domain knowledge except the game rules, AlphaZero achieved within 24 hours a superhuman level of play in the games of chess and shogi (Japanese chess) as well as Go, and convincingly defeated a world-champion program in each case.",
+  "date": "2026-05-24",
+  "tags": [
+    "reinforcement learning",
+    "self-play",
+    "monte-carlo tree search",
+    "game playing",
+    "deep learning"
+  ],
+  "source": {
+    "name": "arXiv 1712.01815",
+    "url": "https://arxiv.org/abs/1712.01815"
+  },
+  "images": [
+    {
+      "src": "/papers/mastering-chess-and-shogi-by-self-play/hero.webp",
+      "alt": "A pixel chessboard sits at the root of forking forest trails, one trail worn clay-orange with heavy footprints while the others stay faint sage green, an ink arrow marking the most-walked branch, showing that the search explores the most promising lines hardest and plays the branch it walked most.",
+      "width": 2048,
+      "height": 1152,
+      "caption": "The search grows a tree out of one position, walks the promising lines hardest, and plays the branch it visited most."
+    },
+    {
+      "src": "/papers/mastering-chess-and-shogi-by-self-play/puct.webp",
+      "alt": "A pixel hiker at a forked trail weighs three things, a signpost map for the net's hunch, a worn footpath for the move's track record, and a fresh untouched path for the rarely-tried bonus, three ink arrows converging into one clay-orange chosen arrow, showing that each step down the tree balances prior, value, and visit count.",
+      "width": 2048,
+      "height": 1536,
+      "caption": "Every step down the tree balances the net's hunch, the move's track record, and a bonus for moves barely tried."
+    },
+    {
+      "src": "/papers/mastering-chess-and-shogi-by-self-play/self-play-loop.webp",
+      "alt": "A ring of three pixel tiles joined by clay-orange arrows, a brain-chip for the neural net, a small search tree, and a scroll of self-play games, showing that search makes the net stronger and the stronger net makes the search smarter, round after round.",
+      "width": 2048,
+      "height": 2048,
+      "caption": "Search sharpens the net, the sharper net guides better search, and self-play games feed the next round."
+    }
+  ],
+  "hasVisualization": true
+}
