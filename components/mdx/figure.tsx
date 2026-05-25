@@ -12,7 +12,7 @@ export function MdxImage({ src, alt }: ImgHTMLAttributes<HTMLImageElement>) {
       src={src}
       alt={alt ?? ""}
       loading="lazy"
-      className="border-border mx-auto my-8 w-full rounded-xl border"
+      className="mx-auto my-8 w-full rounded-xl"
     />
   );
 }
