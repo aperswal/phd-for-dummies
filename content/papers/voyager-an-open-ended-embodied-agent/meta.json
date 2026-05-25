@@ -4,35 +4,42 @@
   "headline": "A Minecraft agent that learns forever by having GPT-4 write code for each new task, debug it against the game, and save the working programs as reusable skills that compose into harder ones.",
   "abstract": "We introduce VOYAGER, the first LLM-powered embodied lifelong learning agent in Minecraft that continuously explores the world, acquires diverse skills, and makes novel discoveries without human intervention. VOYAGER consists of three key components: 1) an automatic curriculum that maximizes exploration, 2) an ever-growing skill library of executable code for storing and retrieving complex behaviors, and 3) a new iterative prompting mechanism that incorporates environment feedback, execution errors, and self-verification for program improvement. VOYAGER interacts with GPT-4 via blackbox queries, which bypasses the need for model parameter fine-tuning. The skills developed by VOYAGER are temporally extended, interpretable, and compositional, which compounds the agent's abilities rapidly and alleviates catastrophic forgetting. Empirically, VOYAGER shows strong in-context lifelong learning capability and exhibits exceptional proficiency in playing Minecraft. It obtains 3.3x more unique items, travels 2.3x longer distances, and unlocks key tech tree milestones up to 15.3x faster than prior SOTA. VOYAGER is able to utilize the learned skill library in a new Minecraft world to solve novel tasks from scratch, while other techniques struggle to generalize.",
   "date": "2026-05-24",
-  "tags": ["llm agents", "embodied agents", "lifelong learning", "code generation", "minecraft", "automatic curriculum"],
+  "tags": [
+    "llm agents",
+    "embodied agents",
+    "lifelong learning",
+    "code generation",
+    "minecraft",
+    "automatic curriculum"
+  ],
   "source": {
     "name": "arXiv 2305.16291",
     "url": "https://arxiv.org/abs/2305.16291"
   },
   "images": [
     {
-      "src": "/papers/voyager-an-open-ended-embodied-agent/hero.webp",
+      "src": "https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/voyager-an-open-ended-embodied-agent/hero.webp",
       "alt": "A pixel-art explorer stands at a crafting workbench while a recipe book beside them fills with tool icons and a stepped tech-tree path climbs toward a glowing diamond, with ink loop arrows joining craft-and-test to learn-and-save, showing that the agent keeps writing, testing, and saving skills so each new one builds on the last.",
       "width": 2752,
       "height": 1536,
       "caption": "The agent crafts and tests a program, saves the working one as a skill, and uses it to climb toward harder goals."
     },
     {
-      "src": "/papers/voyager-an-open-ended-embodied-agent/skill-library.webp",
+      "src": "https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/voyager-an-open-ended-embodied-agent/skill-library.webp",
       "alt": "Three small sage pixel icons, a stick, an iron ingot, and a crafting table, flow along ink arrows into one large clay-orange iron pickaxe labelled new skill, showing that a new skill is written by reusing skills already saved in the library.",
       "width": 2400,
       "height": 1792,
       "caption": "A new skill is short to write because it just calls the simpler skills already in the library."
     },
     {
-      "src": "/papers/voyager-an-open-ended-embodied-agent/iterative-prompting.webp",
+      "src": "https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/voyager-an-open-ended-embodied-agent/iterative-prompting.webp",
       "alt": "Three stacked pixel panels joined by ink arrows, a code scroll with a red cross, an error note reading ERROR BUG, and a fixed code scroll with a green check labelled FIXED APPROVED, showing that the agent reads the error, rewrites the program, and a critic confirms it worked before the skill is saved.",
       "width": 1792,
       "height": 2400,
       "caption": "The agent reads the error trace, fixes the program, and a self-verification critic confirms the task is done before it commits."
     },
     {
-      "src": "/papers/voyager-an-open-ended-embodied-agent/curriculum.webp",
+      "src": "https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/voyager-an-open-ended-embodied-agent/curriculum.webp",
       "alt": "On the left a clay-orange pixel climber steps up an orderly staircase under a clean arrow labelled reachable step, while on the right a slate pixel climber sits stuck low among tangled arrows labelled random jump, showing that proposing the next reachable task climbs the tech tree while a random task order stalls.",
       "width": 2400,
       "height": 1792,

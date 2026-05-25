@@ -365,7 +365,8 @@ export function LanguageModelsAreFewShotLearners() {
             </div>
             {stats.overBudget && (
               <span className="text-xs" style={{ color: ACCENT }}>
-                The prompt overflows the window. The earliest examples fall out.
+                ⚠ The prompt overflows the window. The earliest examples fall
+                out.
               </span>
             )}
           </div>
@@ -388,9 +389,9 @@ export function LanguageModelsAreFewShotLearners() {
           onStep={onStep}
           onReset={onReset}
         />
-        <label className="flex w-40 flex-col gap-1 text-xs">
+        <label className="flex w-44 flex-col gap-1 text-xs">
           <span className="text-muted-foreground flex items-center justify-between">
-            <span>Speed</span>
+            <span>Playback pace</span>
             <span className="text-foreground font-mono">
               {speed.toFixed(1)}x
             </span>
@@ -404,8 +405,11 @@ export function LanguageModelsAreFewShotLearners() {
             onChange={(event) => setSpeed(Number(event.target.value))}
             className="h-1.5 w-full cursor-pointer"
             style={{ accentColor: ACCENT }}
-            aria-label="Playback speed"
+            aria-label="Playback pace — how fast test queries arrive during autoplay"
           />
+          <span className="text-muted-foreground/70">
+            controls query rate, not in the paper
+          </span>
         </label>
       </div>
 
@@ -444,28 +448,6 @@ export function LanguageModelsAreFewShotLearners() {
               onClick={() => intervene({ type: "toggleDescription" })}
             />
           </div>
-          <label className="flex flex-col gap-1 text-xs">
-            <span className="text-muted-foreground flex items-center justify-between">
-              <span>Seed</span>
-              <span className="text-foreground font-mono">{config.seed}</span>
-            </span>
-            <input
-              type="range"
-              min={1}
-              max={20}
-              step={1}
-              value={config.seed}
-              onChange={(event) =>
-                intervene({
-                  type: "setSeed",
-                  value: Number(event.target.value),
-                })
-              }
-              className="h-1.5 w-full cursor-pointer"
-              style={{ accentColor: ACCENT }}
-              aria-label="Random seed"
-            />
-          </label>
           <p className="text-muted-foreground text-xs">{task.note}</p>
         </SimPanel>
 
@@ -481,45 +463,55 @@ export function LanguageModelsAreFewShotLearners() {
               {stats.correct}/{stats.attempted} correct
             </Badge>
           </div>
-          <div className="ring-foreground/10 max-h-44 overflow-y-auto rounded-lg ring-1">
-            <table className="w-full text-left text-xs">
-              <thead className="bg-card text-muted-foreground sticky top-0">
-                <tr>
-                  <th className="px-2 py-1 font-medium">query</th>
-                  <th className="px-2 py-1 font-medium">model</th>
-                  <th className="px-2 py-1 text-right font-medium">answer</th>
-                </tr>
-              </thead>
-              <tbody className="font-mono">
-                {state.trials.length === 0 ? (
+          <div className="relative">
+            <div className="ring-foreground/10 max-h-44 overflow-y-auto rounded-lg ring-1">
+              <table className="w-full text-left text-xs">
+                <thead className="bg-card text-muted-foreground sticky top-0">
                   <tr>
-                    <td className="text-muted-foreground px-2 py-2" colSpan={3}>
-                      Press play to send test queries through the prompt.
-                    </td>
+                    <th className="px-2 py-1 font-medium">query</th>
+                    <th className="px-2 py-1 font-medium">model</th>
+                    <th className="px-2 py-1 text-right font-medium">
+                      answer
+                    </th>
                   </tr>
-                ) : (
-                  [...state.trials].reverse().map((trial) => (
-                    <tr
-                      key={trial.id}
-                      className={
-                        trial.correct
-                          ? "text-foreground"
-                          : "text-muted-foreground"
-                      }
-                    >
-                      <td className="px-2 py-1">{trial.prompt}</td>
-                      <td className="px-2 py-1">{trial.guess}</td>
+                </thead>
+                <tbody className="font-mono">
+                  {state.trials.length === 0 ? (
+                    <tr>
                       <td
-                        className="px-2 py-1 text-right"
-                        style={{ color: trial.correct ? SAGE : ACCENT }}
+                        className="text-muted-foreground px-2 py-2"
+                        colSpan={3}
                       >
-                        {trial.correct ? "correct" : `want ${trial.truth}`}
+                        Press play to send test queries through the prompt.
                       </td>
                     </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
+                  ) : (
+                    [...state.trials].reverse().map((trial) => (
+                      <tr
+                        key={trial.id}
+                        className={
+                          trial.correct
+                            ? "text-foreground"
+                            : "text-muted-foreground"
+                        }
+                      >
+                        <td className="px-2 py-1">{trial.prompt}</td>
+                        <td className="px-2 py-1">{trial.guess}</td>
+                        <td
+                          className="px-2 py-1 text-right"
+                          style={{ color: trial.correct ? SAGE : ACCENT }}
+                        >
+                          {trial.correct ? "✓ correct" : `✗ want ${trial.truth}`}
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+            {state.trials.length > 4 && (
+              <div className="from-background pointer-events-none absolute right-0 bottom-0 left-0 h-6 rounded-b-lg bg-gradient-to-t to-transparent" />
+            )}
           </div>
           <div className="flex flex-col gap-1">
             <span className="text-muted-foreground text-xs font-medium">
@@ -541,12 +533,15 @@ export function LanguageModelsAreFewShotLearners() {
       </div>
 
       <p className="text-muted-foreground text-xs">
-        The success rates here are fit to the paper&apos;s own numbers, GPT-3
-        175B going from 76.9% to 100% on 2-digit addition (Table 3.9) and random
-        insertion climbing 8% to 67% (Table 3.10), while reversed words stays
-        near zero. Each test query is a seeded coin flip against the predicted
-        rate, so the running accuracy lands on the curve over many trials, the
-        way the paper reports accuracy over 2,000 instances.
+        The success rates are fit to the paper&apos;s own numbers: GPT-3 175B
+        goes from 76.9% to 100% on 2-digit addition (Table 3.9) and random
+        insertion climbs 8% to 67% (Table 3.10), while reversed words stays near
+        zero. Each test query is a seeded coin flip against the predicted rate,
+        so the running accuracy lands on the curve over many trials, the way the
+        paper reports accuracy over 2,000 instances. Each preset uses a fixed
+        seed, so the same preset always produces the same trial sequence. The
+        playback-pace slider controls how fast queries arrive during autoplay; it
+        is not a concept in the paper.
       </p>
     </div>
   );

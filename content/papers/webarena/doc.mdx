@@ -2,7 +2,7 @@
 
 _A self-hostable web world plus 812 everyday tasks that score an agent on whether the website actually reached the goal, and the best GPT-4 agent finishes only 14% of what humans finish 78% of._
 
-![A pixel-art robot worker hands a finished web page with a filled cart and a completed task to a pixel-art inspector who stamps it approved with a magnifying glass, showing that WebArena scores an agent on whether the website actually reached the goal rather than on whether its clicks matched a script.](/papers/webarena/hero.webp)
+![A pixel-art robot worker hands a finished web page with a filled cart and a completed task to a pixel-art inspector who stamps it approved with a magnifying glass, showing that WebArena scores an agent on whether the website actually reached the goal rather than on whether its clicks matched a script.](https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/webarena/hero.webp)
 
 ## Read at your level
 
@@ -45,7 +45,7 @@ Now think about testing a robot that does this for you. The easy, lazy test is t
 
 Here's the one new idea for this section. A **functional correctness check** ignores the clicks and looks at the result. After the robot finishes, the test reads the website's own memory. Is the chair actually in the cart? Is the file actually saved? If yes, the robot passes, no matter which path it took.
 
-![Two hand-inked routes branch from one start tile and rejoin at one finished page, with an outcome stamp passing both in sage green and a script stamp failing the alternate in clay-orange, showing that functional scoring accepts any correct path while surface-form matching only accepts the reference.](/papers/webarena/two-paths.webp)
+![Two hand-inked routes branch from one start tile and rejoin at one finished page, with an outcome stamp passing both in sage green and a script stamp failing the alternate in clay-orange, showing that functional scoring accepts any correct path while surface-form matching only accepts the reference.](https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/webarena/two-paths.webp)
 
 WebArena is a set of four real, working websites you can run on your own computer, plus 812 jobs written in plain English, all graded this fair way. When they tested the strongest AI, GPT-4, it finished 14.41% of the jobs. People finished 78.24%. That gap is the whole point. These are jobs people do every day, and the AI flubs most of them.
 
@@ -83,7 +83,7 @@ Deployment cost is low to stand up and real to use. The four sites plus tools ru
 
 The expected reality check is blunt. The best configured agent, GPT-4 with reasoning, finishes 14.41% of tasks end-to-end. That's against 78.24% for humans on the same tasks. The failure modes are the useful part. The biggest one is an instruction artifact. When you tell the agent it may stop on impossible tasks (the unachievable hint), GPT-4 then wrongly declares 54.9% of feasible tasks impossible and quits. Remove the hint and feasible-task success rises, but now the agent hallucinates answers on the genuinely impossible ones. You can't win both with prompt wording alone.
 
-![A pixel-art robot holding a question-mark flag faces a chained locked door it correctly skips with a sage check and an open inviting door it wrongly skips with a clay-orange cross, showing that the permission to give up rescues impossible tasks but makes the agent quit feasible ones.](/papers/webarena/ua-hint.webp)
+![A pixel-art robot holding a question-mark flag faces a chained locked door it correctly skips with a sage check and an open inviting door it wrongly skips with a clay-orange cross, showing that the permission to give up rescues impossible tasks but makes the agent quit feasible ones.](https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/webarena/ua-hint.webp)
 
 The operating envelope to plan around: short, single-site tasks are the agent's best case; long-horizon tasks that cross sites and require backtracking are where it collapses. If you're building on top of an LLM agent today, treat web automation as assistive with a human checkpoint, not autonomous, and use WebArena to track whether your stack is closing the gap.
 
@@ -91,7 +91,7 @@ The operating envelope to plan around: short, single-site tasks are the agent's 
 
 The contribution sits at the intersection of three axes that prior benchmarks each compromise on: dynamic interaction, environment realism, and functional-correctness evaluation. MiniWoB++ and WebShop give dynamic interaction but on simplified or synthetic sites. Mind2Web and Form/QAWoB use realistic pages but freeze them as static states and score surface-form action matching. WebArena is the first to hit all three at once, and the gain is methodological, not architectural.
 
-![A tall sage-green pixel bar for humans towers over a short clay-orange pixel bar for the AI agent, with a dashed ink bracket marking the gap, showing that the best agent finishes only about a sixth of the everyday web tasks a human finishes.](/papers/webarena/gap.webp)
+![A tall sage-green pixel bar for humans towers over a short clay-orange pixel bar for the AI agent, with a dashed ink bracket marking the gap, showing that the best agent finishes only about a sixth of the everyday web tasks a human finishes.](https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/webarena/gap.webp)
 
 The reward design rewards scrutiny. For state-changing tasks they define `r_prog(s)`, a per-task program that reads intermediate and final states (a database query, an API call, a `document.querySelector` on the rendered page) and checks the trajectory ends in the intended configuration. This is a genuine advance over trajectory matching because it admits the full equivalence class of correct paths, which is exactly the set that surface-form scoring collapses. The chosen alternative they rejected, comparing to multiple reference trajectories, doesn't scale because the number of valid paths is unbounded. Reading the world is the only metric that generalizes.
 

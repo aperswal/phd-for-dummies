@@ -2,7 +2,7 @@
 
 _A language model's error drops along a clean, predictable line as you grow its size, its data, or its compute, and the best way to spend a fixed compute budget is to mostly build a bigger model._
 
-![A row of clay-orange dots descends in a dead-straight line down a pixel mountain slope from upper-left to lower-right, with inked loss and scale axes, showing that a model's error falls along a clean straight power law as you grow its scale.](/papers/scaling-laws/hero.webp)
+![A row of clay-orange dots descends in a dead-straight line down a pixel mountain slope from upper-left to lower-right, with inked loss and scale axes, showing that a model's error falls along a clean straight power law as you grow its scale.](https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/scaling-laws/hero.webp)
 
 ## Read at your level
 
@@ -67,7 +67,7 @@ L(N, D) = [ (Nc / N)^(αN/αD) + Dc / D ]^αD
 
 Read the two terms. The first depends only on N and is the floor you hit with infinite data. The second depends only on D and grows as the dataset shrinks. When D is huge the second term vanishes and you recover L(N). When D is small the second term dominates and the model overfits, learning the training set instead of the language.
 
-![A large clay-orange pixel sponge towers over a tiny sage-green puddle, with an ink brace and arrow marking the gap, showing that a model far too big for its dataset runs out of data to learn from and starts to overfit.](/papers/scaling-laws/overfitting.webp)
+![A large clay-orange pixel sponge towers over a tiny sage-green puddle, with an ink brace and arrow marking the gap, showing that a model far too big for its dataset runs out of data to learn from and starts to overfit.](https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/scaling-laws/overfitting.webp)
 
 The overfitting penalty depends almost entirely on the ratio N^0.74 / D. That single number tells you whether a model is starved for data. The practical rule that falls out is that to grow a model 8x without overfitting, you only need about 5x more data. Data needs grow slower than model size, which is the seed of the headline finding.
 
@@ -81,7 +81,7 @@ The problem this solves is budget planning for training. Before this, you sized 
 
 What it costs you to use is almost nothing. The inputs are parameter count, token count, and compute, all of which you already track. The fits in the paper are for Transformers on a WebText-style corpus, so treat the exact constants as a starting point and refit on your own data and tokenizer, since those constants have no fundamental meaning and shift with vocabulary.
 
-![A pixel sack of flour labelled compute splits with a thick clay-orange arrow into a large layer cake labelled model and a thin sage arrow into a tiny scoop of batter labelled data, showing that a fixed compute budget is best spent mostly on a bigger model and only a little on more data.](/papers/scaling-laws/allocation.webp)
+![A pixel sack of flour labelled compute splits with a thick clay-orange arrow into a large layer cake labelled model and a thin sage arrow into a tiny scoop of batter labelled data, showing that a fixed compute budget is best spent mostly on a bigger model and only a little on more data.](https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/scaling-laws/allocation.webp)
 
 The expected improvement over the old instinct is large and counterintuitive. The old instinct trained a modest model on as much data as possible, to convergence. This paper says do the opposite. With a fixed budget, train a much bigger model, on relatively little data, and stop early, well short of convergence. Bigger models are more sample-efficient, so they reach a given loss in fewer steps and on fewer tokens. The optimal model size grows about 5x for every 10x of compute, while the data processed grows only about 2x.
 

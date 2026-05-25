@@ -2,7 +2,7 @@
 
 _A real computer you can hand an AI agent any task on, then grade by running a script that checks the machine afterward, which shows agents plan well but miss the clicks._
 
-![A pixel-art desktop screen with a small button labelled go, a correct checklist plan beside it, and a pointing hand whose cursor lands just off the button in a clay-orange burst, marked miss, showing that the agent knows what to do but clicks the wrong spot.](/papers/osworld/hero.webp)
+![A pixel-art desktop screen with a small button labelled go, a correct checklist plan beside it, and a pointing hand whose cursor lands just off the button in a clay-orange burst, marked miss, showing that the agent knows what to do but clicks the wrong spot.](https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/osworld/hero.webp)
 
 ## Read at your level
 
@@ -66,13 +66,13 @@ task = (S, O, A, T, R)
 
 Walk it left to right. The agent gets an observation, emits one action as a Python string, and the virtual machine executes it for real. The loop runs until the agent emits `DONE` or `FAIL`, or it hits the 15-step cap. The reward is the part that makes this trustworthy. Instead of comparing the agent's action to a stored "correct" action, OSWorld runs a task-specific script on the machine afterward. For "delete the Amazon cookies," the script reads the browser's cookie store and checks they're gone. There are 134 of these unique evaluation functions, so the benchmark grades the outcome, not the path.
 
-![A setup scroll feeds a chunky pixel computer monitor, a clay-orange check-mark stamp grades the screen on the right, and thin ink arrows loop the cycle back, labelled setup and grade, showing that the benchmark boots a real machine, lets the agent drive it, then runs a script to score the final state.](/papers/osworld/loop.webp)
+![A setup scroll feeds a chunky pixel computer monitor, a clay-orange check-mark stamp grades the screen on the right, and thin ink arrows loop the cycle back, labelled setup and grade, showing that the benchmark boots a real machine, lets the agent drive it, then runs a script to score the final state.](https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/osworld/loop.webp)
 
 The result is the gap. Humans score 72.36% overall. The strongest agent configuration, GPT-4 reading an accessibility tree, scores 12.24%. Raw screenshots alone drop to about 5%. The reason is grounding, which means turning "click the Save button" into the exact pixel coordinate of that button. Vision-language models are weak at it. The authors found more than 75% of failures are mouse-click inaccuracies, and a second failure they call the environmental noise dilemma, where a stray click opens a pop-up the agent then doesn't know how to close.
 
 The limitation falls out of the math. A multi-step task succeeds only if every grounded action lands. If each click lands with probability `p` below 1, and a task needs `k` clicks, the chance of finishing decays like `p^k`. That's why single-app tasks score 13.74% while multi-app workflows score 6.57%. More steps, more chances to miss, and the agent burns its 15-step budget on repeated misclicks.
 
-![A row of pixel stepping stones across a stream, the first two solid and clay-orange, the far ones cracked and sinking, with a dashed ink path hopping across them, labelled steps, showing that each extra action is another chance to slip so long tasks rarely reach the far side.](/papers/osworld/decay.webp)
+![A row of pixel stepping stones across a stream, the first two solid and clay-orange, the far ones cracked and sinking, with a dashed ink path hopping across them, labelled steps, showing that each extra action is another chance to slip so long tasks rarely reach the far side.](https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/osworld/decay.webp)
 
 ## For an industry pro
 
@@ -119,7 +119,7 @@ The action space is real mouse and keyboard through pyautogui, like `click(x, y)
 
 **Window perturbations.** The sharpest robustness finding. On a 28-task subset agents handled at 50.79%, the authors disturbed the window and watched success fall. The simulation above applies these exact drops as a multiplier on the landing chance.
 
-![A faint dashed outline of a window where it used to be, the real pixel window now slid to the right, and a cursor still clicking the empty old spot in a clay-orange burst, labelled was here and moved, showing that a small window nudge makes the agent's memorized click land on nothing.](/papers/osworld/perturb.webp)
+![A faint dashed outline of a window where it used to be, the real pixel window now slid to the right, and a cursor still clicking the empty old spot in a clay-orange burst, labelled was here and moved, showing that a small window nudge makes the agent's memorized click land on nothing.](https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/osworld/perturb.webp)
 
 | Window state | Success rate |
 | --- | --- |

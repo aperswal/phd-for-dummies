@@ -2,7 +2,7 @@
 
 _Grow a game tree one random playout at a time, steer each playout toward the move most likely to be best so you never fully give up on anything, and read each node's value as a blend that slides from the average toward the best as the playouts pile up._
 
-![A small pixel-art tree of nodes grows from a root at the top, with one clay-orange path lit from the root down to a single leaf and a thin ink arrow curling back up the same path, while the other branches stay sage green, showing that the search grows one random playout at a time by descending to a promising leaf and carrying the result back up.](/papers/efficient-selectivity-and-backup-operators/hero.webp)
+![A small pixel-art tree of nodes grows from a root at the top, with one clay-orange path lit from the root down to a single leaf and a thin ink arrow curling back up the same path, while the other branches stay sage green, showing that the search grows one random playout at a time by descending to a promising leaf and carrying the result back up.](https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/efficient-selectivity-and-backup-operators/hero.webp)
 
 ## Read at your level
 
@@ -76,13 +76,13 @@ u_i = exp( -2.4 · (μ_0 - μ_i) / sqrt(2·(σ_0² + σ_i²)) ) + ε_i
 
 The exponential is a smooth approximation of the probability that move i beats the best move, given their means and variances. A move that's far below the best, or whose value is pinned down tightly (small σ), gets a small urgency. The ε_i term is a floor that keeps every urgency above zero, so no move is ever fully abandoned.
 
-![Three pixel-art dig sites in a row, two shallow sage holes with a few pebbles and one deeper hole with a glowing clay-orange gem half-buried in dirt, with ink arrows still sending probes into the gem hole, showing that a good move can look bad at first so the search keeps probing it instead of giving up.](/papers/efficient-selectivity-and-backup-operators/selectivity.webp)
+![Three pixel-art dig sites in a row, two shallow sage holes with a few pebbles and one deeper hole with a glowing clay-orange gem half-buried in dirt, with ink arrows still sending probes into the gem hole, showing that a good move can look bad at first so the search keeps probing it instead of giving up.](https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/efficient-selectivity-and-backup-operators/selectivity.webp)
 
 That floor is the whole point of "selectivity" over hard "pruning." Earlier methods cut a move off for good once it looked bad. The danger, which the paper names directly, is that the central limit theorem doesn't really apply inside a tree, because as the tree grows the move probabilities shift and the playout outcomes aren't drawn from one fixed distribution. A move can look weak until a deeper search uncovers a killer follow-up. Cut it early and you lose it. Keep a floor under it and the search can come back.
 
 **Backup (how you score a node).** A leaf you've barely visited uses the plain mean of its playouts, value = Σ/S. But a well-visited internal node shouldn't use the mean, because the mean of a node mixes in its bad moves, and once you've searched a lot you'll only ever play the best move from here, so the node is worth roughly the value of its best child. The fix is an operator that slides from one to the other.
 
-![A hand-inked dial labelled value sits between a pixel-art scale weighing pebbles on the left, labelled average, and a glowing clay-orange gem on a pedestal on the right, labelled best, with the pointer sliding toward the gem, showing that a node's backed-up value starts as the average of its playouts and slides toward the best one as more playouts arrive.](/papers/efficient-selectivity-and-backup-operators/backup-blend.webp)
+![A hand-inked dial labelled value sits between a pixel-art scale weighing pebbles on the left, labelled average, and a glowing clay-orange gem on a pedestal on the right, labelled best, with the pointer sliding toward the gem, showing that a node's backed-up value starts as the average of its playouts and slides toward the best one as more playouts arrive.](https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/efficient-selectivity-and-backup-operators/backup-blend.webp)
 
 Early, with few playouts, the mean is the honest estimate, because the best-looking child might just be lucky and taking the max would overestimate. Late, with many playouts, the best child is the honest estimate, because you've confirmed which one it is and you'll only play that one. The paper's "Mix" operator is a weighted blend of the robust max and the mean whose weight shifts toward the max as the visit count grows, which the experiments found beats either extreme.
 
@@ -141,7 +141,7 @@ The mix weights were fit by a temporal-difference-style procedure across 1,500 s
 
 **Results with effect sizes.** Table 1 measures backup error against a "true" value from twice as many simulations. The mean operator is biased low, the max biased high, the mean more accurate at low simulation counts and the max more accurate at high counts, exactly as the bias argument predicts, and the mix beats both across the range. Crazy Stone won the 10th KGS computer-Go tournament over 8 opponents including GNU Go, Neuro Go, and Aya. In direct matches it beat Indigo 2005, a strong Monte-Carlo Go program, 61 percent to its opponents over 100 games, while still losing to the knowledge-rich GNU Go at equal time and closing the gap as time control grew, which shows the method scales with compute.
 
-![A pixel-art hatchet chops through a green branch marked pruned while a glowing clay-orange gem hangs on that very branch, about to fall away, showing that cutting off a move on a few unlucky early playouts can throw away the move that was secretly best.](/papers/efficient-selectivity-and-backup-operators/prune-trap.webp)
+![A pixel-art hatchet chops through a green branch marked pruned while a glowing clay-orange gem hangs on that very branch, about to fall away, showing that cutting off a move on a few unlucky early playouts can throw away the move that was secretly best.](https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/efficient-selectivity-and-backup-operators/prune-trap.webp)
 
 Switch the simulation's selectivity to **Pruning** to watch the danger directly. Progressive pruning cuts a move once its score falls far enough below the best, and on the hidden-gem tree it cuts the gem after a few unlucky playouts and never reconsiders it. Coulom's rule, with the ε floor, keeps a thin stream of playouts flowing to that move and recovers it.
 

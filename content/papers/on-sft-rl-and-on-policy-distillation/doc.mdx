@@ -2,7 +2,7 @@
 
 _Every way to train a language model after pretraining is the same gradient with three dials, and the shape of that gradient in parameter space is what makes a step fast, safe, or prone to collapse._
 
-![Three framed pixel-art tug-of-war panels in a row, where the left team pulls in scattered directions and the cart barely moves, the middle team pulls together in a fan and the cart rolls far, and the right team has one huge clay-orange rope yanking the cart off a cliff, showing that SFT, RL, and self-distillation are three different shapes of pulling force and the shape decides the outcome.](/papers/on-sft-rl-and-on-policy-distillation/hero.webp)
+![Three framed pixel-art tug-of-war panels in a row, where the left team pulls in scattered directions and the cart barely moves, the middle team pulls together in a fan and the cart rolls far, and the right team has one huge clay-orange rope yanking the cart off a cliff, showing that SFT, RL, and self-distillation are three different shapes of pulling force and the shape decides the outcome.](https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/on-sft-rl-and-on-policy-distillation/hero.webp)
 
 ## Read at your level
 
@@ -57,7 +57,7 @@ Start with the two endpoints. SFT trains on completions from a fixed teacher. Th
 
 RL is the opposite. The model samples its own rollouts, the gradient updates the policy, and the next batch comes from the improved policy. Improvements compound back into the sampling distribution. The ceiling isn't set by any data. It's set by whatever the verifier can grade.
 
-![A pixel-art chart where a sage-green trail rises fast then flattens out under a dashed fence-topped ceiling line while a clay-orange trail starts slow then steepens and crosses above both near the right, with the crossing circled, showing that off-policy methods plateau below the teacher ceiling while reinforcement learning starts slow but is unbounded by it.](/papers/on-sft-rl-and-on-policy-distillation/tipping-point.webp)
+![A pixel-art chart where a sage-green trail rises fast then flattens out under a dashed fence-topped ceiling line while a clay-orange trail starts slow then steepens and crosses above both near the right, with the crossing circled, showing that off-policy methods plateau below the teacher ceiling while reinforcement learning starts slow but is unbounded by it.](https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/on-sft-rl-and-on-policy-distillation/tipping-point.webp)
 
 That gap creates a tipping point. When the model is far below the teacher and teacher data is cheap, SFT buys capability cheaply, because you're learning things you don't have from a source that does. As you approach the teacher, SFT examples get less informative, and the model's own lucky rollouts start producing genuinely new strategies that an RL gradient can extract. Past the tipping point, rollout compute is better spent on RL than on more SFT. That's the whole "SFT first, then RL" recipe in one sentence.
 
@@ -85,7 +85,7 @@ The deeper win in same-family distillation isn't just cheaper sampling. It's on-
 
 The contribution here is framing, not a new algorithm. SFT, RL, OPD, and self-distillation are special cases of one token-level policy gradient, and a gradient-geometry analysis sorts them into a small taxonomy that predicts which ones are stable and why.
 
-![Three brass pixel-art control dials on a warm wooden workshop panel with sage-green trim, each clay-orange pointer set to a different angle with inked tick marks, showing that every post-training method is just a setting of three dials for how the data is sampled, who scores each token, and where the teaching comes from.](/papers/on-sft-rl-and-on-policy-distillation/three-dials.webp)
+![Three brass pixel-art control dials on a warm wooden workshop panel with sage-green trim, each clay-orange pointer set to a different angle with inked tick marks, showing that every post-training method is just a setting of three dials for how the data is sampled, who scores each token, and where the teaching comes from.](https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/on-sft-rl-and-on-policy-distillation/three-dials.webp)
 
 The meta-algorithm has three dials.
 
@@ -120,7 +120,7 @@ The author's own read is that interpolating alpha and lambda in the interior is 
 
 **The geometry, method by method.** RL is sparse and unbiased. In a GRPO-style step, every token gets an advantage, the group baseline makes the advantages roughly zero-mean, and most token-arrows are noise that happened to share a trajectory with a reward. Average a large batch and the noise cancels, leaving the small consistent component along directions that correlate with reward. SFT is dense and biased but diffuse, every token gets a one-hot label so the arrows are dense and all point toward the data, but the data is varied so the bias spreads across many slightly different directions.
 
-![A row of evenly short pixel-art figures on a stage with one single towering clay-orange bar near the middle, a dashed cap line drawn across near its top and a downward ink arrow over it, showing that one pivot token the teacher loves and the student barely supports dominates the training loss until a per-token clip caps it.](/papers/on-sft-rl-and-on-policy-distillation/pivot-token.webp)
+![A row of evenly short pixel-art figures on a stage with one single towering clay-orange bar near the middle, a dashed cap line drawn across near its top and a downward ink arrow over it, showing that one pivot token the teacher loves and the student barely supports dominates the training loss until a per-token clip caps it.](https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/on-sft-rl-and-on-policy-distillation/pivot-token.webp)
 
 OPSD is the dangerous one. Consider a long math rollout the model got wrong because it missed one key move, the pivot token. For the model that token might have probability 0.01, but for a teacher conditioned on the answer it's 0.6, because once you know where the solution is going the right move is obvious. The per-token reverse KL between "student says 0.01" and "teacher says 0.6" is about log(0.6/0.01), roughly 4.1 nats, while a typical token contributes near zero. One token carries about a hundred times the loss, and that tug is neither cancelled nor spread. Load the **OPSD: collapse** preset to watch one pivot drag the averaged update past the safe radius.
 

@@ -16,7 +16,6 @@ const base: AlignParams = {
   step: 0,
   bottleneck: false,
   sharpness: 4,
-  seed: 0,
 };
 
 describe("soft-alignment attention", () => {

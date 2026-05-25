@@ -18,8 +18,6 @@ const base: AttentionParams = {
   scaling: true,
   causalMask: false,
   magnitude: 5,
-  temperature: 1,
-  seed: 0,
 };
 
 describe("scaled dot-product attention", () => {

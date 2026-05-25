@@ -2,8 +2,10 @@
 
 import {
   useCallback,
+  useEffect,
   useMemo,
   useReducer,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
@@ -67,6 +69,7 @@ function Slider({
         max={max}
         step={step}
         value={value}
+        aria-label={label}
         onChange={(event) => onChange(Number(event.target.value))}
         className="h-1.5 w-full cursor-pointer"
         style={{ accentColor: ACCENT }}
@@ -124,6 +127,7 @@ export function MonteCarloTreeSearch() {
   const [playing, setPlaying] = useState(false);
   const [speed, setSpeed] = useState(1.5);
   const [inspect, setInspect] = useState<number | null>(null);
+  const eventLogRef = useRef<HTMLDivElement>(null);
 
   const scenario = getScenario(state.scenarioId);
   const tree = scenario.tree;
@@ -138,6 +142,13 @@ export function MonteCarloTreeSearch() {
     (action: Intervention) => dispatch({ kind: "intervene", action }),
     [],
   );
+
+  // Scroll the event log to the top whenever new entries arrive (newest-first list).
+  useEffect(() => {
+    if (eventLogRef.current) {
+      eventLogRef.current.scrollTop = 0;
+    }
+  }, [state.events.length]);
 
   const resetClock = useFixedTimestep(playing && !onBudget, 900 / speed, () =>
     dispatch({ kind: "tick" }),
@@ -199,7 +210,7 @@ export function MonteCarloTreeSearch() {
             color: correct ? SAGE : ACCENT,
           }}
         >
-          {correct ? "plays the true best move" : "not yet the best move"}
+          {correct ? "✓ plays the true best move" : "✗ not yet the best move"}
         </Badge>
       </div>
 
@@ -225,9 +236,9 @@ export function MonteCarloTreeSearch() {
                 y1={a.y}
                 x2={b.x}
                 y2={b.y}
-                stroke={onPath ? ACCENT : "var(--color-border)"}
+                stroke={onPath ? "var(--color-foreground)" : "var(--color-border)"}
                 strokeWidth={onPath ? 3 : 1 + Math.min(visits, 30) * 0.18}
-                strokeOpacity={onPath ? 0.95 : 0.45}
+                strokeOpacity={onPath ? 0.85 : 0.45}
               />
             );
           })}
@@ -276,7 +287,7 @@ export function MonteCarloTreeSearch() {
                   fillOpacity={stat.visits === 0 ? 0.5 : 0.92}
                   stroke={
                     onPath
-                      ? ACCENT
+                      ? "var(--color-foreground)"
                       : node.id === inspect
                         ? "var(--color-foreground)"
                         : "transparent"
@@ -318,11 +329,11 @@ export function MonteCarloTreeSearch() {
           onPlayPause={onPlayPause}
           onStep={onStep}
           onReset={onReset}
-          disabled={onBudget && !playing && state.completed === 0}
+          disabled={onBudget}
         />
-        <div className="w-40">
+        <div className="w-40 min-w-32">
           <Slider
-            label="Speed"
+            label="Playback pace"
             value={speed}
             min={0.5}
             max={4}
@@ -342,7 +353,7 @@ export function MonteCarloTreeSearch() {
       <div className="grid gap-4 sm:grid-cols-2">
         <Panel title="Search controls">
           <Slider
-            label="Exploration c_puct"
+            label="Exploration c_puct — how much the search favors rarely-tried moves"
             value={state.params.cPuct}
             min={0}
             max={5}
@@ -351,7 +362,7 @@ export function MonteCarloTreeSearch() {
             onChange={(value) => intervene({ type: "setCPuct", value })}
           />
           <Slider
-            label="Root noise (Dirichlet mix)"
+            label="Root noise — Dirichlet exploration mix at the root (0 = off)"
             value={state.params.rootNoise}
             min={0}
             max={1}
@@ -364,7 +375,7 @@ export function MonteCarloTreeSearch() {
             onChange={(value) => intervene({ type: "setRootNoise", value })}
           />
           <Slider
-            label="Simulation budget"
+            label="Simulation budget — total look-aheads before a move is chosen"
             value={state.params.simBudget}
             min={4}
             max={120}
@@ -372,22 +383,9 @@ export function MonteCarloTreeSearch() {
             display={String(state.params.simBudget)}
             onChange={(value) => intervene({ type: "setSimBudget", value })}
           />
-          <Slider
-            label="Seed (sets the noise stream)"
-            value={state.params.seed}
-            min={0}
-            max={20}
-            step={1}
-            display={String(state.params.seed)}
-            onChange={(value) => intervene({ type: "setSeed", value })}
-          />
-          <p className="text-muted-foreground text-xs">
-            The seed only changes the run when root noise is on, and only takes
-            effect before the first simulation.
-          </p>
         </Panel>
 
-        <Panel title="Root moves and the inside">
+        <Panel title="Root moves">
           <div className="flex flex-col gap-1.5">
             {moves.map((move) => {
               const isChosen = chosen?.id === move.id;
@@ -453,33 +451,49 @@ export function MonteCarloTreeSearch() {
             <span className="text-muted-foreground text-xs font-medium">
               Event log
             </span>
-            <div className="ring-foreground/10 max-h-28 overflow-y-auto rounded-lg ring-1">
-              {state.events.length === 0 ? (
-                <p className="text-muted-foreground px-2 py-1.5 text-xs">
-                  Step or play to start the log. Click an entry to rewind there.
-                </p>
-              ) : (
-                <ul className="text-xs">
-                  {[...state.events].reverse().map((event) => (
-                    <li key={event.id}>
-                      <button
-                        type="button"
-                        className="text-muted-foreground hover:bg-foreground/5 w-full px-2 py-1 text-left font-mono"
-                        onClick={() => {
-                          setPlaying(false);
-                          resetClock();
-                          intervene({
-                            type: "restore",
-                            snapshot: event.snapshot,
-                            label: `rewind to sim ${event.sim}`,
-                          });
-                        }}
-                      >
-                        {event.id}. {event.label}
-                      </button>
-                    </li>
-                  ))}
-                </ul>
+            <div className="relative">
+              <div
+                ref={eventLogRef}
+                className="ring-foreground/10 max-h-28 overflow-y-auto rounded-lg ring-1"
+              >
+                {state.events.length === 0 ? (
+                  <p className="text-muted-foreground px-2 py-1.5 text-xs">
+                    Step or play to start the log. Click an entry to rewind
+                    there.
+                  </p>
+                ) : (
+                  <ul className="text-xs">
+                    {[...state.events].reverse().map((event) => (
+                      <li key={event.id}>
+                        <button
+                          type="button"
+                          className="text-muted-foreground hover:bg-foreground/5 w-full px-2 py-1 text-left font-mono"
+                          onClick={() => {
+                            setPlaying(false);
+                            resetClock();
+                            intervene({
+                              type: "restore",
+                              snapshot: event.snapshot,
+                              label: `rewind to sim ${event.sim}`,
+                            });
+                          }}
+                        >
+                          {event.id}. {event.label}
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+              {state.events.length > 0 && (
+                <div
+                  className="pointer-events-none absolute bottom-0 left-0 right-0 h-6 rounded-b-lg"
+                  style={{
+                    background:
+                      "linear-gradient(to bottom, transparent, var(--color-background))",
+                  }}
+                  aria-hidden="true"
+                />
               )}
             </div>
           </div>
@@ -490,10 +504,11 @@ export function MonteCarloTreeSearch() {
         This runs the paper&apos;s PUCT search over a fixed nine-node game tree,
         a stand-in for chess where the real tree holds millions of positions.
         The network&apos;s prior P and value v are hand-set per node so the
-        patterns are legible, where AlphaZero learns those numbers from
-        self-play. The search reads the network&apos;s value at each leaf, not
-        the true outcome, so a wrong, under-explored net plays the wrong move
-        exactly as it would in the full game.
+        patterns are legible; AlphaZero learns those numbers from self-play.
+        The search reads the network&apos;s value at each leaf, not the true
+        outcome, so a wrong, under-explored net plays the wrong move exactly as
+        it would in the full game. The run is deterministic: same scenario and
+        same controls always produce the same sequence of simulations.
       </p>
     </div>
   );

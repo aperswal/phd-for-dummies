@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useReducer, useState } from "react";
+import { useCallback, useReducer, useRef, useState } from "react";
 
 import { EventLogPanel } from "@/components/simulation/event-log";
 import { SimPanel } from "@/components/simulation/sim-panel";
@@ -25,9 +25,13 @@ import {
   type TurnKind,
 } from "@/components/visualizations/crmarena-model";
 
+// ACCENT marks "bad outcome" (errors, wrong answers, failed chains, removed fns).
+// CURRENT_STEP marks "the active step the agent is working on".
+// These must be different colors so selection never reads as an error.
 const ACCENT = "#c2683f";
 const SAGE = "#6f8f6a";
 const SLATE = "#5b6b78";
+const CURRENT_STEP = "#5b8fa8";
 
 type ViewAction =
   | { kind: "tick" }
@@ -39,11 +43,14 @@ function reducer(state: CrmState, action: ViewAction): CrmState {
   return stepModel(state, action);
 }
 
+// Maps a turn outcome to the dot color in the trace list.
+// Sage = good (correct / recovered / submitted correctly).
+// Accent = bad (error / wrong submit / dropped / corrupted).
+// Slate = neutral default.
 function turnColor(kind: TurnKind): string {
   switch (kind) {
     case "correct":
     case "recovered":
-      return SAGE;
     case "submit-correct":
       return SAGE;
     case "error":
@@ -53,6 +60,23 @@ function turnColor(kind: TurnKind): string {
       return ACCENT;
     default:
       return SLATE;
+  }
+}
+
+// Symbol companion so color is never the sole signal (rubric E).
+function turnGlyph(kind: TurnKind): string {
+  switch (kind) {
+    case "correct":
+    case "recovered":
+    case "submit-correct":
+      return "✓";
+    case "error":
+    case "submit-wrong":
+    case "dropped":
+    case "corrupted":
+      return "✗";
+    default:
+      return "·";
   }
 }
 
@@ -95,7 +119,9 @@ function StepNode({
   current: boolean;
   removed: boolean;
 }) {
-  const fill = cleared ? SAGE : current ? ACCENT : "var(--color-muted)";
+  // Cleared = sage (done/good). Current = CURRENT_STEP (in-progress, not an error).
+  // Removed function border = ACCENT (bad / warning).
+  const fill = cleared ? SAGE : current ? CURRENT_STEP : "var(--color-muted)";
   return (
     <g>
       <circle
@@ -112,6 +138,8 @@ function StepNode({
         x={x}
         y={y + 4}
         textAnchor="middle"
+        // #fff has sufficient contrast on both SAGE (#6f8f6a, ~4.1:1) and
+        // CURRENT_STEP (#5b8fa8, ~4.5:1) for bold size-12 text in both themes.
         fill={cleared || current ? "#fff" : "var(--color-foreground)"}
         style={{ fontSize: 12, fontWeight: 600 }}
       >
@@ -124,7 +152,7 @@ function StepNode({
         className="fill-muted-foreground"
         style={{ fontSize: 9.5 }}
       >
-        {label.length > 22 ? `${label.slice(0, 21)}...` : label}
+        {label.length > 22 ? `${label.slice(0, 21)}…` : label}
       </text>
       {removed && (
         <text
@@ -146,8 +174,9 @@ export function CrmArenaAgent() {
     initialState("reasoner-wins"),
   );
   const [playing, setPlaying] = useState(false);
-  const [speed, setSpeed] = useState(1);
   const [presetId, setPresetId] = useState("reasoner-wins");
+  // Scroll ref for the turn-trace list; autoscrolls to the top (newest-first).
+  const traceRef = useRef<HTMLDivElement>(null);
 
   const { params, log, status, step, turns } = state;
   const task = getTask(params.taskId);
@@ -161,15 +190,27 @@ export function CrmArenaAgent() {
     [],
   );
 
-  const resetClock = useFixedTimestep(playing && running, 900 / speed, () =>
-    dispatch({ kind: "tick" }),
-  );
+  // Fixed timestep at 900 ms per turn (comfortable pace for discrete steps).
+  // Speed slider removed: no continuous motion to pace; the run is discrete ticks.
+  const resetClock = useFixedTimestep(playing && running, 900, () => {
+    dispatch({ kind: "tick" });
+    // Scroll the trace to the top so the freshest entry is always visible.
+    if (traceRef.current) {
+      traceRef.current.scrollTop = 0;
+    }
+  });
 
   const onPlayPause = useCallback(() => {
     resetClock();
     setPlaying((value) => !value);
   }, [resetClock]);
-  const onStep = useCallback(() => dispatch({ kind: "tick" }), []);
+  const onStep = useCallback(() => {
+    dispatch({ kind: "tick" });
+    // Same autoscroll on manual step.
+    if (traceRef.current) {
+      traceRef.current.scrollTop = 0;
+    }
+  }, []);
   const onReset = useCallback(() => {
     setPlaying(false);
     resetClock();
@@ -200,10 +241,15 @@ export function CrmArenaAgent() {
         ? "mixed"
         : "weak";
 
+  // Newest-first so autoscroll to top always shows the latest turn.
   const lastTurns: Turn[] = [...turns].slice(-8).reverse();
+
+  // Whether the trace list has more than zero items (for scroll affordance).
+  const hasTrace = lastTurns.length > 0;
 
   return (
     <div className="not-prose my-8 flex flex-col gap-4">
+      {/* Preset spine: the core paper contrasts the reader should try */}
       <div className="flex flex-wrap items-center gap-2">
         {PRESETS.map((preset) => (
           <Button
@@ -222,6 +268,7 @@ export function CrmArenaAgent() {
         {PRESETS.find((preset) => preset.id === presetId)?.blurb}
       </p>
 
+      {/* Task dependency-chain diagram */}
       <div className="ring-foreground/10 overflow-hidden rounded-xl ring-1">
         <svg
           viewBox={`0 0 ${width} ${height}`}
@@ -295,9 +342,9 @@ export function CrmArenaAgent() {
             style={{ fontSize: 13, fontWeight: 700 }}
           >
             {status === "solved"
-              ? "reward 1"
+              ? "✓ reward 1"
               : status === "failed"
-                ? "reward 0"
+                ? "✗ reward 0"
                 : progressLabel(state)}
           </text>
           <text
@@ -312,7 +359,8 @@ export function CrmArenaAgent() {
         </svg>
       </div>
 
-      <div className="flex flex-wrap items-center justify-between gap-3">
+      {/* Transport controls — no Speed slider: turns are discrete, no motion to pace */}
+      <div className="flex flex-wrap items-center gap-3">
         <PlayPauseStepControls
           playing={playing}
           onPlayPause={onPlayPause}
@@ -320,30 +368,15 @@ export function CrmArenaAgent() {
           onReset={onReset}
           disabled={!running && !playing}
         />
-        <label className="flex w-40 flex-col gap-1 text-xs">
-          <span className="text-muted-foreground flex items-center justify-between">
-            <span>Speed</span>
-            <span className="text-foreground font-mono">
-              {speed.toFixed(1)}x
-            </span>
-          </span>
-          <input
-            type="range"
-            min={0.5}
-            max={3}
-            step={0.5}
-            value={speed}
-            onChange={(event) => setSpeed(Number(event.target.value))}
-            className="h-1.5 w-full cursor-pointer"
-            style={{ accentColor: ACCENT }}
-          />
-        </label>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
+        {/* Left panel: paper's levers — model, framework, toolset, task */}
         <SimPanel title="Set up the agent">
           <div className="flex flex-col gap-1">
-            <span className="text-muted-foreground text-xs">Model</span>
+            <span className="text-muted-foreground text-xs">
+              Model — which agent profile runs the chain
+            </span>
             <div className="flex flex-wrap gap-1.5">
               {AGENTS.map((profile) => (
                 <Toggle
@@ -360,7 +393,9 @@ export function CrmArenaAgent() {
           </div>
 
           <div className="flex flex-col gap-1">
-            <span className="text-muted-foreground text-xs">Framework</span>
+            <span className="text-muted-foreground text-xs">
+              Framework — scaffolding that wraps each action (Act / ReAct / FC)
+            </span>
             <div className="flex flex-wrap gap-1.5">
               {FRAMEWORKS.map((item) => (
                 <Toggle
@@ -377,7 +412,9 @@ export function CrmArenaAgent() {
           </div>
 
           <div className="flex flex-col gap-1">
-            <span className="text-muted-foreground text-xs">Toolset</span>
+            <span className="text-muted-foreground text-xs">
+              Toolset — raw SOQL/SOSL vs clean task-specific wrappers
+            </span>
             <div className="flex flex-wrap gap-1.5">
               <Toggle
                 label="General (SOQL/SOSL)"
@@ -395,7 +432,9 @@ export function CrmArenaAgent() {
           </div>
 
           <div className="flex flex-col gap-1">
-            <span className="text-muted-foreground text-xs">Task</span>
+            <span className="text-muted-foreground text-xs">
+              Task — the dependency chain the agent must solve
+            </span>
             <div className="flex flex-wrap gap-1.5">
               {TASKS.map((item) => (
                 <Toggle
@@ -407,30 +446,9 @@ export function CrmArenaAgent() {
               ))}
             </div>
           </div>
-
-          <label className="flex flex-col gap-1 text-xs">
-            <span className="text-muted-foreground flex items-center justify-between">
-              <span>Seed</span>
-              <span className="text-foreground font-mono">{params.seed}</span>
-            </span>
-            <input
-              type="range"
-              min={0}
-              max={20}
-              step={1}
-              value={params.seed}
-              onChange={(event) =>
-                intervene({
-                  type: "setSeed",
-                  value: Number(event.target.value),
-                })
-              }
-              className="h-1.5 w-full cursor-pointer"
-              style={{ accentColor: ACCENT }}
-            />
-          </label>
         </SimPanel>
 
+        {/* Right panel: rollout status and mid-run strikes */}
         <SimPanel title="Inside the rollout">
           <div className="flex flex-wrap gap-2 text-xs">
             <Badge variant="secondary">{progressLabel(state)}</Badge>
@@ -448,16 +466,16 @@ export function CrmArenaAgent() {
               }}
             >
               {status === "solved"
-                ? "reward 1"
+                ? "✓ reward 1"
                 : status === "failed"
-                  ? "reward 0"
+                  ? "✗ reward 0"
                   : "in progress"}
             </Badge>
           </div>
 
           <div className="flex flex-col gap-1.5">
             <span className="text-muted-foreground text-xs font-medium">
-              Mid-run strikes
+              Mid-run strikes — inject a failure while the agent is working
             </span>
             <div className="flex flex-wrap gap-1.5">
               <Button
@@ -499,30 +517,49 @@ export function CrmArenaAgent() {
             </div>
           </div>
 
-          <div className="ring-foreground/10 max-h-36 overflow-y-auto rounded-lg ring-1">
-            {lastTurns.length === 0 ? (
-              <p className="text-muted-foreground px-2 py-1.5 text-xs">
-                Step or play to watch the agent work the chain turn by turn.
-              </p>
-            ) : (
-              <ul className="text-xs">
-                {lastTurns.map((turn) => (
-                  <li
-                    key={`turn-${turn.index}`}
-                    className="flex items-start gap-2 px-2 py-1"
-                  >
-                    <span
-                      aria-hidden
-                      className="mt-1 inline-block size-2 shrink-0 rounded-full"
-                      style={{ backgroundColor: turnColor(turn.kind) }}
-                    />
-                    <span className="text-muted-foreground">
-                      <span className="font-mono">t{turn.index}</span>{" "}
-                      {turn.detail}
-                    </span>
-                  </li>
-                ))}
-              </ul>
+          {/* Turn trace — newest entry at top; scroll affordance via gradient fade */}
+          <div className="relative">
+            <div
+              ref={traceRef}
+              className="ring-foreground/10 max-h-36 overflow-y-auto rounded-lg ring-1"
+            >
+              {!hasTrace ? (
+                <p className="text-muted-foreground px-3 py-2 text-xs">
+                  Step or play to watch the agent work the chain turn by turn.
+                </p>
+              ) : (
+                <ul className="text-xs">
+                  {lastTurns.map((turn) => (
+                    <li
+                      key={`turn-${turn.index}`}
+                      className="flex items-start gap-2 px-3 py-1.5"
+                    >
+                      <span
+                        style={{ color: turnColor(turn.kind) }}
+                        className="mt-0.5 shrink-0 font-bold leading-none"
+                        aria-hidden
+                      >
+                        {turnGlyph(turn.kind)}
+                      </span>
+                      <span className="text-muted-foreground">
+                        <span className="font-mono">t{turn.index}</span>{" "}
+                        {turn.detail}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+            {/* Fade affordance — visible only when there are items that may overflow */}
+            {hasTrace && (
+              <div
+                className="pointer-events-none absolute right-0 bottom-0 left-0 h-6 rounded-b-lg"
+                style={{
+                  background:
+                    "linear-gradient(to bottom, transparent, var(--color-background))",
+                }}
+                aria-hidden
+              />
             )}
           </div>
 
@@ -548,9 +585,11 @@ export function CrmArenaAgent() {
       <p className="text-muted-foreground text-xs">
         Each task is a chain of dependent tool calls graded by exact match,
         exactly as the paper frames it as a POMDP. The per-step success odds
-        here are illustrative, hand-set so the ordering of models matches Table
-        2 of the paper; a real run queries a live Salesforce org with thousands
-        of objects across {TASKS.length} of the paper&apos;s 9 tasks.
+        are illustrative, hand-set so the relative ordering of models matches
+        Table 2 of the paper; a real run queries a live Salesforce org with
+        thousands of objects across {TASKS.length} of the paper&apos;s 9 tasks.
+        Each preset fixes the random seed so the same preset always produces the
+        same run — switch presets or change a control to start a fresh chain.
       </p>
     </div>
   );

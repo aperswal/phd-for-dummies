@@ -251,7 +251,7 @@ export interface ScalingParams {
 
 export type Intervention =
   | { type: "setAxis"; id: AxisId }
-  | { type: "setSeed"; value: number }
+  | { type: "reshuffle"; seed: number }
   | { type: "setCompute"; value: number }
   | { type: "setAllocation"; value: number }
   | { type: "loadPreset"; id: string }
@@ -410,10 +410,10 @@ function applyIntervention(
         revealLog: getAxis(action.id).min,
       };
     }
-    case "setSeed":
+    case "reshuffle":
       return {
-        params: { ...params, seed: action.value },
-        label: `seed -> ${action.value}`,
+        params: { ...params, seed: action.seed },
+        label: `reshuffle points (seed ${action.seed})`,
         revealLog: state.revealLog,
       };
     case "setCompute":

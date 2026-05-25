@@ -2,7 +2,7 @@
 
 _Don't jump to the greedy policy; blend toward it just enough that each round is a guaranteed improvement, and you reach a near-optimal policy in a number of rounds that depends on how good your value estimates are, never on how big the world is._
 
-![A pixel explorer on a hillside with a short clay-orange step-arrow nudging a little uphill to a check mark, beside a long thin arrow that leaps high and tumbles down to land lower than the start, showing that a small careful step is a sure climb while a confident greedy leap can drop you below where you began because the ground shifts as you move.](/papers/approximately-optimal-approximate-reinforcement-learning/hero.webp)
+![A pixel explorer on a hillside with a short clay-orange step-arrow nudging a little uphill to a check mark, beside a long thin arrow that leaps high and tumbles down to land lower than the start, showing that a small careful step is a sure climb while a confident greedy leap can drop you below where you began because the ground shifts as you move.](https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/approximately-optimal-approximate-reinforcement-learning/hero.webp)
 
 ## Read at your level
 
@@ -41,7 +41,7 @@ Think about getting good at a video game. One approach is to rate every situatio
 
 So don't flip all the way. Keep your current habits and shift them a little toward the better move. Maybe you used to go right here 4 times out of 10, and the better move looks like going right, so you bump it to 5 out of 10. Small shift, small change in where you end up, no nasty surprise. Do that again and again and you steadily get better.
 
-![A large pitcher pouring a wide sage stream and a small clay-orange bottle adding a thin splash into one measuring cup, with a dial between them, showing that the updated policy is mostly the current habit with only a small fraction of the greedy move mixed in.](/papers/approximately-optimal-approximate-reinforcement-learning/mixture-rule.webp)
+![A large pitcher pouring a wide sage stream and a small clay-orange bottle adding a thin splash into one measuring cup, with a dial between them, showing that the updated policy is mostly the current habit with only a small fraction of the greedy move mixed in.](https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/approximately-optimal-approximate-reinforcement-learning/mixture-rule.webp)
 
 How small a shift? There's a sweet spot. Too tiny and you barely improve. Too big and you're back to the risky full flip. The paper works out exactly how big the shift can be while still being a sure thing.
 
@@ -79,7 +79,7 @@ eta(pi_new) - eta(pi)  >=  (alpha / (1 - gamma)) * ( A - 2 alpha gamma eps / (1 
 
 Read the two terms. The first, `alpha A / (1 - gamma)`, is the gain you'd expect, growing with the step. The second is a penalty growing with `alpha` squared, because the bigger your step the more the visited states drift away from the `d_pi` you measured under. The whole thing is an upside-down parabola in `alpha`.
 
-![A clay-orange arc that rises to a flag at its peak then bends down into a dark crevasse on the right, showing that the guaranteed gain grows with the step size up to a sweet spot and then turns into a loss once the step is too big.](/papers/approximately-optimal-approximate-reinforcement-learning/step-size.webp)
+![A clay-orange arc that rises to a flag at its peak then bends down into a dark crevasse on the right, showing that the guaranteed gain grows with the step size up to a sweet spot and then turns into a loss once the step is too big.](https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/approximately-optimal-approximate-reinforcement-learning/step-size.webp)
 
 Maximize that parabola over `alpha` and you get a guaranteed improvement of `A^2 / (8 R)` per round, where `R` is the largest reward (Corollary 4.2). As long as the policy advantage `A` is positive, the right small step strictly improves performance. That's the whole game. You never take a step you can't prove helps. When `A` finally drops near zero, no improving direction is left and you stop.
 
@@ -97,7 +97,7 @@ Two operational costs are worth stating plainly. First, the guarantee is local, 
 
 If you've shipped modern policy optimization you already use the descendants of this paper. The "blend toward the greedy policy by a controlled amount" idea became "constrain how far the new policy can move from the old one," which is the trust region in TRPO and the clipped objective in PPO. The penalty term here, the cost of the visited-state distribution drifting under a big step, is exactly what those methods bound with a KL or total-variation constraint. When you tune PPO's clip range you are choosing this `alpha`.
 
-![A grid map with a small house in the bottom-left corner and grey fog over the far corners, then clay-orange restart flags scattered across the far cells lifting the fog, showing that practicing only from the start leaves rarely-reached states in the dark while scattering the starting points reveals the whole map.](/papers/approximately-optimal-approximate-reinforcement-learning/restart-distribution.webp)
+![A grid map with a small house in the bottom-left corner and grey fog over the far corners, then clay-orange restart flags scattered across the far cells lifting the fog, showing that practicing only from the start leaves rarely-reached states in the dark while scattering the starting points reveals the whole map.](https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/approximately-optimal-approximate-reinforcement-learning/restart-distribution.webp)
 
 ## For a PhD candidate
 

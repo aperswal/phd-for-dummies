@@ -32,9 +32,8 @@
 // The bracket subtracts the policy-mean (a baseline), which is what keeps the
 // softmax gradient a proper ascent direction. The model also tracks the true
 // objective E_pi[trueQuality] so the view can show proxy reward climbing while
-// true quality peaks and falls under reward hacking. All randomness comes from a
-// seeded stream threaded through state, so a seed plus a list of inputs
-// reproduces a run exactly.
+// true quality peaks and falls under reward hacking. All randomness is seeded and
+// fixed, so a preset reproduces the same trajectory on every load.
 
 import { at } from "@/lib/simulation/array";
 import {
@@ -43,7 +42,6 @@ import {
   type EventLog,
   type SimEvent,
 } from "@/lib/simulation/history";
-import { nextRandom } from "@/lib/simulation/rng";
 
 export interface Style {
   name: string;
@@ -198,26 +196,20 @@ export function readout(state: SimState): Readout {
 }
 
 // One PPO update: closed-form gradient ascent on equation 2 over the tabular
-// softmax. Optional reproducible noise stands in for the variance of a real PPO
-// estimate; with noise 0 the update is exact.
+// softmax. The run is deterministic — noise is fixed at 0 for all presets, and
+// the rng cursor is seeded once at initialState, so a preset reproduces the same
+// trajectory every load.
 function ascend(state: SimState): SimState {
   const pi = softmax(state.theta);
   const piSft = softmax(state.thetaSft);
   const rmScores = effectiveRmScores(state.params);
   const { beta, gamma, learningRate } = state.params;
 
-  let rngState = state.rngState;
   const advantages = BASE_STYLES.map((style, i) => {
     const klTerm =
       beta * (Math.log(at(pi, i) / Math.max(at(piSft, i), 1e-9)) + 1);
     const capTerm = gamma * style.capability;
-    let value = at(rmScores, i) - klTerm + capTerm;
-    if (state.params.noise > 0) {
-      const draw = nextRandom(rngState);
-      rngState = draw.state;
-      value += (draw.value - 0.5) * state.params.noise;
-    }
-    return value;
+    return at(rmScores, i) - klTerm + capTerm;
   });
 
   const baseline = expected(pi, advantages);
@@ -226,15 +218,12 @@ function ascend(state: SimState): SimState {
       value + learningRate * at(pi, i) * (at(advantages, i) - baseline),
   );
 
-  return { ...state, theta, rngState, step: state.step + 1 };
+  return { ...state, theta, step: state.step + 1 };
 }
 
 export type Intervention =
   | { type: "setBeta"; value: number }
   | { type: "setGamma"; value: number }
-  | { type: "setLearningRate"; value: number }
-  | { type: "setNoise"; value: number }
-  | { type: "setSeed"; value: number }
   | { type: "corruptReward"; index: number; amount: number }
   | { type: "nudgeStyle"; index: number; amount: number }
   | { type: "loadPreset"; id: string }
@@ -355,25 +344,6 @@ function applyIntervention(state: SimState, action: Intervention): SimState {
       return logged(
         { ...state, params: { ...state.params, gamma: action.value } },
         `ptx gamma -> ${action.value.toFixed(2)}`,
-      );
-    case "setLearningRate":
-      return logged(
-        { ...state, params: { ...state.params, learningRate: action.value } },
-        `step size -> ${action.value.toFixed(2)}`,
-      );
-    case "setNoise":
-      return logged(
-        { ...state, params: { ...state.params, noise: action.value } },
-        `RL noise -> ${action.value.toFixed(2)}`,
-      );
-    case "setSeed":
-      return logged(
-        {
-          ...state,
-          params: { ...state.params, seed: action.value },
-          rngState: action.value >>> 0,
-        },
-        `seed -> ${action.value}`,
       );
     case "corruptReward": {
       const rmBias = [...state.params.rmBias];

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useReducer, useRef, useState } from "react";
+import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -187,6 +187,26 @@ export function ReActLoop() {
   const g = grounding(state);
   const terminal = state.status !== "running";
 
+  // The trajectory scrolls, and macOS hides its scrollbar at rest, so signal
+  // which edge holds more steps and pin the view to the newest step as the run
+  // advances (steps append at the bottom).
+  const trajRef = useRef<HTMLDivElement | null>(null);
+  const [trajEdges, setTrajEdges] = useState({ above: false, below: false });
+  const updateTrajEdges = useCallback(() => {
+    const node = trajRef.current;
+    if (!node) return;
+    setTrajEdges({
+      above: node.scrollTop > 4,
+      below: node.scrollHeight - node.clientHeight - node.scrollTop > 4,
+    });
+  }, []);
+  useEffect(() => {
+    const node = trajRef.current;
+    if (!node) return;
+    node.scrollTop = node.scrollHeight;
+    updateTrajEdges();
+  }, [state.steps.length, terminal, state.status, updateTrajEdges]);
+
   const intervene = useCallback(
     (action: Intervention) => dispatch({ kind: "intervene", action }),
     [],
@@ -204,8 +224,15 @@ export function ReActLoop() {
   const onReset = useCallback(() => {
     setPlaying(false);
     resetClock();
+    setEditText("");
     dispatch({ kind: "reset", presetId });
   }, [presetId, resetClock]);
+
+  const onNewSample = useCallback(() => {
+    setPlaying(false);
+    resetClock();
+    intervene({ type: "setSeed", value: (state.seed + 7) % 21 });
+  }, [intervene, resetClock, state.seed]);
 
   const loadPreset = useCallback(
     (id: string) => {
@@ -257,30 +284,52 @@ export function ReActLoop() {
       <p className="text-muted-foreground text-sm">{preset?.blurb}</p>
 
       <div className="grid gap-4 lg:grid-cols-[1.5fr_1fr]">
-        <Panel title="Trajectory" className="min-h-[20rem]">
-          <div className="flex max-h-[24rem] flex-col gap-1.5 overflow-y-auto pr-1">
-            {state.steps.map((s) => (
-              <StepRow key={s.index} step={s} />
-            ))}
-            {terminal && state.finalAnswer && (
+        <Panel title="Trajectory">
+          <div className="relative">
+            <div
+              ref={trajRef}
+              onScroll={updateTrajEdges}
+              className="flex max-h-[24rem] flex-col gap-1.5 overflow-y-auto pr-1"
+            >
+              {state.steps.map((s) => (
+                <StepRow key={s.index} step={s} />
+              ))}
+              {terminal && state.finalAnswer && (
+                <div
+                  className={cn(
+                    "mt-1 rounded-lg px-3 py-2 text-sm font-semibold",
+                    STATUS_TONE[state.status],
+                  )}
+                >
+                  {state.status === "solved" ? "Answer: " : "Wrong answer: "}
+                  {state.finalAnswer}
+                </div>
+              )}
+              {state.status === "stuck" && (
+                <div
+                  className={cn(
+                    "mt-1 rounded-lg px-3 py-2 text-sm font-semibold",
+                    STATUS_TONE.stuck,
+                  )}
+                >
+                  Stuck. No grounded answer reached.
+                </div>
+              )}
+            </div>
+            {trajEdges.above && (
               <div
-                className={cn(
-                  "mt-1 rounded-lg px-3 py-2 text-sm font-semibold",
-                  STATUS_TONE[state.status],
-                )}
-              >
-                {state.status === "solved" ? "Answer: " : "Wrong answer: "}
-                {state.finalAnswer}
-              </div>
+                aria-hidden
+                className="from-background pointer-events-none absolute inset-x-0 top-0 h-6 bg-gradient-to-b to-transparent"
+              />
             )}
-            {state.status === "stuck" && (
+            {trajEdges.below && (
               <div
-                className={cn(
-                  "mt-1 rounded-lg px-3 py-2 text-sm font-semibold",
-                  STATUS_TONE.stuck,
-                )}
+                aria-hidden
+                className="from-background pointer-events-none absolute inset-x-0 bottom-0 flex h-6 items-end justify-center bg-gradient-to-t to-transparent"
               >
-                Stuck. No grounded answer reached.
+                <span className="text-muted-foreground text-[9px] leading-none">
+                  ▾ more
+                </span>
               </div>
             )}
           </div>
@@ -428,9 +477,18 @@ export function ReActLoop() {
           disabled={false}
         />
         <div className="flex items-center gap-3">
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            onClick={onNewSample}
+            title="Run the same task again with a different random draw"
+          >
+            New sample
+          </Button>
           <label className="flex w-40 flex-col gap-1 text-xs">
             <span className="text-muted-foreground flex items-center justify-between">
-              <span>Speed</span>
+              <span>Playback speed</span>
               <span className="text-foreground font-mono">
                 {speed.toFixed(1)}x
               </span>
@@ -444,49 +502,37 @@ export function ReActLoop() {
               onChange={(event) => setSpeed(Number(event.target.value))}
               className="h-1.5 w-full cursor-pointer"
               style={{ accentColor: ACCENT }}
-            />
-          </label>
-          <label className="flex w-32 flex-col gap-1 text-xs">
-            <span className="text-muted-foreground flex items-center justify-between">
-              <span>Seed</span>
-              <span className="text-foreground font-mono">{state.seed}</span>
-            </span>
-            <input
-              type="range"
-              min={0}
-              max={20}
-              step={1}
-              value={state.seed}
-              onChange={(event) =>
-                intervene({
-                  type: "setSeed",
-                  value: Number(event.target.value),
-                })
-              }
-              className="h-1.5 w-full cursor-pointer"
-              style={{ accentColor: ACCENT }}
+              aria-label="Playback speed"
             />
           </label>
         </div>
       </div>
 
       <Panel title="Event log">
-        <div className="ring-foreground/10 max-h-32 overflow-y-auto rounded-lg ring-1">
-          {state.log.events.length === 0 ? (
-            <p className="text-muted-foreground px-2 py-1.5 text-xs">
-              Step the run, switch a mode, or inject a fault to start the log.
-            </p>
-          ) : (
-            <ul className="text-xs">
-              {[...state.log.events].reverse().map((event) => (
-                <li
-                  key={event.id}
-                  className="text-muted-foreground px-2 py-1 font-mono"
-                >
-                  {event.id}. {event.label}
-                </li>
-              ))}
-            </ul>
+        <div className="ring-foreground/10 relative overflow-hidden rounded-lg ring-1">
+          <div className="max-h-32 overflow-y-auto">
+            {state.log.events.length === 0 ? (
+              <p className="text-muted-foreground px-2 py-1.5 text-xs">
+                Step the run, switch a mode, or inject a fault to start the log.
+              </p>
+            ) : (
+              <ul className="text-xs">
+                {[...state.log.events].reverse().map((event) => (
+                  <li
+                    key={event.id}
+                    className="text-muted-foreground px-2 py-1 font-mono"
+                  >
+                    {event.id}. {event.label}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+          {state.log.events.length > 3 && (
+            <div
+              aria-hidden
+              className="from-background pointer-events-none absolute inset-x-0 bottom-0 h-5 bg-gradient-to-t to-transparent"
+            />
           )}
         </div>
       </Panel>

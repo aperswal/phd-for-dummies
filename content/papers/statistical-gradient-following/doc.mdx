@@ -2,7 +2,7 @@
 
 _A learner can climb toward more reward by doing more of whatever random move just beat its own recent average, and although it never measures a slope or maps its world, averaging these blind tweaks over many tries points it in the exact uphill direction of expected reward._
 
-![A pixel hillside half hidden in soft fog on aged parchment, a glowing clay-orange peak near its top, a loose scatter of thrown darts across the slope with the ones that landed on bright ground glowing orange, and thin ink arrows tugging a central aim marker uphill toward them, showing that a learner finds high ground it cannot see by throwing spread-out tries and leaning toward the ones that scored higher.](/papers/statistical-gradient-following/hero.webp)
+![A pixel hillside half hidden in soft fog on aged parchment, a glowing clay-orange peak near its top, a loose scatter of thrown darts across the slope with the ones that landed on bright ground glowing orange, and thin ink arrows tugging a central aim marker uphill toward them, showing that a learner finds high ground it cannot see by throwing spread-out tries and leaning toward the ones that scored higher.](https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/statistical-gradient-following/hero.webp)
 
 ## Read at your level
 
@@ -47,7 +47,7 @@ Here's a worked example with numbers. Say the coin currently lands "yes" 40 out 
 
 The amount it shifts has a clean form. It's the reward-above-baseline times how surprising the choice was. A "yes" when yes was already near-certain barely moves anything, because there was nothing to learn. A "yes" that was a long shot moves the chance a lot. That "how surprising was my own output" number is the heart of the method.
 
-![A central aim crosshair on parchment with a dashed ink line marking the average score, one clay-orange dart that beat the average pulling the aim toward it with a solid arrow, and one slate dart below average pushing the aim away with a hollow arrow, showing that the update nudges the aim toward tries that scored above the running average and away from tries that scored below it.](/papers/statistical-gradient-following/reinforce-update.webp)
+![A central aim crosshair on parchment with a dashed ink line marking the average score, one clay-orange dart that beat the average pulling the aim toward it with a solid arrow, and one slate dart below average pushing the aim away with a hollow arrow, showing that the update nudges the aim toward tries that scored above the running average and away from tries that scored below it.](https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/statistical-gradient-following/reinforce-update.webp)
 
 Any single turn is noisy, because the reward was partly luck. But do this thousands of times and the lucky turns cancel out, and what's left is a steady drift toward choices that pay more. The learner ends up climbing toward reward it could never see directly.
 
@@ -108,7 +108,7 @@ d ln g / d sigma = ((y - mu)^2 - sigma^2) / sigma^3
 
 The `mu` rule says move the mean toward outputs that paid off, the same lean-toward-the-good-shots idea. The `sigma` rule is the new thing. It controls how widely the unit explores, separately from where it explores. When good rewards tend to come from samples close to the mean, `sigma` shrinks and the unit narrows its search. When good rewards come from far out, `sigma` grows and the unit widens its search. The simulation above is exactly a Gaussian unit on a 2D reward landscape, and the dashed ring is its `sigma`.
 
-![A wide slate scatter of darts flung outward on the left, a tight clay-orange cluster of darts hitting a small bright peak on the right, and a curved ink arrow with a shrinking bracket sweeping between them, showing that the unit scatters its tries wide while it is doing poorly and tightens its spread as it homes in on the peak.](/papers/statistical-gradient-following/exploration-spread.webp)
+![A wide slate scatter of darts flung outward on the left, a tight clay-orange cluster of darts hitting a small bright peak on the right, and a curved ink arrow with a shrinking bracket sweeping between them, showing that the unit scatters its tries wide while it is doing poorly and tightens its spread as it homes in on the peak.](https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/statistical-gradient-following/exploration-spread.webp)
 
 Here's the whole immediate-reward algorithm:
 
@@ -179,7 +179,7 @@ The name spells out the shape. REINFORCE stands for "REward Increment = Nonnegat
 E{ (r - b) (d ln g / dw) }  =  d/dw E{ r | W }
 ```
 
-![A pixel hill with its top lost in slate fog on parchment, a faint thin ink arrow on the slope marking the true uphill direction, and a bold clay-orange arrow built from a fan of averaged random tries pointing the same way up the slope, showing that averaging many random tries points uphill even though the slope was never measured.](/papers/statistical-gradient-following/gradient-without-map.webp)
+![A pixel hill with its top lost in slate fog on parchment, a faint thin ink arrow on the slope marking the true uphill direction, and a bold clay-orange arrow built from a fan of averaged random tries pointing the same way up the slope, showing that averaging many random tries points uphill even though the slope was never measured.](https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/statistical-gradient-following/gradient-without-map.webp)
 
 Theorem 1 makes this precise. The expected update has nonnegative inner product with the true gradient, and equals it when the learning rate is a shared constant. The simulation draws both arrows so you can watch the unit's averaged step line up with the gradient it can't compute.
 

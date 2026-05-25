@@ -12,6 +12,7 @@ import {
   getItem,
   highestTier,
   initialState,
+  isTerminal,
   PRESETS,
   step,
   TECH_TREE,
@@ -88,6 +89,7 @@ function Slider({
         value={value}
         onChange={(event) => onChange(Number(event.target.value))}
         className="h-1.5 w-full cursor-pointer"
+        aria-label={label}
         style={{ accentColor: ACCENT }}
       />
     </label>
@@ -133,21 +135,31 @@ export function VoyagerLifelongLoop() {
     () => new Set(library.map((skill) => skill.itemId)),
     [library],
   );
+  const terminal = useMemo(() => isTerminal(state), [state]);
 
   const intervene = useCallback(
     (action: Intervention) => dispatch({ kind: "intervene", action }),
     [],
   );
 
-  const resetClock = useFixedTimestep(playing, 650 / speed, () =>
-    dispatch({ kind: "tick" }),
-  );
+  // Stop autoplay when the frontier is exhausted so the animation doesn't spin
+  // forever on a settled state. The check is fresh on every render because the
+  // callback is not wrapped in useCallback.
+  const resetClock = useFixedTimestep(playing, 650 / speed, () => {
+    if (isTerminal(state)) {
+      setPlaying(false);
+      return;
+    }
+    dispatch({ kind: "tick" });
+  });
 
   const onPlayPause = useCallback(() => {
     resetClock();
     setPlaying((value) => !value);
   }, [resetClock]);
-  const onStep = useCallback(() => dispatch({ kind: "tick" }), []);
+  const onStep = useCallback(() => {
+    if (!terminal) dispatch({ kind: "tick" });
+  }, [terminal]);
   const onReset = useCallback(() => {
     setPlaying(false);
     resetClock();
@@ -241,6 +253,8 @@ export function VoyagerLifelongLoop() {
                       ? SAGE
                       : SLATE
                     : "var(--color-muted)";
+                // ACCENT, SAGE, and SLATE are all mid-dark brand colors;
+                // white text on them meets contrast in both light and dark mode.
                 const textFill = isActive || isUnlocked ? "#fff" : undefined;
                 return (
                   <g
@@ -344,24 +358,36 @@ export function VoyagerLifelongLoop() {
                 : "Off. Every task is coded from scratch, so nothing accumulates."}
             </p>
           ) : (
-            <ul className="flex max-h-72 flex-col gap-1 overflow-y-auto text-xs">
-              {library.map((skill) => (
-                <li
-                  key={skill.itemId}
-                  className="ring-foreground/10 flex items-center justify-between gap-2 rounded-md px-2 py-1 ring-1"
+            <div className="relative">
+              <ul className="flex max-h-72 flex-col gap-1 overflow-y-auto text-xs">
+                {library.map((skill) => (
+                  <li
+                    key={skill.itemId}
+                    className="ring-foreground/10 flex items-center justify-between gap-2 rounded-md px-2 py-1 ring-1"
+                    style={{
+                      borderLeft: `3px solid ${skill.composedFrom > 0 ? SAGE : SLATE}`,
+                    }}
+                  >
+                    <span className="truncate">{skill.label}</span>
+                    {skill.composedFrom > 0 && (
+                      <span className="text-muted-foreground shrink-0 font-mono text-[10px]">
+                        +{skill.composedFrom}
+                      </span>
+                    )}
+                  </li>
+                ))}
+              </ul>
+              {/* Gradient fade at the bottom tells the reader more items scroll below. */}
+              {library.length > 8 && (
+                <div
+                  className="pointer-events-none absolute right-0 bottom-0 left-0 h-8 rounded-b-sm"
                   style={{
-                    borderLeft: `3px solid ${skill.composedFrom > 0 ? SAGE : SLATE}`,
+                    background:
+                      "linear-gradient(to bottom, transparent, var(--color-background))",
                   }}
-                >
-                  <span className="truncate">{skill.label}</span>
-                  {skill.composedFrom > 0 && (
-                    <span className="text-muted-foreground shrink-0 font-mono text-[10px]">
-                      +{skill.composedFrom}
-                    </span>
-                  )}
-                </li>
-              ))}
-            </ul>
+                />
+              )}
+            </div>
           )}
           <p className="text-muted-foreground text-[10px]">
             A green bar marks a skill composed from earlier skills. The number
@@ -377,14 +403,14 @@ export function VoyagerLifelongLoop() {
           onStep={onStep}
           onReset={onReset}
         />
-        <div className="w-40">
+        <div className="min-w-28 w-36 flex-shrink-0">
           <Slider
-            label="Speed"
+            label="Playback speed (animation pace only, does not affect the paper)"
             value={speed}
             min={1}
             max={8}
             step={1}
-            display={`${speed}x`}
+            display={`${speed}×`}
             onChange={setSpeed}
           />
         </div>
@@ -393,7 +419,9 @@ export function VoyagerLifelongLoop() {
       <div className="grid gap-4 sm:grid-cols-2">
         <SimPanel title="Controls">
           <div className="flex flex-col gap-1">
-            <span className="text-muted-foreground text-xs">Curriculum</span>
+            <span className="text-muted-foreground text-xs">
+              Curriculum — how the agent picks its next task
+            </span>
             <div className="flex flex-wrap gap-1.5">
               {curricula.map((option) => (
                 <Toggle
@@ -408,7 +436,9 @@ export function VoyagerLifelongLoop() {
             </div>
           </div>
           <div className="flex flex-col gap-1">
-            <span className="text-muted-foreground text-xs">Coder</span>
+            <span className="text-muted-foreground text-xs">
+              Coder — which LLM writes the programs
+            </span>
             <div className="flex flex-wrap gap-1.5">
               {coders.map((option) => (
                 <Toggle
@@ -422,35 +452,31 @@ export function VoyagerLifelongLoop() {
               ))}
             </div>
           </div>
-          <div className="flex flex-wrap gap-1.5">
-            <Toggle
-              label="Skill library"
-              active={params.skillLibrary}
-              onClick={() => intervene({ type: "toggleSkillLibrary" })}
-            />
-            <Toggle
-              label="Self-verification"
-              active={params.selfVerification}
-              onClick={() => intervene({ type: "toggleSelfVerification" })}
-            />
+          <div className="flex flex-col gap-1">
+            <span className="text-muted-foreground text-xs">
+              Components — toggle Voyager&apos;s key ablations
+            </span>
+            <div className="flex flex-wrap gap-1.5">
+              <Toggle
+                label="Skill library"
+                active={params.skillLibrary}
+                onClick={() => intervene({ type: "toggleSkillLibrary" })}
+              />
+              <Toggle
+                label="Self-verification"
+                active={params.selfVerification}
+                onClick={() => intervene({ type: "toggleSelfVerification" })}
+              />
+            </div>
           </div>
           <Slider
-            label="Curriculum hallucination rate"
+            label="Hallucination rate — how often the curriculum proposes non-existent items"
             value={params.hallucinationRate}
             min={0}
             max={0.6}
             step={0.05}
             display={`${Math.round(params.hallucinationRate * 100)}%`}
             onChange={(value) => intervene({ type: "setHallucination", value })}
-          />
-          <Slider
-            label="seed (resets the run)"
-            value={state.rng % 1000}
-            min={1}
-            max={40}
-            step={1}
-            display={String(state.rng % 1000)}
-            onChange={(value) => intervene({ type: "setSeed", value })}
           />
         </SimPanel>
 
@@ -460,14 +486,11 @@ export function VoyagerLifelongLoop() {
             <Badge variant="outline">{state.iterations} iterations</Badge>
             <Badge variant="outline">tier {highestTier(state)}</Badge>
             <Badge variant="outline">{state.failedAttempts} shelved</Badge>
+            {/* destructive variant stays legible in both light and dark mode */}
             <Badge
-              variant={state.committedUnverified > 0 ? "default" : "outline"}
-              style={
-                state.committedUnverified > 0
-                  ? { backgroundColor: ACCENT, color: "#fff" }
-                  : undefined
-              }
+              variant={state.committedUnverified > 0 ? "destructive" : "outline"}
             >
+              {state.committedUnverified > 0 ? "⚠ " : ""}
               {state.committedUnverified} unverified
             </Badge>
           </div>
@@ -544,6 +567,16 @@ export function VoyagerLifelongLoop() {
         </SimPanel>
       </div>
 
+      {terminal && (
+        <div className="ring-foreground/10 rounded-lg px-3 py-2 ring-1">
+          <p className="text-muted-foreground text-xs">
+            <span className="text-foreground font-medium">Run complete.</span>{" "}
+            The frontier is exhausted — no further reachable tasks remain.
+            Reset or load a different preset to run again.
+          </p>
+        </div>
+      )}
+
       <p className="text-muted-foreground text-xs">
         The loop is the paper&apos;s real control flow: the curriculum proposes
         a task, relevant skills are retrieved, the coder writes a program with
@@ -553,7 +586,8 @@ export function VoyagerLifelongLoop() {
         small {TECH_TREE.length}-item tech tree and GPT-4&apos;s coding is
         modelled as a per-round success chance that rises with retrieved skills;
         the real agent plays Minecraft through Mineflayer and queries GPT-4 over
-        thousands of items.
+        thousands of items. Each preset uses a fixed seed so the same preset
+        always produces the same run; playback speed is animation pace only.
       </p>
     </div>
   );

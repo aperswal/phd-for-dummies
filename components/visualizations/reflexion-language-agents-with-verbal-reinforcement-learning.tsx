@@ -1,7 +1,14 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { useCallback, useMemo, useReducer, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useReducer,
+  useRef,
+  useState,
+} from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -23,6 +30,11 @@ import {
 const ACCENT = "#c2683f";
 const SAGE = "#6f7d5f";
 const SLATE = "#5b6470";
+
+// Fixed playback pace: one model micro-step every 520 ms. Each tick is a
+// discrete, meaningful phase (act / evaluate / reflect) that the reader should
+// be able to observe individually, so there is no speed dial.
+const TICK_INTERVAL_MS = 520;
 
 type ViewAction =
   | { kind: "tick" }
@@ -138,6 +150,40 @@ function Slider({
   );
 }
 
+// Three discrete memory-window sizes (Omega = 1, 2, or 3) rendered as a
+// segmented button group so the three distinct values are obvious rather than
+// hidden inside a continuous range slider.
+function MemoryWindowPicker({
+  value,
+  onChange,
+}: {
+  value: number;
+  onChange: (value: number) => void;
+}) {
+  return (
+    <div className="flex flex-col gap-1 text-xs">
+      <span className="text-muted-foreground">
+        memory window (Omega) — how many lessons the agent holds at once
+      </span>
+      <div className="flex gap-1" role="group" aria-label="Memory window size">
+        {([1, 2, 3] as const).map((size) => (
+          <Button
+            key={size}
+            type="button"
+            size="sm"
+            variant={value === size ? "default" : "outline"}
+            aria-pressed={value === size}
+            onClick={() => onChange(size)}
+            className="flex-1"
+          >
+            {size}
+          </Button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function pct(value: number): string {
   return `${Math.round(value * 100)}%`;
 }
@@ -152,8 +198,8 @@ const PHASE_LABEL: Record<SimState["phase"], string> = {
 };
 
 // One sparkline-style cell per trial showing pass / fail, so the reader watches
-// the learning curve fill in. Truthful pass is sage, false-positive pass is a
-// hollow warning, fail is faint, the current trial pulses.
+// the learning curve fill in. Truthful pass is sage, false-positive pass is
+// clay (warning), fail is faint, the current trial pulses.
 function TrialStrip({ state }: { state: SimState }) {
   const cells = Array.from({ length: state.params.maxTrials }, (_, trial) => {
     const outcome = state.outcomes.find((o) => o.trial === trial);
@@ -198,27 +244,72 @@ function TrialStrip({ state }: { state: SimState }) {
   );
 }
 
+// Gradient fade at the bottom edge of a scrollable region: appears only when
+// there is content below the fold so macOS overlay scrollbars (invisible at
+// rest) do not silently hide overflow.
+function ScrollFade({
+  scrollRef,
+}: {
+  scrollRef: React.RefObject<HTMLDivElement | null>;
+}) {
+  const [canScrollDown, setCanScrollDown] = useState(false);
+
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+
+    function check() {
+      if (!el) return;
+      setCanScrollDown(el.scrollHeight - el.scrollTop > el.clientHeight + 2);
+    }
+    check();
+    el.addEventListener("scroll", check);
+    const observer = new ResizeObserver(check);
+    observer.observe(el);
+    return () => {
+      el.removeEventListener("scroll", check);
+      observer.disconnect();
+    };
+  }, [scrollRef]);
+
+  if (!canScrollDown) return null;
+
+  return (
+    <div
+      className="from-background pointer-events-none absolute right-0 bottom-0 left-0 h-6 rounded-b-lg bg-gradient-to-b to-transparent"
+      aria-hidden
+    />
+  );
+}
+
 export function ReflexionLoop() {
   const [presetId, setPresetId] = useState("reflexion");
   const [state, dispatch] = useReducer(reducer, undefined, () =>
     initialState("reflexion"),
   );
   const [playing, setPlaying] = useState(false);
-  const [speed, setSpeed] = useState(3);
   const [inspectId, setInspectId] = useState<number | null>(null);
 
   const { task, memory, params, trajectory, cursor, phase, outcomes } = state;
+
+  const terminal = isTerminal(state);
 
   const intervene = useCallback(
     (action: Intervention) => dispatch({ kind: "intervene", action }),
     [],
   );
 
+  // The animation gate: stop ticking once the run is done regardless of the
+  // playing flag, so the fixedTimestep accumulator drains gracefully.
   const resetClock = useFixedTimestep(
-    playing && !isTerminal(state),
-    520 / speed,
+    playing && !terminal,
+    TICK_INTERVAL_MS,
     () => dispatch({ kind: "tick" }),
   );
+
+  // Treat the run as paused once it reaches a terminal phase so the Play button
+  // shows "Play" rather than "Pause" when the controls are re-enabled by Reset.
+  const effectivePlaying = playing && !terminal;
 
   const onPlayPause = useCallback(() => {
     resetClock();
@@ -254,6 +345,32 @@ export function ReflexionLoop() {
       ? (memory.find((r) => r.id === inspectId) ?? null)
       : null;
 
+  // Autoscroll the event log (newest-first list) to the top whenever a new
+  // event is appended so the latest action is always visible without scrolling.
+  const eventLogRef = useRef<HTMLDivElement>(null);
+  const prevLogLength = useRef(state.log.length);
+  useEffect(() => {
+    if (state.log.length !== prevLogLength.current) {
+      prevLogLength.current = state.log.length;
+      if (eventLogRef.current) {
+        eventLogRef.current.scrollTop = 0;
+      }
+    }
+  }, [state.log.length]);
+
+  // Autoscroll the memory list to the bottom (newest lesson appended at the
+  // bottom) so the fresh lesson is visible as soon as it lands.
+  const memoryListRef = useRef<HTMLDivElement>(null);
+  const prevMemoryLength = useRef(memory.length);
+  useEffect(() => {
+    if (memory.length !== prevMemoryLength.current) {
+      prevMemoryLength.current = memory.length;
+      if (memoryListRef.current) {
+        memoryListRef.current.scrollTop = memoryListRef.current.scrollHeight;
+      }
+    }
+  }, [memory.length]);
+
   const cellPx = 116;
   const gapPx = 22;
   const totalW = task.length * cellPx + (task.length - 1) * gapPx;
@@ -261,6 +378,7 @@ export function ReflexionLoop() {
 
   return (
     <div className="not-prose my-8 flex flex-col gap-4">
+      {/* Preset buttons — the spine: four scenarios teaching the core contrast */}
       <div className="flex flex-wrap items-center gap-2">
         {PRESETS.map((preset) => (
           <Button
@@ -298,7 +416,7 @@ export function ReflexionLoop() {
             const decided = chosen !== undefined;
             const correctChoice = decided && chosen === point.correctAction;
             const isCursor =
-              index === cursor && phase === "acting" && !isTerminal(state);
+              index === cursor && phase === "acting" && !terminal;
             const fill = lesson
               ? lesson.correct
                 ? SAGE
@@ -355,7 +473,7 @@ export function ReflexionLoop() {
                     fill={lesson.correct ? SAGE : ACCENT}
                     style={{ fontSize: 10, fontFamily: "var(--font-mono)" }}
                   >
-                    {lesson.correct ? "lesson: avoid trap" : "lesson: misled"}
+                    {lesson.correct ? "lesson: on target" : "lesson: misled"}
                   </text>
                 ) : (
                   <text
@@ -384,25 +502,16 @@ export function ReflexionLoop() {
         </svg>
       </div>
 
-      <div className="flex flex-wrap items-center justify-between gap-3">
+      {/* Transport — disabled entirely once the run is done so neither Play
+          nor Step fires a no-op tick after a terminal phase. */}
+      <div className="flex flex-wrap items-center gap-3">
         <PlayPauseStepControls
-          playing={playing}
+          playing={effectivePlaying}
           onPlayPause={onPlayPause}
           onStep={onStep}
           onReset={onReset}
-          disabled={isTerminal(state) && playing}
+          disabled={terminal}
         />
-        <div className="w-40">
-          <Slider
-            label="Speed"
-            value={speed}
-            min={1}
-            max={10}
-            step={1}
-            display={`${speed}x`}
-            onChange={setSpeed}
-          />
-        </div>
       </div>
 
       <div className="flex flex-wrap items-center gap-2 text-xs">
@@ -414,11 +523,12 @@ export function ReflexionLoop() {
         <Badge variant="outline">
           passes {passes}/{outcomes.length || 0}
         </Badge>
+        {/* Color reinforced by word so meaning is never carried by color alone. */}
         <Badge
           variant={phase === "passed" ? "default" : "outline"}
           style={
             phase === "passed" && state.truthfulPass
-              ? { backgroundColor: SAGE, color: "#fff" }
+              ? { backgroundColor: SAGE, color: "white" }
               : undefined
           }
         >
@@ -435,7 +545,11 @@ export function ReflexionLoop() {
           style={
             safe
               ? undefined
-              : { backgroundColor: ACCENT, color: "#fff", borderColor: ACCENT }
+              : {
+                  backgroundColor: ACCENT,
+                  color: "white",
+                  borderColor: ACCENT,
+                }
           }
         >
           evaluator {safe ? "honest" : "passed a wrong answer"}
@@ -451,6 +565,7 @@ export function ReflexionLoop() {
 
       <div className="grid gap-4 sm:grid-cols-2">
         <Panel title="Perturb the loop">
+          {/* Reflection toggle: the on/off switch for the paper's core mechanism */}
           <Toggle
             label={
               params.reflectionEnabled ? "Reflection: on" : "Reflection: off"
@@ -463,8 +578,10 @@ export function ReflexionLoop() {
               })
             }
           />
+          {/* Self-reflection accuracy: quality of the verbal lesson. 100% = the
+              agent always names the right fix; 0% = always misdiagnoses. */}
           <Slider
-            label="self-reflection accuracy"
+            label="self-reflection accuracy — how often the lesson names the real mistake (100% = always, 0% = never)"
             value={params.reflectionAccuracy}
             min={0}
             max={1}
@@ -474,8 +591,10 @@ export function ReflexionLoop() {
               intervene({ type: "setReflectionAccuracy", value })
             }
           />
+          {/* Evaluator false-positive rate: how often a wrong trajectory is
+              declared correct. Recreates the MBPP flaky-test failure. */}
           <Slider
-            label="evaluator false-positive rate"
+            label="evaluator false-positive rate — how often a wrong answer is declared correct (0% = trustworthy)"
             value={params.evaluatorFalsePositiveRate}
             min={0}
             max={1}
@@ -485,13 +604,10 @@ export function ReflexionLoop() {
               intervene({ type: "setFalsePositiveRate", value })
             }
           />
-          <Slider
-            label="memory window (Omega)"
+          {/* Memory window (Omega): exactly 3 meaningful values matching the
+              paper's bound of 1–3 lessons, shown as explicit buttons. */}
+          <MemoryWindowPicker
             value={params.memoryCapacity}
-            min={1}
-            max={3}
-            step={1}
-            display={String(params.memoryCapacity)}
             onChange={(value) =>
               intervene({ type: "setMemoryCapacity", value })
             }
@@ -517,6 +633,9 @@ export function ReflexionLoop() {
           </div>
         </Panel>
 
+        {/* Memory panel: the verbal reflections are the spine of the sim.
+            Bounded height with a fade affordance; autoscrolls to the newest
+            lesson (appended at the bottom). */}
         <Panel title="Memory (long-term)">
           {memory.length === 0 ? (
             <p className="text-muted-foreground text-xs">
@@ -525,10 +644,14 @@ export function ReflexionLoop() {
               fail, then watch a line appear.
             </p>
           ) : (
-            <ul className="flex flex-col gap-1.5">
-              {memory.map((reflection) => (
-                <li key={reflection.id}>
+            <div className="relative">
+              <div
+                ref={memoryListRef}
+                className="flex max-h-48 flex-col gap-1.5 overflow-y-auto"
+              >
+                {memory.map((reflection) => (
                   <button
+                    key={reflection.id}
                     type="button"
                     onClick={() => setInspectId(reflection.id)}
                     className={cn(
@@ -551,9 +674,10 @@ export function ReflexionLoop() {
                       {reflection.text}
                     </span>
                   </button>
-                </li>
-              ))}
-            </ul>
+                ))}
+              </div>
+              <ScrollFade scrollRef={memoryListRef} />
+            </div>
           )}
           {inspected && (
             <div className="bg-foreground/5 rounded-lg p-2 text-xs">
@@ -569,36 +693,44 @@ export function ReflexionLoop() {
         </Panel>
       </div>
 
+      {/* Event log: newest event at top (reversed list). Autoscrolls to the
+          top on each new entry; fade affordance when overflow exists. */}
       <div className="flex flex-col gap-1">
         <span className="text-muted-foreground text-xs font-medium">
           Event log
         </span>
-        <div className="ring-foreground/10 max-h-32 overflow-y-auto rounded-lg ring-1">
-          {state.log.length === 0 ? (
-            <p className="text-muted-foreground px-2 py-1.5 text-xs">
-              Press play or step to start the loop.
-            </p>
-          ) : (
-            <ul className="text-xs">
-              {[...state.log].reverse().map((event) => (
-                <li key={event.id}>
-                  <button
-                    type="button"
-                    className="text-muted-foreground hover:bg-foreground/5 w-full px-2 py-1 text-left font-mono"
-                    onClick={() =>
-                      intervene({
-                        type: "restore",
-                        snapshot: event.snapshot,
-                        label: `rewind to event ${event.id}`,
-                      })
-                    }
-                  >
-                    {event.id}. {event.label}
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
+        <div className="relative">
+          <div
+            ref={eventLogRef}
+            className="ring-foreground/10 max-h-32 overflow-y-auto rounded-lg ring-1"
+          >
+            {state.log.length === 0 ? (
+              <p className="text-muted-foreground px-2 py-1.5 text-xs">
+                Press play or step to start the loop.
+              </p>
+            ) : (
+              <ul className="text-xs">
+                {[...state.log].reverse().map((event) => (
+                  <li key={event.id}>
+                    <button
+                      type="button"
+                      className="text-muted-foreground hover:bg-foreground/5 w-full px-2 py-1 text-left font-mono"
+                      onClick={() =>
+                        intervene({
+                          type: "restore",
+                          snapshot: event.snapshot,
+                          label: `rewind to event ${event.id}`,
+                        })
+                      }
+                    >
+                      {event.id}. {event.label}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+          <ScrollFade scrollRef={eventLogRef} />
         </div>
       </div>
 
@@ -608,7 +740,8 @@ export function ReflexionLoop() {
         behavior follows the paper&apos;s rules. &quot;Mastered&quot; counts the
         steps the agent now gets right because a correct lesson sits in memory.
         A weight never changes; the only thing that updates between trials is
-        the text in the memory panel.
+        the text in the memory panel. The run is deterministic: same preset,
+        same trajectory every time.
       </p>
     </div>
   );

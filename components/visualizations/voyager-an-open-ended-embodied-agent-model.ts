@@ -325,7 +325,6 @@ export type Intervention =
   | { type: "toggleSelfVerification" }
   | { type: "setHallucination"; value: number }
   | { type: "forceTask"; itemId: string }
-  | { type: "setSeed"; value: number }
   | { type: "loadPreset"; id: string }
   | { type: "restore"; snapshot: SimState; label: string };
 
@@ -574,11 +573,6 @@ function applyIntervention(state: SimState, action: Intervention): SimState {
       const started = startTask(state, item, state);
       return logged(started, `forced task -> ${item.label}`);
     }
-    case "setSeed":
-      return logged(
-        { ...state, rng: action.value >>> 0 },
-        `seed -> ${action.value}`,
-      );
     case "loadPreset": {
       const preset = getPreset(action.id);
       return initialState(preset.id);
@@ -703,4 +697,18 @@ export function highestTier(state: SimState): number {
     (max, item) => (have.has(item.id) ? Math.max(max, item.tier) : max),
     0,
   );
+}
+
+// The run is over when the frontier is empty and there is no active task. This
+// happens when every tech-tree item is unlocked, or when the random curriculum
+// has exhausted all reachable items and none remain. The view uses this to stop
+// autoplay automatically rather than spinning forever on a settled state.
+export function isTerminal(state: SimState): boolean {
+  if (state.active !== null) return false;
+  const have = new Set(state.unlocked);
+  const reachable = TECH_TREE.filter((item) => {
+    if (have.has(item.id)) return false;
+    return item.needs.every((need) => have.has(need) || isPrimitive(need));
+  });
+  return reachable.length === 0;
 }

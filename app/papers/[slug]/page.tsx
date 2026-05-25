@@ -42,7 +42,7 @@ export default async function PaperPage({ params }: PaperPageProps) {
   const paper = await getPaper(slug);
   if (!paper) notFound();
 
-  const { mdx } = paper;
+  const { mdx, meta } = paper;
   const Visualization = getVisualization(slug);
   const components: MDXComponents = {};
   if (Visualization) {
@@ -52,6 +52,22 @@ export default async function PaperPage({ params }: PaperPageProps) {
   return (
     <article className="prose prose-zinc prose-code:before:content-none prose-code:after:content-none prose-pre:overflow-x-auto prose-pre:rounded-xl prose-pre:px-5 prose-pre:py-4 mx-auto w-full max-w-3xl px-4 py-10 sm:px-6 lg:py-14">
       <MdxRenderer source={mdx} components={components} />
+      {meta.source && (
+        <aside className="not-prose border-border mt-12 border-t pt-6">
+          <p className="text-muted-foreground text-sm">
+            Want the original? Read the full paper at its source.
+          </p>
+          <a
+            href={meta.source.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-foreground mt-1 inline-flex items-center gap-1.5 text-sm font-medium underline-offset-4 hover:underline"
+          >
+            Read the paper on {meta.source.name}
+            <span aria-hidden>→</span>
+          </a>
+        </aside>
+      )}
     </article>
   );
 }

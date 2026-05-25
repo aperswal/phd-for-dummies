@@ -18,28 +18,28 @@
   },
   "images": [
     {
-      "src": "/papers/thinking-fast-and-slow-with-deep-learning-and-tree-search/hero.webp",
+      "src": "https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/thinking-fast-and-slow-with-deep-learning-and-tree-search/hero.webp",
       "alt": "A small clay-orange pixel lantern labelled fast sits across from a sage-green pixel tree labelled slow, joined by two curved ink arrows into a loop, showing a quick intuition and a slow search taking turns making each other stronger.",
       "width": 2752,
       "height": 1536,
       "caption": "A fast intuition and a slow search take turns making each other stronger."
     },
     {
-      "src": "/papers/thinking-fast-and-slow-with-deep-learning-and-tree-search/exit-loop.webp",
+      "src": "https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/thinking-fast-and-slow-with-deep-learning-and-tree-search/exit-loop.webp",
       "alt": "A clay-orange pixel notebook and a sage-green pixel tree pass a baton around an ink loop labelled copy and plan, showing that each round the fast learner copies the stronger planner and the planner then plans with the sharper learner.",
       "width": 2400,
       "height": 1792,
       "caption": "Each round the learner copies a stronger planner, and the planner plans with a sharper learner."
     },
     {
-      "src": "/papers/thinking-fast-and-slow-with-deep-learning-and-tree-search/uct-bias.webp",
+      "src": "https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/thinking-fast-and-slow-with-deep-learning-and-tree-search/uct-bias.webp",
       "alt": "A sage-green pixel tree with one clay-orange branch lit up and an ink arrow labelled hunch pointing at it, showing the learner's hunch steering where the slow search spends most of its effort.",
       "width": 2400,
       "height": 1792,
       "caption": "The learner's hunch steers where the slow search spends its effort."
     },
     {
-      "src": "/papers/thinking-fast-and-slow-with-deep-learning-and-tree-search/gap-climb.webp",
+      "src": "https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/thinking-fast-and-slow-with-deep-learning-and-tree-search/gap-climb.webp",
       "alt": "A clay-orange rising path labelled ExIt climbs above a sage-green path, while a flat jagged ink line labelled old stays near the bottom, showing that splitting planning from learning climbs faster and steadier than learning both at once.",
       "width": 2400,
       "height": 1792,

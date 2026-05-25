@@ -2,6 +2,7 @@
 
 import {
   useCallback,
+  useEffect,
   useReducer,
   useRef,
   useState,
@@ -359,6 +360,14 @@ export function DirectPreferenceOptimization() {
     ? PROMPTS.find((p) => p.id === inspect.promptId)?.completions[inspect.index]
     : null;
 
+  // Scroll the event log to the top whenever a new entry is added. The log
+  // displays newest-first (reversed), so the active entry is always at the top.
+  const logRef = useRef<HTMLDivElement>(null);
+  const logLength = state.log.events.length;
+  useEffect(() => {
+    if (logRef.current) logRef.current.scrollTop = 0;
+  }, [logLength]);
+
   return (
     <div className="not-prose my-8 flex flex-col gap-4">
       <div className="flex flex-wrap items-center gap-2">
@@ -405,8 +414,8 @@ export function DirectPreferenceOptimization() {
           />
           preferred
           <span
-            className="ml-2 inline-block size-2.5 rounded-full ring-1"
-            style={{ borderColor: ACCENT, color: ACCENT }}
+            className="ml-2 inline-block size-2.5 rounded-full"
+            style={{ boxShadow: `0 0 0 1.5px ${ACCENT}` }}
           />
           dispreferred
           <span
@@ -424,9 +433,9 @@ export function DirectPreferenceOptimization() {
           onStep={onStep}
           onReset={onReset}
         />
-        <div className="w-40">
+        <div className="w-48">
           <Slider
-            label="Speed"
+            label="Playback speed (animation pace only)"
             value={speed}
             min={0.5}
             max={4}
@@ -447,7 +456,7 @@ export function DirectPreferenceOptimization() {
             />
           </div>
           <Slider
-            label="beta (KL constraint)"
+            label="beta — how tightly the KL constraint holds the policy near the reference"
             value={params.beta}
             min={0.05}
             max={2}
@@ -456,22 +465,13 @@ export function DirectPreferenceOptimization() {
             onChange={(value) => intervene({ type: "setBeta", value })}
           />
           <Slider
-            label="Step size"
+            label="Step size — gradient update magnitude per tick"
             value={params.learningRate}
             min={0.2}
             max={3}
             step={0.1}
             display={params.learningRate.toFixed(1)}
             onChange={(value) => intervene({ type: "setLearningRate", value })}
-          />
-          <Slider
-            label="Seed (jitters the reference)"
-            value={params.seed}
-            min={0}
-            max={12}
-            step={1}
-            display={params.seed === 0 ? "off" : String(params.seed)}
-            onChange={(value) => intervene({ type: "setSeed", value })}
           />
           <div className="flex flex-col gap-1.5">
             <span className="text-muted-foreground text-xs">
@@ -556,25 +556,37 @@ export function DirectPreferenceOptimization() {
             <span className="text-muted-foreground text-xs font-medium">
               Event log
             </span>
-            <div className="ring-foreground/10 max-h-32 overflow-y-auto rounded-lg ring-1">
-              {state.log.events.length === 0 ? (
-                <p className="text-muted-foreground px-2 py-1.5 text-xs">
-                  Step, drag a slider, or flip a pair to start the log.
-                </p>
-              ) : (
-                <ul className="text-xs">
-                  {[...state.log.events].reverse().map((event) => (
-                    <li key={event.id}>
-                      <button
-                        type="button"
-                        className="text-muted-foreground hover:bg-foreground/5 w-full px-2 py-1 text-left font-mono"
-                        onClick={() => onRestore(event.snapshot, event.label)}
-                      >
-                        {event.id}. {event.label}
-                      </button>
-                    </li>
-                  ))}
-                </ul>
+            {/* Fade mask at the bottom signals hidden content when scrollable. */}
+            <div className="relative">
+              <div
+                ref={logRef}
+                className="ring-foreground/10 max-h-32 overflow-y-auto rounded-lg ring-1"
+              >
+                {state.log.events.length === 0 ? (
+                  <p className="text-muted-foreground px-2 py-1.5 text-xs">
+                    Step, drag a slider, or flip a pair to start the log.
+                  </p>
+                ) : (
+                  <ul className="text-xs">
+                    {[...state.log.events].reverse().map((event) => (
+                      <li key={event.id}>
+                        <button
+                          type="button"
+                          className="text-muted-foreground hover:bg-foreground/5 w-full px-2 py-1 text-left font-mono"
+                          onClick={() => onRestore(event.snapshot, event.label)}
+                        >
+                          {event.id}. {event.label}
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+              {state.log.events.length > 3 && (
+                <div
+                  className="from-background pointer-events-none absolute bottom-0 left-0 right-0 h-6 rounded-b-lg bg-gradient-to-t to-transparent"
+                  aria-hidden="true"
+                />
               )}
             </div>
           </div>
@@ -586,7 +598,9 @@ export function DirectPreferenceOptimization() {
         prompts with {PROMPTS[0]?.completions.length ?? 4} candidate replies
         each, where a real run works over a full vocabulary of completions. The
         policy starts as a copy of the reference, and the reward is beta times
-        log pi(y)/pi_ref(y), exactly the paper&apos;s implicit reward.
+        log pi(y)/pi_ref(y), exactly the paper&apos;s implicit reward. The
+        reference starts at a uniform distribution (seed fixed for
+        determinism); every run of the same preset produces the same result.
       </p>
     </div>
   );

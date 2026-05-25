@@ -33,7 +33,17 @@ describe("paper content matches the site", () => {
 
       for (const image of meta.images) {
         expect(image.alt.trim().length).toBeGreaterThan(0);
-        expect(existsSync(join(PUBLIC_DIR, image.src))).toBe(true);
+        // Figures are hosted on Vercel Blob, so the src is an absolute URL on
+        // the store's public host. A local path (the pre-Blob form) must still
+        // resolve to a file on disk.
+        if (/^https?:\/\//.test(image.src)) {
+          const { hostname } = new URL(image.src);
+          expect(hostname.endsWith(".public.blob.vercel-storage.com")).toBe(
+            true,
+          );
+        } else {
+          expect(existsSync(join(PUBLIC_DIR, image.src))).toBe(true);
+        }
       }
 
       if (meta.hasVisualization) {

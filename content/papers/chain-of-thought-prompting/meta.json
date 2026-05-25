@@ -4,35 +4,41 @@
   "headline": "Show a big language model a few worked examples that spell out their reasoning step by step, and it starts writing its own steps before answering, which lets it solve problems it gets wrong when asked to answer in one shot.",
   "abstract": "We explore how generating a chain of thought—a series of intermediate reasoning steps—significantly improves the ability of large language models to perform complex reasoning. In particular, we show how such reasoning abilities emerge naturally in sufficiently large language models via a simple method called chain-of-thought prompting, where a few chain of thought demonstrations are provided as exemplars in prompting. Experiments on three large language models show that chain-of-thought prompting improves performance on a range of arithmetic, commonsense, and symbolic reasoning tasks. The empirical gains can be striking. For instance, prompting a PaLM 540B with just eight chain-of-thought exemplars achieves state-of-the-art accuracy on the GSM8K benchmark of math word problems, surpassing even finetuned GPT-3 with a verifier.",
   "date": "2026-05-24",
-  "tags": ["chain of thought", "prompting", "reasoning", "large language models", "in-context learning"],
+  "tags": [
+    "chain of thought",
+    "prompting",
+    "reasoning",
+    "large language models",
+    "in-context learning"
+  ],
   "source": {
     "name": "arXiv 2201.11903",
     "url": "https://arxiv.org/abs/2201.11903"
   },
   "images": [
     {
-      "src": "/papers/chain-of-thought-prompting/hero.webp",
+      "src": "https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/chain-of-thought-prompting/hero.webp",
       "alt": "Two pixel-art notebook pages side by side, the left holding one big crossed-out number labeled blurted answer beside a frowning face, the right holding three small worked lines that flow down an ink arrow into a circled clay-orange final number beside a smiling face, showing that writing out the steps reaches the right answer where blurting one number does not.",
       "width": 2752,
       "height": 1536,
       "caption": "Blurting one answer gets the multi-step problem wrong; writing the steps out reaches the right answer."
     },
     {
-      "src": "/papers/chain-of-thought-prompting/broken-chain.webp",
+      "src": "https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/chain-of-thought-prompting/broken-chain.webp",
       "alt": "A vertical chain with sound sage-green links at the top, a cracked clay-orange link in the middle labeled false step, and a shattered link below it, showing that one wrong reasoning step poisons every step that follows.",
       "width": 2400,
       "height": 1792,
       "caption": "One wrong step breaks the chain, and the error falls through to the answer."
     },
     {
-      "src": "/papers/chain-of-thought-prompting/emergence.webp",
+      "src": "https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/chain-of-thought-prompting/emergence.webp",
       "alt": "An inked line graph over a row of pixel-art mountains that grow taller from left to right, with a flat low sage curve and a clay-orange curve that hugs it then leaps upward past a marked threshold, showing that reasoning switches on only once a model grows past a certain size.",
       "width": 2400,
       "height": 1792,
       "caption": "Reasoning is an emergent ability. The gain is flat for small models, then jumps near 100B parameters."
     },
     {
-      "src": "/papers/chain-of-thought-prompting/ablations.webp",
+      "src": "https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/chain-of-thought-prompting/ablations.webp",
       "alt": "Two sage-green keys crossed out and labeled false paths fail to fit a lock, while one clay-orange key labeled true reasoning turns and opens the same lock, showing that look-alike shortcuts like emitting only the equation or only filler tokens do not give the boost that real worked reasoning does.",
       "width": 2400,
       "height": 1792,

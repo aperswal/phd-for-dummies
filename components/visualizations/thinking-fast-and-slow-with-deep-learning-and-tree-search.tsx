@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useReducer, useState } from "react";
+import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from "react";
 
 import { EventLogPanel } from "@/components/simulation/event-log";
 import { SimPanel } from "@/components/simulation/sim-panel";
@@ -10,7 +10,9 @@ import { Button } from "@/components/ui/button";
 import { PlayPauseStepControls } from "@/components/visualizations/play-pause-step-controls";
 import {
   initialState,
+  isDone,
   MAX_ELO,
+  MAX_ITERATIONS,
   MIN_ELO,
   MOHEX_ELO,
   PRESETS,
@@ -123,6 +125,7 @@ export function ExpertIterationLoop() {
 
   const { params, history, log } = state;
   const stats = useMemo(() => readout(state), [state]);
+  const done = useMemo(() => isDone(state), [state]);
   const visits = useMemo(
     () => moveVisits(params.useApprenticePrior, params.priorWeight),
     [params.useApprenticePrior, params.priorWeight],
@@ -134,9 +137,20 @@ export function ExpertIterationLoop() {
     [],
   );
 
-  const resetClock = useFixedTimestep(playing, 850 / speed, () =>
-    dispatch({ kind: "tick" }),
-  );
+  // Keep a ref so the fixed-timestep callback (closed over on mount) can read
+  // the latest done value without re-registering the interval on every tick.
+  const doneRef = useRef(done);
+  useEffect(() => {
+    doneRef.current = done;
+  }, [done]);
+
+  const resetClock = useFixedTimestep(playing, 850 / speed, () => {
+    if (doneRef.current) {
+      setPlaying(false);
+      return;
+    }
+    dispatch({ kind: "tick" });
+  });
 
   const onPlayPause = useCallback(() => {
     resetClock();
@@ -168,9 +182,11 @@ export function ExpertIterationLoop() {
   const padT = 20;
   const padB = 34;
   const maxIter = Math.max(40, history.length - 1);
-  const xAt = (iter: number) => padL + (iter / maxIter) * (width - padL - padR);
+  const xAt = (iter: number) =>
+    padL + (iter / maxIter) * (width - padL - padR);
   const yAt = (elo: number) =>
-    padT + (1 - (elo - MIN_ELO) / (MAX_ELO - MIN_ELO)) * (height - padT - padB);
+    padT +
+    (1 - (elo - MIN_ELO) / (MAX_ELO - MIN_ELO)) * (height - padT - padB);
 
   const linePath = (key: "apprentice" | "expert") =>
     history
@@ -306,10 +322,11 @@ export function ExpertIterationLoop() {
           onPlayPause={onPlayPause}
           onStep={onStep}
           onReset={onReset}
+          disabled={done}
         />
-        <div className="w-40">
+        <div className="min-w-[8rem] flex-1 sm:max-w-[12rem]">
           <Slider
-            label="Speed"
+            label="Playback pace"
             value={speed}
             min={0.5}
             max={3}
@@ -320,44 +337,74 @@ export function ExpertIterationLoop() {
         </div>
       </div>
 
+      {done && (
+        <div className="ring-foreground/10 bg-muted/40 flex items-center justify-between rounded-lg px-4 py-2 ring-1">
+          <span className="text-muted-foreground text-sm">
+            Run complete — {MAX_ITERATIONS} iterations
+          </span>
+          <Button type="button" size="sm" variant="outline" onClick={onReset}>
+            Reset
+          </Button>
+        </div>
+      )}
+
       <div className="grid gap-4 sm:grid-cols-2">
         <SimPanel title="Tune the loop">
-          <div className="flex flex-wrap gap-1.5">
-            <Toggle
-              label="ExIt"
-              active={params.mode === "exit"}
-              onClick={() => intervene({ type: "setMode", value: "exit" })}
-            />
-            <Toggle
-              label="REINFORCE"
-              active={params.mode === "reinforce"}
-              onClick={() => intervene({ type: "setMode", value: "reinforce" })}
-            />
-          </div>
-          <div className="flex flex-wrap gap-1.5">
-            {(["TPT", "CAT"] as TargetType[]).map((target) => (
+          <div className="flex flex-col gap-0.5">
+            <span className="text-muted-foreground text-xs font-medium">
+              Algorithm
+            </span>
+            <div className="flex flex-wrap gap-1.5">
               <Toggle
-                key={target}
-                label={`${target} target`}
-                active={params.target === target}
-                onClick={() => intervene({ type: "setTarget", value: target })}
+                label="ExIt — apprentice imitates expert"
+                active={params.mode === "exit"}
+                onClick={() => intervene({ type: "setMode", value: "exit" })}
               />
-            ))}
+              <Toggle
+                label="REINFORCE — policy gradient only"
+                active={params.mode === "reinforce"}
+                onClick={() =>
+                  intervene({ type: "setMode", value: "reinforce" })
+                }
+              />
+            </div>
           </div>
-          <div className="flex flex-wrap gap-1.5">
-            <Toggle
-              label="Apprentice prior"
-              active={params.useApprenticePrior}
-              onClick={() => intervene({ type: "toggleApprenticePrior" })}
-            />
-            <Toggle
-              label="Value net"
-              active={params.useValueNet}
-              onClick={() => intervene({ type: "toggleValueNet" })}
-            />
+          <div className="flex flex-col gap-0.5">
+            <span className="text-muted-foreground text-xs font-medium">
+              Imitation target
+            </span>
+            <div className="flex flex-wrap gap-1.5">
+              {(["TPT", "CAT"] as TargetType[]).map((target) => (
+                <Toggle
+                  key={target}
+                  label={`${target}${target === "TPT" ? " — match visit distribution" : " — match best move only"}`}
+                  active={params.target === target}
+                  onClick={() =>
+                    intervene({ type: "setTarget", value: target })
+                  }
+                />
+              ))}
+            </div>
+          </div>
+          <div className="flex flex-col gap-0.5">
+            <span className="text-muted-foreground text-xs font-medium">
+              Search components
+            </span>
+            <div className="flex flex-wrap gap-1.5">
+              <Toggle
+                label="Apprentice prior — learned hunch steers search"
+                active={params.useApprenticePrior}
+                onClick={() => intervene({ type: "toggleApprenticePrior" })}
+              />
+              <Toggle
+                label="Value net — shortcut rollouts with learned value"
+                active={params.useValueNet}
+                onClick={() => intervene({ type: "toggleValueNet" })}
+              />
+            </div>
           </div>
           <Slider
-            label="MCTS simulations per move"
+            label="MCTS simulations per move — more gives a stronger expert"
             value={params.simulations}
             min={500}
             max={30000}
@@ -366,7 +413,7 @@ export function ExpertIterationLoop() {
             onChange={(value) => intervene({ type: "setSimulations", value })}
           />
           <Slider
-            label="Prior weight w_a (tuned at 100)"
+            label="Prior weight w_a — how strongly the hunch steers search (paper: 100)"
             value={params.priorWeight}
             min={0}
             max={300}
@@ -375,7 +422,7 @@ export function ExpertIterationLoop() {
             onChange={(value) => intervene({ type: "setPriorWeight", value })}
           />
           <Slider
-            label="Dataset size per iteration"
+            label="Dataset size per iteration — more positions close more of the gap"
             value={params.datasetSize}
             min={24000}
             max={550000}
@@ -387,14 +434,16 @@ export function ExpertIterationLoop() {
 
         <SimPanel title="Inside one search">
           <div className="flex flex-wrap gap-2 text-xs">
-            <Badge variant="secondary">
-              apprentice {Math.round(state.apprentice)}
+            <Badge variant="outline">
+              apprentice {Math.round(state.apprentice)} Elo
             </Badge>
-            <Badge variant="outline">expert {Math.round(state.expert)}</Badge>
+            <Badge variant="outline">
+              expert {Math.round(state.expert)} Elo
+            </Badge>
             <Badge variant="outline">gap {Math.round(stats.gap)} Elo</Badge>
             <Badge variant={stats.beatsMohex ? "default" : "outline"}>
               {stats.beatsMohex
-                ? `beats MoHeX (iter ${stats.iterationsToMohex})`
+                ? `✓ beats MoHeX (iter ${stats.iterationsToMohex})`
                 : "below MoHeX"}
             </Badge>
           </div>
@@ -507,10 +556,11 @@ export function ExpertIterationLoop() {
         Strength here is an Elo recurrence that follows the paper&apos;s
         framing. The expert is the apprentice plus a search gain, and each
         iteration the apprentice closes part of the gap up to the expert it just
-        imitated. The real ExIt ran 9x9 Hex with 10,000 simulations per move
-        over hundreds of thousands of positions; this runs the loop in tens of
-        iterations so the compounding is watchable, not at the paper&apos;s
-        scale.
+        imitated. The run is deterministic (fixed seed) and stops at{" "}
+        {MAX_ITERATIONS} iterations. The real ExIt ran 9x9 Hex with 10,000
+        simulations per move over hundreds of thousands of positions; this
+        compresses the loop so the compounding is watchable, not at the
+        paper&apos;s scale.
       </p>
     </div>
   );

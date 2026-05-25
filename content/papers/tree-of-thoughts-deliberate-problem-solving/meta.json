@@ -17,28 +17,28 @@
   },
   "images": [
     {
-      "src": "/papers/tree-of-thoughts-deliberate-problem-solving/hero.webp",
+      "src": "https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/tree-of-thoughts-deliberate-problem-solving/hero.webp",
       "alt": "A pixel-art field-journal map where a single trailhead splits into a branching tree of forest trails, a few lit clay-orange trails traced by ink arrows climbing to a glowing lantern marked goal while the other trails fade to gray and dead-end with x marks, showing that Tree of Thoughts explores many partial-answer branches, keeps the promising ones, and searches its way to the answer.",
       "width": 2752,
       "height": 1536,
       "caption": "One start, many branching trails. The search keeps the promising routes lit and lets the dead ends fade."
     },
     {
-      "src": "/papers/tree-of-thoughts-deliberate-problem-solving/propose-evaluate.webp",
+      "src": "https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/tree-of-thoughts-deliberate-problem-solving/propose-evaluate.webp",
       "alt": "A forest trail splitting into three forks at a junction with an ink wax-seal stamp on each path reading sure, maybe, and no, and a small ink magnifier at the junction, showing that the language model both proposes the next steps and grades each one before the search decides which to follow.",
       "width": 2400,
       "height": 1792,
       "caption": "The model plays two roles at every fork. It proposes the next steps, then grades each one sure, maybe, or no."
     },
     {
-      "src": "/papers/tree-of-thoughts-deliberate-problem-solving/prune-backtrack.webp",
+      "src": "https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/tree-of-thoughts-deliberate-problem-solving/prune-backtrack.webp",
       "alt": "A forest trail that climbs into a pile of boulders blocking the way, with a bold curved ink arrow labelled backtrack looping back down to the last fork where a fresh clay-orange trail sets off in a new direction, showing that depth-first search prunes a dead-end branch and backs up to try another.",
       "width": 2400,
       "height": 1792,
       "caption": "Hit a dead end, cut that branch, and back up to the last fork to try a different route."
     },
     {
-      "src": "/papers/tree-of-thoughts-deliberate-problem-solving/beam-width.webp",
+      "src": "https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/tree-of-thoughts-deliberate-problem-solving/beam-width.webp",
       "alt": "Two small trail maps side by side, on the left a single narrow trail labelled b=1 that dead-ends short of the top, on the right a wide fan of several trails labelled b=5 where one clay-orange trail reaches a glowing lantern, showing that keeping more branches alive at each step finds the goal far more often.",
       "width": 2400,
       "height": 1792,

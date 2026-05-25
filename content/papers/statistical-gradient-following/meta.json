@@ -17,28 +17,28 @@
   },
   "images": [
     {
-      "src": "/papers/statistical-gradient-following/hero.webp",
+      "src": "https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/statistical-gradient-following/hero.webp",
       "alt": "A pixel hillside half hidden in soft fog on aged parchment, a glowing clay-orange peak near its top, a loose scatter of thrown darts across the slope with the ones that landed on bright ground glowing orange, and thin ink arrows tugging a central aim marker uphill toward them, showing that a learner finds high ground it cannot see by throwing spread-out tries and leaning toward the ones that scored higher.",
       "width": 2752,
       "height": 1536,
       "caption": "Throw a spread of tries onto ground you cannot see, then lean toward the ones that scored higher, and you drift uphill."
     },
     {
-      "src": "/papers/statistical-gradient-following/reinforce-update.webp",
+      "src": "https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/statistical-gradient-following/reinforce-update.webp",
       "alt": "A central aim crosshair on parchment with a dashed ink line marking the average score, one clay-orange dart that beat the average pulling the aim toward it with a solid arrow, and one slate dart below average pushing the aim away with a hollow arrow, showing that the update nudges the aim toward tries that scored above the running average and away from tries that scored below it.",
       "width": 2400,
       "height": 1792,
       "caption": "Tries that beat your average score pull the aim toward them; tries below it push the aim away."
     },
     {
-      "src": "/papers/statistical-gradient-following/exploration-spread.webp",
+      "src": "https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/statistical-gradient-following/exploration-spread.webp",
       "alt": "A wide slate scatter of darts flung outward on the left, a tight clay-orange cluster of darts hitting a small bright peak on the right, and a curved ink arrow with a shrinking bracket sweeping between them, showing that the unit scatters its tries wide while it is doing poorly and tightens its spread as it homes in on the peak.",
       "width": 2400,
       "height": 1792,
       "caption": "Scatter wide while you are lost, tighten the grouping as you home in on the peak."
     },
     {
-      "src": "/papers/statistical-gradient-following/gradient-without-map.webp",
+      "src": "https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/statistical-gradient-following/gradient-without-map.webp",
       "alt": "A pixel hill with its top lost in slate fog on parchment, a faint thin ink arrow on the slope marking the true uphill direction, and a bold clay-orange arrow built from a fan of averaged random tries pointing the same way up the slope, showing that averaging many random tries points uphill even though the slope was never measured.",
       "width": 2400,
       "height": 1792,

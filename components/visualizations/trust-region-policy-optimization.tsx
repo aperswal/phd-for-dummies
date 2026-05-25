@@ -24,6 +24,10 @@ import {
   type UpdateMode,
 } from "@/components/visualizations/trust-region-policy-optimization-model";
 
+// The negative-advantage color is a theme token so it reads clearly in both
+// light and dark mode.
+const NEGATIVE_ADV_COLOR = "var(--color-muted-foreground)";
+
 const ACCENT = "#c2683f";
 const SAGE = "#6f7d5f";
 const SLATE = "#7c8a99";
@@ -518,7 +522,9 @@ export function TrustRegionFlow() {
                 return (
                   <span key={a} className="font-mono">
                     {label.padEnd(6)} p={prob.toFixed(2)} A=
-                    <span style={{ color: adv >= 0 ? SAGE : SLATE }}>
+                    <span
+                      style={{ color: adv >= 0 ? SAGE : NEGATIVE_ADV_COLOR }}
+                    >
                       {adv >= 0 ? "+" : ""}
                       {adv.toFixed(2)}
                     </span>
@@ -564,7 +570,7 @@ export function TrustRegionFlow() {
         />
         <div className="w-40">
           <Slider
-            label="Speed"
+            label="Playback speed"
             value={speed}
             min={1}
             max={16}
@@ -603,7 +609,7 @@ export function TrustRegionFlow() {
         </div>
         <div className="grid gap-3 sm:grid-cols-2">
           <Slider
-            label="delta (trust-region radius)"
+            label="delta — how far the policy may move each step (KL budget)"
             value={params.delta}
             min={0.005}
             max={0.6}
@@ -612,31 +618,13 @@ export function TrustRegionFlow() {
             onChange={(value) => intervene({ type: "setDelta", value })}
           />
           <Slider
-            label="advantage estimate error"
+            label="estimate error — how noisy the advantage signal is"
             value={params.estError}
             min={0}
             max={0.4}
             step={0.01}
             display={params.estError.toFixed(2)}
             onChange={(value) => intervene({ type: "setEstError", value })}
-          />
-          <Slider
-            label="gamma (discount)"
-            value={params.gamma}
-            min={0.85}
-            max={0.97}
-            step={0.01}
-            display={params.gamma.toFixed(2)}
-            onChange={(value) => intervene({ type: "setGamma", value })}
-          />
-          <Slider
-            label="seed (error pattern)"
-            value={state.seed}
-            min={1}
-            max={40}
-            step={1}
-            display={String(state.seed)}
-            onChange={(value) => intervene({ type: "setSeed", value })}
           />
         </div>
       </SimPanel>
@@ -647,10 +635,12 @@ export function TrustRegionFlow() {
         solves the policy exactly for its value, advantage, and discounted
         visitation, builds the surrogate and its natural-gradient step, then
         scales the step to a mean KL of delta and backtracks until the surrogate
-        truly improves. The advantage estimate carries a fixed seeded error, so
-        a worse estimate makes the surrogate less trustworthy. This runs one
-        small MDP solved exactly, where the paper estimates these quantities
-        from sampled trajectories.
+        truly improves. The advantage estimate carries a fixed bias whose pattern
+        is set by the preset; raising estimate error makes the surrogate less
+        trustworthy even within the KL budget. Runs are deterministic: the same
+        preset always produces the same trajectory. This runs one small MDP
+        solved exactly, where the paper estimates these quantities from sampled
+        trajectories.
       </p>
     </div>
   );

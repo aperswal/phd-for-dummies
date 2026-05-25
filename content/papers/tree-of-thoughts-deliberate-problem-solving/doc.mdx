@@ -2,7 +2,7 @@
 
 _Instead of writing one answer left to right, a language model lays out partial answers as a branching tree, scores each branch itself, and searches the tree, keeping the promising paths and backtracking out of dead ends._
 
-![A pixel-art field-journal map where a single trailhead splits into a branching tree of forest trails, a few lit clay-orange trails traced by ink arrows climbing to a glowing lantern marked goal while the other trails fade to gray and dead-end with x marks, showing that Tree of Thoughts explores many partial-answer branches, keeps the promising ones, and searches its way to the answer.](/papers/tree-of-thoughts-deliberate-problem-solving/hero.webp)
+![A pixel-art field-journal map where a single trailhead splits into a branching tree of forest trails, a few lit clay-orange trails traced by ink arrows climbing to a glowing lantern marked goal while the other trails fade to gray and dead-end with x marks, showing that Tree of Thoughts explores many partial-answer branches, keeps the promising ones, and searches its way to the answer.](https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/tree-of-thoughts-deliberate-problem-solving/hero.webp)
 
 ## Read at your level
 
@@ -55,7 +55,7 @@ Frame any problem as a tree. A node is a state `s = [x, z_1...i]`, the input `x`
 
 For Game of 24 the answers are concrete. A thought is one intermediate equation that consumes two numbers and produces one. The generator proposes `k` candidate next equations. The evaluator scores each resulting state.
 
-![A forest trail splitting into three forks at a junction with an ink wax-seal stamp on each path reading sure, maybe, and no, and a small ink magnifier at the junction, showing that the language model both proposes the next steps and grades each one before the search decides which to follow.](/papers/tree-of-thoughts-deliberate-problem-solving/propose-evaluate.webp)
+![A forest trail splitting into three forks at a junction with an ink wax-seal stamp on each path reading sure, maybe, and no, and a small ink magnifier at the junction, showing that the language model both proposes the next steps and grades each one before the search decides which to follow.](https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/tree-of-thoughts-deliberate-problem-solving/propose-evaluate.webp)
 
 The trick that makes this work without any extra training is that the same model does both the generating and the evaluating. The evaluator is just the model prompted to reason about a state and answer sure, maybe, or impossible, which maps to a value the search can sort on.
 
@@ -73,7 +73,7 @@ def tot_bfs(x, generate, evaluate, steps, beam):
 
 That `top_b` line is the whole game. With a beam of 1 you keep only the single best-looking state at each depth, so one bad score from the evaluator throws away the winning branch and never gets it back. With a beam of 5 you keep five, so the right branch survives even when the evaluator misranks it.
 
-![Two small trail maps side by side, on the left a single narrow trail labelled b=1 that dead-ends short of the top, on the right a wide fan of several trails labelled b=5 where one clay-orange trail reaches a glowing lantern, showing that keeping more branches alive at each step finds the goal far more often.](/papers/tree-of-thoughts-deliberate-problem-solving/beam-width.webp)
+![Two small trail maps side by side, on the left a single narrow trail labelled b=1 that dead-ends short of the top, on the right a wide fan of several trails labelled b=5 where one clay-orange trail reaches a glowing lantern, showing that keeping more branches alive at each step finds the goal far more often.](https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/tree-of-thoughts-deliberate-problem-solving/beam-width.webp)
 
 The numbers show exactly this. Beam of 1 solved 45 percent of Game of 24 puzzles, beam of 5 solved 74 percent, against 4 percent for chain-of-thought. The simulation above is honest about why. Load the narrow-beam preset, watch it drop the path, then widen the beam and watch the same search recover.
 
@@ -95,7 +95,7 @@ The contribution is recasting LM inference as a general tree search over self-ge
 
 The methodological choices reward scrutiny. Decomposition is deliberately task-specific, a thought is one equation for Game of 24, a writing plan for Creative Writing, a word for Crosswords, chosen so a thought is small enough for the model to evaluate yet big enough to be coherent. Generation has two modes, sampling i.i.d. thoughts when the space is rich and diverse, and a propose prompt that lists candidates in one shot when the space is constrained and i.i.d. samples would collide. Evaluation also has two modes, an independent value per state, or a vote that compares states against each other, the latter for tasks like passage coherence where an absolute score is hard but a relative ranking is easy. The search is plain BFS with a beam, or DFS with a value threshold for pruning and backtracking, with A* and MCTS explicitly left as future work.
 
-![A forest trail that climbs into a pile of boulders blocking the way, with a bold curved ink arrow labelled backtrack looping back down to the last fork where a fresh clay-orange trail sets off in a new direction, showing that depth-first search prunes a dead-end branch and backs up to try another.](/papers/tree-of-thoughts-deliberate-problem-solving/prune-backtrack.webp)
+![A forest trail that climbs into a pile of boulders blocking the way, with a bold curved ink arrow labelled backtrack looping back down to the last fork where a fresh clay-orange trail sets off in a new direction, showing that depth-first search prunes a dead-end branch and backs up to try another.](https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/tree-of-thoughts-deliberate-problem-solving/prune-backtrack.webp)
 
 Threats to validity worth probing. The three tasks are chosen to be hard for left-to-right decoding and are not a broad benchmark, so the headline gains describe a class of problems, not all problems. The evaluator is the load-bearing component and its errors are the real ceiling, the crosswords ablations show that with the oracle best state ToT solves 7 of 20 games versus 4 of 20 with its own heuristic, so a chunk of the remaining failures are evaluation failures, not search failures. The cost analysis is light on a careful compute-matched comparison against simply sampling more chains. The obvious follow-ups are better learned evaluators, stronger search like MCTS, and whether the gains survive on tasks the field actually benchmarks.
 

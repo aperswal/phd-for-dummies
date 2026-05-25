@@ -17,28 +17,28 @@
   },
   "images": [
     {
-      "src": "/papers/learning-from-delayed-rewards/hero.webp",
+      "src": "https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/learning-from-delayed-rewards/hero.webp",
       "alt": "A top-down pixel dungeon grid on aged parchment with a glowing clay-orange treasure chest labelled Goal in the corner, its warm glow fading room by room across the grid while a short ink arrow in every room points toward the chest, showing that a reward at the goal seeps backward until every spot knows the way to it.",
       "width": 2752,
       "height": 1536,
       "caption": "The reward at the goal backs up cell by cell until every cell's arrow points the way to it."
     },
     {
-      "src": "/papers/learning-from-delayed-rewards/q-update.webp",
+      "src": "https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/learning-from-delayed-rewards/q-update.webp",
       "alt": "Two pixel stone rooms labelled now and next on parchment, a clay-orange reward coin between them, an ink arrow leaving the now room through a door and a curved ink arrow feeding the glowing next room's value back to revise the number written on the door, showing that one step nudges a single move's score toward the reward plus the best value of where it leads.",
       "width": 2400,
       "height": 1792,
       "caption": "Each step nudges one move's score toward the reward you just got plus the best you can do from where you land."
     },
     {
-      "src": "/papers/learning-from-delayed-rewards/explore.webp",
+      "src": "https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/learning-from-delayed-rewards/explore.webp",
       "alt": "A pixel dungeon on parchment with a treasure chest in the corner, a meandering sage-green dashed path labelled wander tracing an explorer's random route, and a separate field of clean solid black ink arrows in every room all pointing along the shortest route to the chest labelled learn, showing that an agent can wander any way it likes and still learn the one best route.",
       "width": 2400,
       "height": 1792,
       "caption": "Wander any way you like, even at random, and the learned best route still points straight at the goal."
     },
     {
-      "src": "/papers/learning-from-delayed-rewards/discount.webp",
+      "src": "https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/learning-from-delayed-rewards/discount.webp",
       "alt": "A row of pixel stone rooms on parchment leading away from a glowing clay-orange treasure chest labelled goal, the warm glow a clear notch dimmer in each room further off, with an ink bracket under each room and a distance arrow beneath, showing that a far-off reward is worth a little less with every step so its value fades with distance.",
       "width": 2400,
       "height": 1792,

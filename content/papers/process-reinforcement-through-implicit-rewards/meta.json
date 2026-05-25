@@ -4,28 +4,35 @@
   "headline": "A way to reward an AI for every reasoning step, not just the final answer, using a reward model that comes free from the language model itself and stays honest by updating online.",
   "abstract": "Dense process rewards have proven a more effective alternative to the sparse outcome-level rewards in the inference-time scaling of large language models (LLMs), particularly in tasks requiring complex multi-step reasoning. While dense rewards also offer an appealing choice for the reinforcement learning (RL) of LLMs since their fine-grained rewards have the potential to address some inherent issues of outcome rewards, such as training efficiency and credit assignment, this potential remains largely unrealized. This can be primarily attributed to the challenges of training process reward models (PRMs) online, where collecting high-quality process labels is prohibitively expensive, making them particularly vulnerable to reward hacking. To address these challenges, we propose PRIME (Process Reinforcement through IMplicit rEwards), which enables online PRM updates using only policy rollouts and outcome labels through implicit process rewards. PRIME combines well with various advantage functions and forgoes the dedicated reward model training phase that existing approaches require, substantially reducing the development overhead. We demonstrate PRIME's effectiveness on competitional math and coding. Starting from Qwen2.5-Math-7B-Base, PRIME achieves a 15.1% average improvement across several key reasoning benchmarks over the SFT model. Notably, our resulting model, Eurus-2-7B-PRIME, surpasses Qwen2.5-Math-7B-Instruct on seven reasoning benchmarks with 10% of its training data.",
   "date": "2026-05-24",
-  "tags": ["reinforcement learning", "large language models", "reward modeling", "process rewards", "reasoning", "reward hacking"],
+  "tags": [
+    "reinforcement learning",
+    "large language models",
+    "reward modeling",
+    "process rewards",
+    "reasoning",
+    "reward hacking"
+  ],
   "source": {
     "name": "arXiv 2502.01456",
     "url": "https://arxiv.org/abs/2502.01456"
   },
   "images": [
     {
-      "src": "/papers/process-reinforcement-through-implicit-rewards/hero.webp",
+      "src": "https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/process-reinforcement-through-implicit-rewards/hero.webp",
       "alt": "Two pixel lenses, a clay-orange one labelled policy and a sage one labelled frozen, both reading a column of three identical reasoning-step tiles, with an ink bracket turning the two readings into a row of clay-orange score bars, showing that a model scores every step for free by comparing its own reading against a frozen twin.",
       "width": 2752,
       "height": 1536,
       "caption": "The implicit reward for a step is how much more the policy likes it than a frozen twin does, so every step gets a score with no labels."
     },
     {
-      "src": "/papers/process-reinforcement-through-implicit-rewards/sparse-vs-dense.webp",
+      "src": "https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/process-reinforcement-through-implicit-rewards/sparse-vs-dense.webp",
       "alt": "Two pixel stepping-stone paths climbing left to right, the upper one marked End only with a single clay-orange star on its last stone, the lower one marked Every step with a clay-orange tick on every stone, showing that an outcome reward scores only the final answer while a dense process reward scores each step.",
       "width": 2400,
       "height": 1792,
       "caption": "An outcome reward marks only the final answer; a dense process reward marks every step, so credit lands where the work happened."
     },
     {
-      "src": "/papers/process-reinforcement-through-implicit-rewards/reward-hacking.webp",
+      "src": "https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/process-reinforcement-through-implicit-rewards/reward-hacking.webp",
       "alt": "Two pixel line-chart panels, the left one labelled frozen showing a clay-orange reward curve climbing while a sage truth curve falls away, the right one labelled online showing both curves rising together, showing that a frozen reward gets gamed while a reward that keeps updating on fresh rollouts stays honest.",
       "width": 2400,
       "height": 1792,

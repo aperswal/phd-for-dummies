@@ -2,7 +2,7 @@
 
 _A web agent that searches a tree of possible web pages, uses one model as both the actor that proposes clicks and the critic that grades them, and learns from both its wins and its mistakes._
 
-![An explorer stands at the top room of a downward-branching tree of pixel-art rooms, a sage-green lantern guide pointing one ink arrow toward the right branch while the room at the end of that path glows clay-orange and carries a small inked star, showing that the agent searches many possible web pages, listens to a critic that points at the promising branch, and remembers which path reached the goal.](/papers/agent-q-advanced-reasoning-and-learning/hero.webp)
+![An explorer stands at the top room of a downward-branching tree of pixel-art rooms, a sage-green lantern guide pointing one ink arrow toward the right branch while the room at the end of that path glows clay-orange and carries a small inked star, showing that the agent searches many possible web pages, listens to a critic that points at the promising branch, and remembers which path reached the goal.](https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/agent-q-advanced-reasoning-and-learning/hero.webp)
 
 ## Read at your level
 
@@ -45,7 +45,7 @@ Here's the one new idea for this section. **Search** means trying many possible 
 
 There's a second trick. The same model that proposes clicks also grades them. Before trying anything, it ranks its own ideas, "this click looks most useful, that one looks pointless." That ranking is a cheap guess that steers the search toward good clicks first, so it doesn't waste tries on obvious junk.
 
-![One pixel-art wizard shown twice, on the left sketching three doorways onto the page and on the right writing rank numbers one, two, three beside the same three doors with a quill, the top-ranked door glowing clay-orange, showing that a single model plays both the actor that proposes the next clicks and the critic that grades them.](/papers/agent-q-advanced-reasoning-and-learning/actor-critic.webp)
+![One pixel-art wizard shown twice, on the left sketching three doorways onto the page and on the right writing rank numbers one, two, three beside the same three doors with a quill, the top-ranked door glowing clay-orange, showing that a single model plays both the actor that proposes the next clicks and the critic that grades them.](https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/agent-q-advanced-reasoning-and-learning/actor-critic.webp)
 
 Once the search has tried a bunch of paths, the agent looks at moments where two possible clicks ended up very different. Say at the search page, "open the correct restaurant" scored 0.8 and "open the wrong restaurant" scored 0.2. That's a clear lesson. The agent saves "prefer the correct one, reject the wrong one" and uses pairs like that to retrain itself, so next time it picks the good click on its own without searching.
 
@@ -59,7 +59,7 @@ Start with the setup. The agent works in a partially observed environment. It se
 
 The first answer is Monte Carlo Tree Search. Picture each web page as a node in a tree, and each candidate click as an edge to a child page. MCTS repeats four phases. It **selects** a path down the tree, **expands** a new node, **rolls out** a trajectory from there to a terminal page to get a reward, and **backpropagates** that reward up the path.
 
-![A branching tree of pixel-art rooms with a black ink arrow going down the left branch from the START room to a chest marked RESULT, and a curved arrow carrying a small clay-orange token back up to the start, showing the search picking a path, trying it all the way to a result, then carrying the score back up the tree.](/papers/agent-q-advanced-reasoning-and-learning/mcts-loop.webp)
+![A branching tree of pixel-art rooms with a black ink arrow going down the left branch from the START room to a chest marked RESULT, and a curved arrow carrying a small clay-orange token back up to the start, showing the search picking a path, trying it all the way to a result, then carrying the score back up the tree.](https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/agent-q-advanced-reasoning-and-learning/mcts-loop.webp)
 
 Selection uses the UCB1 rule, which balances trying what already looks good against trying what's unexplored.
 
@@ -86,7 +86,7 @@ Here `Q_tilde` is the empirical MCTS estimate from rollouts and `Q_hat` is the c
 
 The last step turns search into training. After a round of search, look at every page where two sibling actions ended with values that differ by more than a threshold. The higher one is the preferred action, the lower one is rejected, and the pair feeds Direct Preference Optimization (DPO). DPO is a way to fine-tune a model on "prefer A over B" pairs without training a separate reward model. The loss pushes the model to raise the log-probability of the preferred action relative to the rejected one.
 
-![Two sibling pixel-art doorways at different heights share one room below, an ink brace measures the gap between them, the taller clay-orange door gets a star marked CHOSEN PATH and the shorter sage door gets a cross marked REJECTED PATH, showing that where two sibling moves differ in value by more than a threshold the better one becomes the preferred example and the worse one the rejected example for fine-tuning.](/papers/agent-q-advanced-reasoning-and-learning/preference-pair.webp)
+![Two sibling pixel-art doorways at different heights share one room below, an ink brace measures the gap between them, the taller clay-orange door gets a star marked CHOSEN PATH and the shorter sage door gets a cross marked REJECTED PATH, showing that where two sibling moves differ in value by more than a threshold the better one becomes the preferred example and the worse one the rejected example for fine-tuning.](https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/agent-q-advanced-reasoning-and-learning/preference-pair.webp)
 
 The threshold matters. A tiny threshold makes pairs out of near-ties, which is noisy. A big threshold only keeps the clearest lessons but gives you fewer of them. Drag the DPO threshold slider in the simulation and watch the pair list shrink as you raise it.
 

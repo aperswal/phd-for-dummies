@@ -4,35 +4,41 @@
   "headline": "A way to teach a language model what people prefer in one direct training step, skipping the separate reward model and reinforcement learning that the old recipe needed.",
   "abstract": "While large-scale unsupervised language models (LMs) learn broad world knowledge and some reasoning skills, achieving precise control of their behavior is difficult due to the completely unsupervised nature of their training. Existing methods for gaining such steerability collect human labels of the relative quality of model generations and fine-tune the unsupervised LM to align with these preferences, often with reinforcement learning from human feedback (RLHF). However, RLHF is a complex and often unstable procedure, first fitting a reward model that reflects the human preferences, and then fine-tuning the large unsupervised LM using reinforcement learning to maximize this estimated reward without drifting too far from the original model. In this paper we introduce a new parameterization of the reward model in RLHF that enables extraction of the corresponding optimal policy in closed form, allowing us to solve the standard RLHF problem with only a simple classification loss. The resulting algorithm, which we call Direct Preference Optimization (DPO), is stable, performant, and computationally lightweight, eliminating the need for sampling from the LM during fine-tuning or performing significant hyperparameter tuning. Our experiments show that DPO can fine-tune LMs to align with human preferences as well as or better than existing methods. Notably, fine-tuning with DPO exceeds PPO-based RLHF in ability to control sentiment of generations, and matches or improves response quality in summarization and single-turn dialogue while being substantially simpler to implement and train.",
   "date": "2026-05-24",
-  "tags": ["preference learning", "RLHF", "language models", "alignment", "fine-tuning"],
+  "tags": [
+    "preference learning",
+    "RLHF",
+    "language models",
+    "alignment",
+    "fine-tuning"
+  ],
   "source": {
     "name": "arXiv 2305.18290",
     "url": "https://arxiv.org/abs/2305.18290"
   },
   "images": [
     {
-      "src": "/papers/direct-preference-optimization/hero.webp",
+      "src": "https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/direct-preference-optimization/hero.webp",
       "alt": "A stack of preference cards splits into two inked routes: the long top route runs through a wig-wearing judge holding a scale and loops back before reaching a pixel robot, while the bold bottom route labelled direct goes straight from the cards to the robot, showing that DPO drops the separate reward model and reinforcement learning loop and trains the model in one step.",
       "width": 2752,
       "height": 1536,
       "caption": "The old recipe hires a judge and loops through reinforcement learning; DPO goes straight from preference cards to the model."
     },
     {
-      "src": "/papers/direct-preference-optimization/implicit-reward.webp",
+      "src": "https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/direct-preference-optimization/implicit-reward.webp",
       "alt": "A pixel robot with a gauge dial sketched inside its chest, the needle leaning toward a clay-orange smiling reply tile and away from a faded one, showing that the language model carries its own reward score as the log-ratio of how much likelier it makes a reply than the reference model.",
       "width": 2400,
       "height": 1792,
       "caption": "The reward was never a separate thing; it lives inside the model as how much likelier it makes a reply than the starting model did."
     },
     {
-      "src": "/papers/direct-preference-optimization/sigma-weight.webp",
+      "src": "https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/direct-preference-optimization/sigma-weight.webp",
       "alt": "Two pixel seesaw scales, the top one already level beside a thin sage nudge arrow and the bottom one tipped the wrong way beside a thick clay-orange shove arrow, showing that DPO leans hardest on the pairs the model currently ranks wrong and barely touches the pairs it already ranks right.",
       "width": 2400,
       "height": 1792,
       "caption": "Pairs the model already ranks right get a tiny nudge; pairs it ranks wrong get the hard shove."
     },
     {
-      "src": "/papers/direct-preference-optimization/beta-leash.webp",
+      "src": "https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/direct-preference-optimization/beta-leash.webp",
       "alt": "A pixel robot on a leash anchored to a wooden stake tagged beta, straining toward a clay-orange treat but held back, with an inked arc marking how far it can roam, showing that beta sets how far the trained model is allowed to drift from the model it started as.",
       "width": 2400,
       "height": 1792,

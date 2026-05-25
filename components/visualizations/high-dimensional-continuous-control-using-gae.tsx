@@ -551,9 +551,9 @@ export function GeneralizedAdvantageEstimation() {
           onStep={onStep}
           onReset={onReset}
         />
-        <div className="w-40">
+        <div className="min-w-0 w-40">
           <Slider
-            label="Speed"
+            label="Playback speed (animation pace only, not part of GAE)"
             value={speed}
             min={1}
             max={12}
@@ -567,7 +567,7 @@ export function GeneralizedAdvantageEstimation() {
       <SimPanel title="Knobs">
         <div className="grid gap-3 sm:grid-cols-2">
           <Slider
-            label="lambda (bias-variance dial)"
+            label="λ — slides between one-step biased (0) and full-return unbiased (1)"
             value={params.lambda}
             min={0}
             max={1}
@@ -576,7 +576,7 @@ export function GeneralizedAdvantageEstimation() {
             onChange={(value) => intervene({ type: "setLambda", value })}
           />
           <Slider
-            label="gamma (discount)"
+            label="γ — discount on future rewards; defines which value function we solve"
             value={params.gamma}
             min={0.9}
             max={0.995}
@@ -612,7 +612,7 @@ export function GeneralizedAdvantageEstimation() {
         </div>
         <div className="grid gap-3 sm:grid-cols-2">
           <Slider
-            label="value error (noisy V)"
+            label="value error — std of per-state noise added to V (noisy mode only)"
             value={params.valueError}
             min={0}
             max={1}
@@ -622,7 +622,7 @@ export function GeneralizedAdvantageEstimation() {
             onChange={(value) => intervene({ type: "setValueError", value })}
           />
           <Slider
-            label="episodes per step"
+            label="episodes per step — batch size; more reduces variance of the gradient estimate"
             value={params.episodes}
             min={2}
             max={80}
@@ -631,22 +631,13 @@ export function GeneralizedAdvantageEstimation() {
             onChange={(value) => intervene({ type: "setEpisodes", value })}
           />
           <Slider
-            label="alpha (learning rate)"
+            label="α — policy-gradient step size; larger climbs faster but can overshoot"
             value={params.alpha}
             min={0.5}
             max={8}
             step={0.1}
             display={params.alpha.toFixed(1)}
             onChange={(value) => intervene({ type: "setAlpha", value })}
-          />
-          <Slider
-            label="rollout seed"
-            value={state.rng % 1000}
-            min={1}
-            max={40}
-            step={1}
-            display={String(state.rng % 1000)}
-            onChange={(value) => intervene({ type: "setSeed", value })}
           />
         </div>
       </SimPanel>
@@ -661,7 +652,9 @@ export function GeneralizedAdvantageEstimation() {
         the side only to score it. It sits near zero at lambda 1 for any value
         function, and grows as lambda shrinks under a wrong value function. This
         stands in for the paper&apos;s trust-region update and neural-network
-        value function with one plain ascent step on a solvable grid.
+        value function with one plain ascent step on a solvable grid. Each
+        preset starts from a fixed rollout seed so the same preset always
+        produces the same run; loading a preset resets it.
       </p>
     </div>
   );

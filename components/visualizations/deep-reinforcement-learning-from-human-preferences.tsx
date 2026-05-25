@@ -275,16 +275,14 @@ export function PreferenceLoop() {
         {PRESETS.find((preset) => preset.id === presetId)?.blurb}
       </p>
 
-      <div className="grid gap-4 lg:grid-cols-[auto_1fr]">
-        <div className="flex flex-col items-center gap-2">
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div className="flex min-w-0 flex-col gap-2">
           <span className="text-muted-foreground text-xs font-medium">
             learned reward and its greedy policy
           </span>
           <svg
             viewBox={`0 0 ${size} ${size}`}
-            width={size}
-            height={size}
-            className="ring-foreground/10 rounded-xl ring-1"
+            className="ring-foreground/10 w-full rounded-xl ring-1"
             role="img"
             aria-label={`A ${GRID} by ${GRID} grid colored by the learned reward, with arrows showing the greedy policy. The agent sits at row ${
               rowCol(agentCell).row + 1
@@ -322,7 +320,7 @@ export function PreferenceLoop() {
                     x={at2(col) + cellSize / 2}
                     y={at2(row) + cellSize / 2 + 12}
                     textAnchor="middle"
-                    fill={isGoal ? "#fff" : "var(--color-foreground)"}
+                    fill={isGoal ? "var(--color-card)" : "var(--color-foreground)"}
                     fillOpacity={isGoal ? 1 : 0.55}
                     className="font-mono"
                     style={{ fontSize: 9 }}
@@ -337,11 +335,11 @@ export function PreferenceLoop() {
               cy={at2(rowCol(agentCell).row) + cellSize / 2}
               r={cellSize * 0.22}
               fill={ACCENT}
-              stroke="#fff"
+              stroke="var(--color-card)"
               strokeWidth={2}
             />
           </svg>
-          <p className="text-muted-foreground max-w-[360px] text-center text-[11px]">
+          <p className="text-muted-foreground w-full text-center text-[11px]">
             The agent never sees the true reward. It only chases this learned
             map, fit from clip comparisons. The green cell is the hidden goal.
           </p>
@@ -408,9 +406,9 @@ export function PreferenceLoop() {
           onReset={onReset}
           disabled={waitingForLabel && !playing}
         />
-        <div className="w-40">
+        <div className="w-48">
           <Slider
-            label="Speed"
+            label="Playback pace (faster ticks per second)"
             value={speed}
             min={0.5}
             max={3}
@@ -423,61 +421,73 @@ export function PreferenceLoop() {
 
       <div className="grid gap-4 sm:grid-cols-2">
         <SimPanel title="Controls">
-          <div className="flex flex-wrap gap-1.5">
+          <div className="flex flex-col gap-3">
+            <div>
+              <span className="text-muted-foreground mb-1 block text-[11px]">
+                Who labels clips mid-run
+              </span>
+              <div className="flex flex-wrap gap-1.5">
+                <Toggle
+                  label="Automatic oracle"
+                  active={params.labeler === "oracle"}
+                  onClick={() =>
+                    intervene({ type: "setLabeler", value: "oracle" })
+                  }
+                />
+                <Toggle
+                  label="You decide"
+                  active={params.labeler === "you"}
+                  onClick={() =>
+                    intervene({ type: "setLabeler", value: "you" })
+                  }
+                />
+              </div>
+            </div>
+            <div>
+              <span className="text-muted-foreground mb-1 block text-[11px]">
+                Which clip pairs to ask about
+              </span>
+              <div className="flex flex-wrap gap-1.5">
+                <Toggle
+                  label="Highest ensemble disagreement"
+                  active={params.queryRule === "disagreement"}
+                  onClick={() =>
+                    intervene({ type: "setQueryRule", value: "disagreement" })
+                  }
+                />
+                <Toggle
+                  label="Random pairs"
+                  active={params.queryRule === "random"}
+                  onClick={() =>
+                    intervene({ type: "setQueryRule", value: "random" })
+                  }
+                />
+              </div>
+            </div>
             <Toggle
-              label="Oracle labels"
-              active={params.labeler === "oracle"}
-              onClick={() => intervene({ type: "setLabeler", value: "oracle" })}
+              label="Keep querying online (off = freeze after opening batch)"
+              active={params.onlineQueries}
+              onClick={() => intervene({ type: "toggleOnline" })}
             />
-            <Toggle
-              label="You label"
-              active={params.labeler === "you"}
-              onClick={() => intervene({ type: "setLabeler", value: "you" })}
+            <Slider
+              label="Human error — chance the labeler flips its pick"
+              value={params.mislabelRate}
+              min={0}
+              max={0.5}
+              step={0.05}
+              display={`${Math.round(params.mislabelRate * 100)}%`}
+              onChange={(value) => intervene({ type: "setMislabel", value })}
+            />
+            <Slider
+              label="Query interval — steps between new clip pairs (lower = more feedback)"
+              value={params.queryEvery}
+              min={1}
+              max={12}
+              step={1}
+              display={`${params.queryEvery}`}
+              onChange={(value) => intervene({ type: "setQueryEvery", value })}
             />
           </div>
-          <div className="flex flex-wrap gap-1.5">
-            <Toggle
-              label="Query by disagreement"
-              active={params.queryRule === "disagreement"}
-              onClick={() =>
-                intervene({ type: "setQueryRule", value: "disagreement" })
-              }
-            />
-            <Toggle
-              label="Random queries"
-              active={params.queryRule === "random"}
-              onClick={() =>
-                intervene({ type: "setQueryRule", value: "random" })
-              }
-            />
-          </div>
-          <Toggle
-            label={
-              params.onlineQueries
-                ? "Online queries: on"
-                : "Online queries: off"
-            }
-            active={params.onlineQueries}
-            onClick={() => intervene({ type: "toggleOnline" })}
-          />
-          <Slider
-            label="Mislabel rate (human error)"
-            value={params.mislabelRate}
-            min={0}
-            max={0.5}
-            step={0.05}
-            display={`${Math.round(params.mislabelRate * 100)}%`}
-            onChange={(value) => intervene({ type: "setMislabel", value })}
-          />
-          <Slider
-            label="Query every N steps (lower = more feedback)"
-            value={params.queryEvery}
-            min={1}
-            max={12}
-            step={1}
-            display={`${params.queryEvery}`}
-            onChange={(value) => intervene({ type: "setQueryEvery", value })}
-          />
         </SimPanel>
 
         <SimPanel title="How aligned is the learned reward?">
@@ -549,13 +559,14 @@ export function PreferenceLoop() {
       </div>
 
       <p className="text-muted-foreground text-xs">
-        The reward fitting here is the paper&apos;s real Bradley-Terry loss over
-        clip pairs, trained online by gradient descent, with an ensemble of{" "}
+        The reward fitting uses the paper&apos;s real Bradley-Terry loss over
+        clip pairs, trained online by gradient descent with an ensemble of{" "}
         {state.predictors.length} predictors estimating disagreement for query
-        selection. The world is a {GRID} by {GRID} grid where the learner never
-        sees the true reward, standing in for the paper&apos;s Atari and MuJoCo
-        tasks; a deep network there learns a reward over pixels, here it is one
-        number per cell so the whole loop fits on screen.
+        selection. The run is deterministic: same preset, same sequence of
+        labels, same grid. The world is a {GRID} by {GRID} grid where the
+        learner never sees the true reward, standing in for the paper&apos;s
+        Atari and MuJoCo tasks; a deep network there learns a reward over
+        pixels, here it is one number per cell so the whole loop fits on screen.
       </p>
     </div>
   );

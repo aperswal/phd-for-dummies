@@ -29,13 +29,18 @@ const SAGE = "#6f7d5f";
 const VIEW = 100;
 const HEAT_RES = 30;
 
+// Fixed seed so Reset always replays the same trajectory as first load. The
+// individual seed value carries no meaning the reader could observe; only the
+// run's determinism matters.
+const INITIAL_SEED = 1;
+
 type ViewAction =
   | { kind: "tick" }
   | { kind: "intervene"; action: Intervention }
-  | { kind: "reset"; presetId: string };
+  | { kind: "reset"; presetId: string; seed: number };
 
 function reducer(state: SimState, action: ViewAction): SimState {
-  if (action.kind === "reset") return initialState(action.presetId, state.rng);
+  if (action.kind === "reset") return initialState(action.presetId, action.seed);
   return step(state, action);
 }
 
@@ -77,6 +82,7 @@ function Slider({
         step={step}
         value={value}
         disabled={disabled}
+        aria-label={label}
         onChange={(event) => onChange(Number(event.target.value))}
         className="h-1.5 w-full cursor-pointer disabled:cursor-not-allowed disabled:opacity-40"
         style={{ accentColor: ACCENT }}
@@ -150,7 +156,7 @@ function arrowTip(from: Vec2, dir: Vec2, length: number): Vec2 {
 
 export function GaussianSearch() {
   const [state, dispatch] = useReducer(reducer, undefined, () =>
-    initialState("climb"),
+    initialState("climb", INITIAL_SEED),
   );
   const [playing, setPlaying] = useState(false);
   const [speed, setSpeed] = useState(4);
@@ -161,6 +167,11 @@ export function GaussianSearch() {
   const { landscape, params, mu, sigma, samples, log } = state;
   const score = useMemo(() => status(state), [state]);
   const peak = useMemo(() => globalPeak(landscape), [landscape]);
+
+  // Once the unit has settled on the global peak it has learned everything it
+  // can. Guard every advancement path so the sim stops without a state update
+  // inside an effect, which the linter disallows.
+  const isDone = score.atGlobalPeak;
 
   // The heatmap is the landscape the reader can see but the unit cannot. It only
   // changes when the landscape does, so it is memoised away from the running sim.
@@ -198,20 +209,24 @@ export function GaussianSearch() {
     [],
   );
 
-  const resetClock = useFixedTimestep(playing, 360 / speed, () =>
+  const resetClock = useFixedTimestep(playing && !isDone, 360 / speed, () =>
     dispatch({ kind: "tick" }),
   );
 
   const onPlayPause = useCallback(() => {
+    if (isDone) return;
     resetClock();
     setPlaying((value) => !value);
-  }, [resetClock]);
-  const onStep = useCallback(() => dispatch({ kind: "tick" }), []);
+  }, [isDone, resetClock]);
+  const onStep = useCallback(() => {
+    if (isDone) return;
+    dispatch({ kind: "tick" });
+  }, [isDone]);
   const onReset = useCallback(() => {
     setPlaying(false);
     resetClock();
     setInspect(null);
-    dispatch({ kind: "reset", presetId });
+    dispatch({ kind: "reset", presetId, seed: INITIAL_SEED });
   }, [presetId, resetClock]);
 
   const loadPreset = useCallback(
@@ -308,14 +323,17 @@ export function GaussianSearch() {
               />
             ))}
 
+            {/* The ring marks the tallest hill so the reader can see the goal;
+                the unit never has access to this location. Using the background
+                color so it stays visible against the heatmap in both themes. */}
             <circle
               cx={peak.center.x * VIEW}
               cy={peak.center.y * VIEW}
               r={2.4}
               fill="none"
-              stroke="#fff"
-              strokeWidth={1}
-              strokeOpacity={0.8}
+              stroke="var(--color-background)"
+              strokeWidth={1.5}
+              strokeOpacity={0.9}
             />
 
             {/* The exploration spread: every try is drawn from inside this circle. */}
@@ -433,7 +451,7 @@ export function GaussianSearch() {
             <Badge
               variant={aligned ? "default" : "outline"}
               style={
-                aligned ? { backgroundColor: SAGE, color: "#fff" } : undefined
+                aligned ? { backgroundColor: SAGE, color: "white" } : undefined
               }
             >
               step {aligned ? "follows" : "off"} gradient (
@@ -443,7 +461,7 @@ export function GaussianSearch() {
               variant={verdict.color ? "default" : "outline"}
               style={
                 verdict.color
-                  ? { backgroundColor: verdict.color, color: "#fff" }
+                  ? { backgroundColor: verdict.color, color: "white" }
                   : undefined
               }
             >
@@ -496,14 +514,23 @@ export function GaussianSearch() {
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <PlayPauseStepControls
-          playing={playing}
+          playing={playing && !isDone}
           onPlayPause={onPlayPause}
           onStep={onStep}
           onReset={onReset}
         />
-        <div className="w-40">
+        {isDone && (
+          <span
+            className="text-xs font-medium"
+            style={{ color: SAGE }}
+            aria-live="polite"
+          >
+            Converged — on the best peak. Reset to run again.
+          </span>
+        )}
+        <div className="min-w-[8rem] flex-1 sm:max-w-[10rem]">
           <Slider
-            label="Speed"
+            label="Playback speed (animation pace, not the algorithm)"
             value={speed}
             min={1}
             max={12}
@@ -514,7 +541,7 @@ export function GaussianSearch() {
         </div>
       </div>
 
-      <SimPanel title="Knobs">
+      <SimPanel title="Paper levers">
         <div className="flex flex-wrap items-center gap-2">
           <span className="text-muted-foreground text-xs">baseline</span>
           {(["comparison", "none"] as BaselineMode[]).map((mode) => (
@@ -543,7 +570,7 @@ export function GaussianSearch() {
         </div>
         <div className="grid gap-3 sm:grid-cols-2">
           <Slider
-            label="alpha (learning rate)"
+            label="alpha — how far the aim moves each batch"
             value={params.alpha}
             min={0.02}
             max={1}
@@ -552,7 +579,7 @@ export function GaussianSearch() {
             onChange={(value) => intervene({ type: "setAlpha", value })}
           />
           <Slider
-            label="sigma (exploration width)"
+            label="sigma — how widely the unit throws its tries"
             value={sigma}
             min={0.012}
             max={0.45}
@@ -561,7 +588,7 @@ export function GaussianSearch() {
             onChange={(value) => intervene({ type: "setSigma", value })}
           />
           <Slider
-            label="baseline decay"
+            label="baseline decay — how quickly the average tracks recent reward"
             value={params.baselineDecay}
             min={0.02}
             max={0.6}
@@ -571,7 +598,7 @@ export function GaussianSearch() {
             onChange={(value) => intervene({ type: "setBaselineDecay", value })}
           />
           <Slider
-            label="reward noise"
+            label="reward noise — corrupts each score so the baseline must work harder"
             value={params.rewardNoise}
             min={0}
             max={0.6}
@@ -579,36 +606,27 @@ export function GaussianSearch() {
             display={params.rewardNoise.toFixed(2)}
             onChange={(value) => intervene({ type: "setRewardNoise", value })}
           />
-          <Slider
-            label="seed (resets learning)"
-            value={state.rng % 1000}
-            min={1}
-            max={40}
-            step={1}
-            display={String(state.rng % 1000)}
-            onChange={(value) => intervene({ type: "setSeed", value })}
-          />
-          <div className="flex items-end">
-            <Button
-              type="button"
-              size="sm"
-              variant="secondary"
-              onClick={() => intervene({ type: "resetLearning" })}
-            >
-              Reset learning (keep the hill)
-            </Button>
-          </div>
         </div>
+        <Button
+          type="button"
+          size="sm"
+          variant="secondary"
+          onClick={() => intervene({ type: "resetLearning" })}
+        >
+          Reset learning (keep the hill)
+        </Button>
       </SimPanel>
 
       <p className="text-muted-foreground text-xs">
         Each batch draws {params.batchSize} tries from N(aim, sigma squared),
         scores them on the hidden landscape, and applies the paper&apos;s
-        averaged update, Delta mu = alpha(r &minus; b)(y &minus; mu) and the
-        matching rule for sigma. The orange arrow is the unit&apos;s averaged
+        averaged update, &Delta;&mu; = &alpha;(r &minus; b)(y &minus; &mu;) and
+        the matching rule for sigma. The orange arrow is the unit&apos;s averaged
         step; the faint dashed arrow is the true gradient of expected reward,
-        computed separately only to check the step against it. The white ring
-        marks the tallest hill, which the unit never sees.
+        computed separately only to check that the averaged step aligns with it
+        (Theorem 1). The ring on the heatmap marks the tallest hill, which the
+        unit never sees. The run uses a fixed seed; Reset replays the same
+        trajectory.
       </p>
     </div>
   );

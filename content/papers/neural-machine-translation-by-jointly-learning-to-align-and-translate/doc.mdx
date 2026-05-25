@@ -2,7 +2,7 @@
 
 _Instead of cramming a whole sentence into one fixed summary, the translator re-reads the source and decides which words to look at for every word it writes._
 
-![On the left a pixel translator squeezes a long scroll down into one tiny crumpled note marked with a faded question mark, while on the right the same translator keeps the scroll fully open and a clay-orange ink arrow glances from the pen back to one glowing line, showing that re-reading the source beats memorizing it as a single fixed summary.](/papers/neural-machine-translation-by-jointly-learning-to-align-and-translate/hero.webp)
+![On the left a pixel translator squeezes a long scroll down into one tiny crumpled note marked with a faded question mark, while on the right the same translator keeps the scroll fully open and a clay-orange ink arrow glances from the pen back to one glowing line, showing that re-reading the source beats memorizing it as a single fixed summary.](https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/neural-machine-translation-by-jointly-learning-to-align-and-translate/hero.webp)
 
 ## Read at your level
 
@@ -64,7 +64,7 @@ alpha_ij = exp(e_ij) / sum_k exp(e_ik)
 
 Read it inside out. `W_a s_{i-1}` is the decoder asking a question from its current state. `U_a h_j` is source word `j` offering its content. Add them, squash with `tanh`, score with `v_a`, and you get one number saying how relevant word `j` is right now. Softmax over all source words turns those numbers into weights that sum to one, and the weighted sum gives `c_i`.
 
-![A row of five blank sage source-word tiles sits above one glowing clay-orange output tile, with thin ink arrows fanning up from the output to the source tiles, two drawn thick to the words it reads hardest and the rest thin, showing that each output word draws a weighted blend from a few source words.](/papers/neural-machine-translation-by-jointly-learning-to-align-and-translate/alignment.webp)
+![A row of five blank sage source-word tiles sits above one glowing clay-orange output tile, with thin ink arrows fanning up from the output to the source tiles, two drawn thick to the words it reads hardest and the rest thin, showing that each output word draws a weighted blend from a few source words.](https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/neural-machine-translation-by-jointly-learning-to-align-and-translate/alignment.webp)
 
 The whole alignment network is differentiable, so the gradient flows back through it. The model learns where to look just from the translation loss, with no alignment supervision. The old encoder-decoder is the special case where you freeze `c_i` to the last annotation for every `i`. Load the **Fixed-vector bottleneck** preset in the simulation to see that collapse. Every output word reads the same flat blur because there's only one summary to read.
 
@@ -76,7 +76,7 @@ The limitation is cost. Computing `e_ij` for every source-target pair is `O(Tx *
 
 The problem this solves is long-input quality. The fixed-vector encoder-decoder squeezes the whole source into one vector and writes from it, so quality falls off as inputs get longer. The paper shows the basic model dropping hard past 30 words while the attention model stays flat out to 50 and beyond.
 
-![Two ink curves climb together over a row of pixel sentence bars that grow longer to the right, then the sage fixed-summary curve falls off a cliff past the middle while the clay-orange re-reading curve stays flat and high, showing that the bottleneck breaks on long sentences and re-reading does not.](/papers/neural-machine-translation-by-jointly-learning-to-align-and-translate/length-cliff.webp)
+![Two ink curves climb together over a row of pixel sentence bars that grow longer to the right, then the sage fixed-summary curve falls off a cliff past the middle while the clay-orange re-reading curve stays flat and high, showing that the bottleneck breaks on long sentences and re-reading does not.](https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/neural-machine-translation-by-jointly-learning-to-align-and-translate/length-cliff.webp)
 
 What it costs you is compute per output word. The model scores every source position for every target position, so attention is roughly quadratic in sequence length. At translation scale that's a rounding error next to the RNN itself. At very long inputs it becomes the thing you budget for, which is why later work spent years making attention cheaper.
 

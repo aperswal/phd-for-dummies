@@ -5,8 +5,8 @@
 // per-head projection matrices are hand-set so the attention patterns mean
 // something a reader can recognize (a pronoun finding its noun, neighbors via
 // position). A trained model learns those numbers from data; here they are fixed
-// so the patterns are legible. No randomness reaches the math unless the reader
-// nudges the seed, which adds a small reproducible jitter to the embeddings.
+// so the patterns are legible. The run is fully deterministic — no randomness
+// reaches the math.
 
 import { at } from "@/lib/simulation/array";
 import {
@@ -15,7 +15,6 @@ import {
   type EventLog,
   type SimEvent,
 } from "@/lib/simulation/history";
-import { mulberry32 } from "@/lib/simulation/rng";
 
 export const SEMANTIC_DIM = 8;
 export const POSITIONAL_DIM = 8;
@@ -211,16 +210,6 @@ function project(vector: number[], dirs: number[][]): number[] {
   return dirs.map((dir) => dot(vector, dir));
 }
 
-// Only the optional embedding jitter uses randomness, and it draws from the
-// shared seeded rng, so a given seed reproduces the exact same run.
-function jitter(embeddings: number[][], seed: number): number[][] {
-  if (seed === 0) return embeddings;
-  const rng = mulberry32(seed);
-  return embeddings.map((vector) =>
-    vector.map((value) => value + (rng() - 0.5) * 0.08),
-  );
-}
-
 function softmax(logits: number[]): number[] {
   const finite = logits.filter((value) => Number.isFinite(value));
   const max = finite.length > 0 ? Math.max(...finite) : 0;
@@ -238,8 +227,6 @@ export interface AttentionParams {
   scaling: boolean;
   causalMask: boolean;
   magnitude: number;
-  temperature: number;
-  seed: number;
 }
 
 export interface AttentionResult {
@@ -256,9 +243,10 @@ export interface AttentionResult {
 }
 
 // The whole of equation 1, computed for one query position over every key.
+// Embeddings are deterministic, so the same params always produce the same run.
 export function computeAttention(params: AttentionParams): AttentionResult {
   const sentence = getSentence(params.sentenceId);
-  const embeddings = jitter(sentence.embeddings, params.seed);
+  const embeddings = sentence.embeddings;
   const headIndex =
     params.headIndex >= 0 && params.headIndex < HEADS.length
       ? params.headIndex
@@ -274,8 +262,9 @@ export function computeAttention(params: AttentionParams): AttentionResult {
     dot(query, project(vector, head.kDirs)),
   );
 
-  const divisor =
-    (params.scaling ? Math.sqrt(dk) : 1) * Math.max(params.temperature, 0.05);
+  // The score magnitude slider is the lever the paper describes for
+  // demonstrating softmax saturation (see "Softmax saturation" preset).
+  const divisor = params.scaling ? Math.sqrt(dk) : 1;
 
   const logits = rawScores.map((score, j) => {
     if (params.causalMask && j > queryIndex) return Number.NEGATIVE_INFINITY;
@@ -329,8 +318,6 @@ export type Intervention =
   | { type: "toggleScaling" }
   | { type: "toggleMask" }
   | { type: "setMagnitude"; value: number }
-  | { type: "setTemperature"; value: number }
-  | { type: "setSeed"; value: number }
   | { type: "loadPreset"; id: string }
   | { type: "restore"; params: AttentionParams; label: string };
 
@@ -360,8 +347,6 @@ export const PRESETS: Preset[] = [
       scaling: true,
       causalMask: false,
       magnitude: 5,
-      temperature: 1,
-      seed: 0,
     },
   },
   {
@@ -376,8 +361,6 @@ export const PRESETS: Preset[] = [
       scaling: false,
       causalMask: false,
       magnitude: 16,
-      temperature: 1,
-      seed: 0,
     },
   },
   {
@@ -392,8 +375,6 @@ export const PRESETS: Preset[] = [
       scaling: true,
       causalMask: true,
       magnitude: 5,
-      temperature: 1,
-      seed: 0,
     },
   },
   {
@@ -408,8 +389,6 @@ export const PRESETS: Preset[] = [
       scaling: true,
       causalMask: false,
       magnitude: 8,
-      temperature: 1,
-      seed: 0,
     },
   },
 ];
@@ -487,16 +466,6 @@ function applyIntervention(
       return {
         params: { ...params, magnitude: action.value },
         label: `score magnitude -> ${action.value.toFixed(1)}`,
-      };
-    case "setTemperature":
-      return {
-        params: { ...params, temperature: action.value },
-        label: `temperature -> ${action.value.toFixed(2)}`,
-      };
-    case "setSeed":
-      return {
-        params: { ...params, seed: action.value },
-        label: `seed -> ${action.value}`,
       };
     case "loadPreset": {
       const preset = getPreset(action.id);

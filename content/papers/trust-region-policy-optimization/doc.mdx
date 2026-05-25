@@ -2,7 +2,7 @@
 
 _Improve a policy by taking the biggest step that still keeps the new policy close to the old one, so your estimate of the improvement stays trustworthy and the real performance goes up almost every time._
 
-![A pixel hiker standing inside a small clear circle of solid ground while grey fog hides everything beyond it, with a short confident clay-orange step-arrow that stays inside the circle and points uphill labelled trust, beside a long thin arrow that leaps out into the fog and tumbles down labelled risk, showing that you should only step as far as the ground you can actually see is reliable.](/papers/trust-region-policy-optimization/hero.webp)
+![A pixel hiker standing inside a small clear circle of solid ground while grey fog hides everything beyond it, with a short confident clay-orange step-arrow that stays inside the circle and points uphill labelled trust, beside a long thin arrow that leaps out into the fog and tumbles down labelled risk, showing that you should only step as far as the ground you can actually see is reliable.](https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/trust-region-policy-optimization/hero.webp)
 
 ## Read at your level
 
@@ -43,7 +43,7 @@ Here's the catch. After the character changes its strategy, it starts playing di
 
 TRPO turns that into a hard rule. It builds a **surrogate**, a quick estimate of how much a new policy would improve, using the data it just collected. Then it asks for the policy that the surrogate likes best, but with a leash. The new policy is not allowed to differ from the old one by more than a set amount. That set amount is the **trust region**.
 
-![A clay-orange dashed curve labelled surrogate and a sage solid curve labelled true climbing a pixel hill, hugging each other tightly on the left inside a faint shaded band then peeling apart on the right, showing that the local estimate of the improvement matches the real return only while the new policy stays close to the old one.](/papers/trust-region-policy-optimization/surrogate-vs-real.webp)
+![A clay-orange dashed curve labelled surrogate and a sage solid curve labelled true climbing a pixel hill, hugging each other tightly on the left inside a faint shaded band then peeling apart on the right, showing that the local estimate of the improvement matches the real return only while the new policy stays close to the old one.](https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/trust-region-policy-optimization/surrogate-vs-real.webp)
 
 Picture two lines on a graph as you change the policy more and more. One line is the surrogate's prediction, the other is the real result. Near the start they sit right on top of each other, so the surrogate is honest. Far out, they split, and the surrogate keeps promising gains the real result never delivers. The trust region is a fence that keeps you in the part where the two lines still agree.
 
@@ -75,7 +75,7 @@ eta(pi-tilde) >= L_pi(pi-tilde) - C * D_KL_max(pi, pi-tilde)
 
 where `C = 4 * epsilon * gamma / (1 - gamma)^2` and `epsilon` is the largest advantage. If you maximize the right-hand side, the true return can only go up. That's the monotonic improvement guarantee.
 
-![A pixel signpost standing for the current policy with a dashed clay-orange circle drawn around it labelled K L, and a clay-orange arrow from the signpost that points outward and stops exactly at the circle's edge labelled change, showing that the update is the largest step that still keeps the new policy inside a fixed KL-divergence budget.](/papers/trust-region-policy-optimization/trust-region-step.webp)
+![A pixel signpost standing for the current policy with a dashed clay-orange circle drawn around it labelled K L, and a clay-orange arrow from the signpost that points outward and stops exactly at the circle's edge labelled change, showing that the update is the largest step that still keeps the new policy inside a fixed KL-divergence budget.](https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/trust-region-policy-optimization/trust-region-step.webp)
 
 The practical algorithm makes one swap. Using that big penalty `C` forces microscopic steps, so instead of penalizing the KL divergence, constrain it. Maximize the surrogate subject to the policy staying inside a fixed KL budget `delta`:
 
@@ -151,7 +151,7 @@ for frac in [1, 0.5, 0.25, ...]:                          # line search
 
 Two sampling schemes feed this. Single-path collects whole trajectories and is usable on real hardware. Vine samples states then rolls out every action from each, using common random numbers, which sharply cuts advantage-estimate variance but needs a resettable simulator.
 
-![A muted slate path of many tiny winding stair-steps labelled penalty that crawls only partway up a pixel hill, beside a clay-orange path of a few large confident step-arrows labelled budget that reaches a flag at the summit, showing that a heavy KL penalty forces timid tiny steps while a fixed KL budget allows fast bounded steps that reach the top.](/papers/trust-region-policy-optimization/penalty-vs-constraint.webp)
+![A muted slate path of many tiny winding stair-steps labelled penalty that crawls only partway up a pixel hill, beside a clay-orange path of a few large confident step-arrows labelled budget that reaches a flag at the summit, showing that a heavy KL penalty forces timid tiny steps while a fixed KL budget allows fast bounded steps that reach the top.](https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/trust-region-policy-optimization/penalty-vs-constraint.webp)
 
 The constraint-versus-penalty choice is the practical heart of the method. The theory's penalty coefficient is so large that it forces a crawl, the slate path above. The fixed KL budget lets the policy take bounded but confident steps, the clay-orange path that reaches the top. Load the **KL penalty: crawl** preset in the simulation to feel the difference, then switch to **trust region** and watch the steps grow.
 

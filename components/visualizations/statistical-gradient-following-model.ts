@@ -359,7 +359,6 @@ export type Intervention =
   | { type: "setBaselineDecay"; value: number }
   | { type: "setRewardNoise"; value: number }
   | { type: "moveMu"; pos: Vec2 }
-  | { type: "setSeed"; value: number }
   | { type: "resetLearning" }
   | { type: "loadPreset"; id: string }
   | { type: "restore"; snapshot: Snapshot; label: string };
@@ -556,11 +555,6 @@ function applyIntervention(
           avgUpdateMu: { x: 0, y: 0 },
         },
         label: `aim moved to (${action.pos.x.toFixed(2)}, ${action.pos.y.toFixed(2)})`,
-      };
-    case "setSeed":
-      return {
-        state: { ...resetLearningState(state), rng: action.value >>> 0 },
-        label: `seed -> ${action.value}, learning reset`,
       };
     case "resetLearning":
       return { state: resetLearningState(state), label: "learning reset" };

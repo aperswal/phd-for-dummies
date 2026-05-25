@@ -28,22 +28,62 @@ import {
 const ACCENT = "#c2683f";
 const ACCENT_SOFT = "#e0b59f";
 const SAGE = "#7d8a6a";
+// Destructive red for pruned moves — distinct from ACCENT so "pruned" and "plays" never share a color.
+const PRUNE_COLOR = "#b91c1c";
 
 const MOVE_FILLS = ["#c2683f", "#7d8a6a", "#a8763f", "#5d6b78"];
 
-const BACKUPS: { value: BackupOperator; label: string }[] = [
-  { value: "mean", label: "Mean" },
-  { value: "max", label: "Max" },
-  { value: "robust-max", label: "Robust max" },
-  { value: "mix", label: "Mix" },
-];
+const BACKUPS: { value: BackupOperator; label: string; description: string }[] =
+  [
+    {
+      value: "mean",
+      label: "Mean",
+      description: "Plain average of all rollouts — underestimates at high counts",
+    },
+    {
+      value: "max",
+      label: "Max",
+      description:
+        "Best child value — overestimates because lucky outliers dominate",
+    },
+    {
+      value: "robust-max",
+      label: "Robust max",
+      description: "Value of the most-visited child — more stable than raw max",
+    },
+    {
+      value: "mix",
+      label: "Mix (paper's best)",
+      description:
+        "Slides from mean toward robust max as visits grow — the paper's recommended operator",
+    },
+  ];
 
-const SELECTIVITIES: { value: SelectivityRule; label: string }[] = [
-  { value: "coulom", label: "Coulom" },
-  { value: "greedy", label: "Greedy" },
-  { value: "uniform", label: "Uniform" },
-  { value: "pruning", label: "Pruning" },
-];
+const SELECTIVITIES: { value: SelectivityRule; label: string; description: string }[] =
+  [
+    {
+      value: "coulom",
+      label: "Coulom urgency",
+      description:
+        "Picks by probability-of-being-best; keeps a floor so nothing is abandoned",
+    },
+    {
+      value: "greedy",
+      label: "Greedy",
+      description: "Always picks the highest-valued move — pours simulations into one option",
+    },
+    {
+      value: "uniform",
+      label: "Uniform",
+      description: "Picks at random — ignores all value information",
+    },
+    {
+      value: "pruning",
+      label: "Progressive pruning",
+      description:
+        "Cuts off low-scoring moves permanently — can kill the best move after bad luck",
+    },
+  ];
 
 type ViewAction =
   | { kind: "tick" }
@@ -143,6 +183,7 @@ export function CrazyStoneSearch() {
   const [speed, setSpeed] = useState(8);
   const [presetId, setPresetId] = useState("coulom-mix");
   const [inspect, setInspect] = useState<number | null>(null);
+  const logRef = useRef<HTMLDivElement>(null);
 
   // A fixed-timestep accumulator on top of the shared frame loop, kept in a ref
   // so changing the rate doesn't restart the loop. Each whole interval runs one
@@ -164,6 +205,8 @@ export function CrazyStoneSearch() {
       dispatch({ kind: "tick" });
       runs += 1;
     }
+    // Autoscroll the event log to the newest entry (rendered reversed, so scroll to top).
+    if (logRef.current) logRef.current.scrollTop = 0;
   });
 
   const intervene = useCallback(
@@ -179,6 +222,7 @@ export function CrazyStoneSearch() {
   const onReset = useCallback(() => {
     setPlaying(false);
     accumulator.current = 0;
+    setInspect(null);
     dispatch({ kind: "reset", presetId });
   }, [presetId]);
 
@@ -339,7 +383,7 @@ export function CrazyStoneSearch() {
                   x={x}
                   y={moveY + 5}
                   textAnchor="middle"
-                  fill="#fff"
+                  className="fill-white"
                   fillOpacity={isPruned ? 0.5 : 1}
                   style={{ fontSize: 14, fontWeight: 700 }}
                 >
@@ -350,10 +394,10 @@ export function CrazyStoneSearch() {
                     x={x}
                     y={moveY - 28}
                     textAnchor="middle"
-                    fill={ACCENT}
+                    fill={PRUNE_COLOR}
                     style={{ fontSize: 10 }}
                   >
-                    pruned
+                    ✕ pruned
                   </text>
                 )}
                 {isRec && !isPruned && (
@@ -364,7 +408,7 @@ export function CrazyStoneSearch() {
                     fill={ACCENT}
                     style={{ fontSize: 10, fontWeight: 600 }}
                   >
-                    plays
+                    ▶ plays
                   </text>
                 )}
 
@@ -428,7 +472,7 @@ export function CrazyStoneSearch() {
           </Button>
           <div className="w-36">
             <Slider
-              label="Speed (sims/s)"
+              label="Playback speed (sims/s)"
               value={speed}
               min={1}
               max={30}
@@ -442,9 +486,9 @@ export function CrazyStoneSearch() {
 
       <div className="grid gap-4 sm:grid-cols-2">
         <SimPanel title="Controls">
-          <div className="flex flex-col gap-1">
-            <span className="text-muted-foreground text-xs">
-              Backup operator
+          <div className="flex flex-col gap-1.5">
+            <span className="text-muted-foreground text-xs font-medium">
+              Backup operator — how a node scores itself from its children
             </span>
             <div className="flex flex-wrap gap-1.5">
               {BACKUPS.map((item) => (
@@ -458,10 +502,13 @@ export function CrazyStoneSearch() {
                 />
               ))}
             </div>
-          </div>
-          <div className="flex flex-col gap-1">
             <span className="text-muted-foreground text-xs">
-              Selectivity rule
+              {BACKUPS.find((b) => b.value === state.params.backup)?.description}
+            </span>
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <span className="text-muted-foreground text-xs font-medium">
+              Selectivity — which move gets the next simulation
             </span>
             <div className="flex flex-wrap gap-1.5">
               {SELECTIVITIES.map((item) => (
@@ -475,9 +522,14 @@ export function CrazyStoneSearch() {
                 />
               ))}
             </div>
+            <span className="text-muted-foreground text-xs">
+              {SELECTIVITIES.find((s) => s.value === state.params.selectivity)?.description}
+            </span>
           </div>
-          <div className="flex flex-col gap-1">
-            <span className="text-muted-foreground text-xs">Tree</span>
+          <div className="flex flex-col gap-1.5">
+            <span className="text-muted-foreground text-xs font-medium">
+              Tree scenario — which set of moves the search explores
+            </span>
             <div className="flex flex-wrap gap-1.5">
               {GAMES.map((item) => (
                 <Toggle
@@ -490,22 +542,13 @@ export function CrazyStoneSearch() {
             </div>
           </div>
           <Slider
-            label="Expand threshold (sims before a node goes internal)"
+            label="Expand threshold — simulations before a node becomes internal and uses the backup operator"
             value={state.params.expandThreshold}
             min={1}
             max={16}
             step={1}
             display={String(state.params.expandThreshold)}
             onChange={(value) => intervene({ type: "setThreshold", value })}
-          />
-          <Slider
-            label="Seed"
-            value={state.params.seed}
-            min={1}
-            max={40}
-            step={1}
-            display={String(state.params.seed)}
-            onChange={(value) => intervene({ type: "setSeed", value })}
           />
         </SimPanel>
 
@@ -563,33 +606,49 @@ export function CrazyStoneSearch() {
 
           <div className="flex flex-col gap-1">
             <span className="text-muted-foreground text-xs font-medium">
-              Event log
+              Event log — click an entry to rewind
             </span>
-            <div className="ring-foreground/10 max-h-28 overflow-y-auto rounded-lg ring-1">
-              {state.log.length === 0 ? (
-                <p className="text-muted-foreground px-2 py-1.5 text-xs">
-                  Flip a control or load a preset to start the log, then click
-                  an entry to rewind.
-                </p>
-              ) : (
-                <ul className="text-xs">
-                  {[...state.log].reverse().map((event) => (
-                    <li key={event.id}>
-                      <button
-                        type="button"
-                        className="text-muted-foreground hover:bg-foreground/5 w-full px-2 py-1 text-left font-mono"
-                        onClick={() =>
-                          restore(
-                            event.snapshot,
-                            `rewind to ${event.simulations} sims`,
-                          )
-                        }
-                      >
-                        {event.id}. {event.label} ({event.simulations} sims)
-                      </button>
-                    </li>
-                  ))}
-                </ul>
+            {/* Outer wrapper positions the scroll-fade mask without clipping the ring. */}
+            <div className="ring-foreground/10 relative rounded-lg ring-1">
+              <div
+                ref={logRef}
+                className="max-h-28 overflow-y-auto rounded-lg"
+              >
+                {state.log.length === 0 ? (
+                  <p className="text-muted-foreground px-2 py-1.5 text-xs">
+                    Flip a control or load a preset to start the log, then click
+                    an entry to rewind.
+                  </p>
+                ) : (
+                  <ul className="text-xs">
+                    {[...state.log].reverse().map((event) => (
+                      <li key={event.id}>
+                        <button
+                          type="button"
+                          className="text-muted-foreground hover:bg-foreground/5 w-full px-2 py-1 text-left font-mono"
+                          onClick={() =>
+                            restore(
+                              event.snapshot,
+                              `rewind to ${event.simulations} sims`,
+                            )
+                          }
+                        >
+                          {event.id}. {event.label} ({event.simulations} sims)
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+              {/* Fade mask signals more content below when the list overflows. */}
+              {state.log.length > 3 && (
+                <div
+                  className="pointer-events-none absolute bottom-0 left-0 right-0 h-6 rounded-b-lg"
+                  style={{
+                    background:
+                      "linear-gradient(to bottom, transparent, var(--color-background))",
+                  }}
+                />
               )}
             </div>
           </div>
@@ -601,10 +660,12 @@ export function CrazyStoneSearch() {
         expand a node, run a rollout, and back the value up. The rollout value
         of a move is sampled around a hidden true value with that move&apos;s
         noise, so a good move with wide noise can look bad at first. The dashed
-        sage ring marks the move with the highest true value; the solid clay
-        ring marks the move the search would play now. This runs a {colCount}
-        -move tree a few plies deep, where Crazy Stone ran thousands of moves on
-        a 9 by 9 board.
+        sage ring marks the move with the highest true value; the solid clay{" "}
+        <span aria-label="triangle right">▶</span> ring marks the move the
+        search would play now; a red ✕ marks a pruned move. Each preset uses a
+        fixed seed so the run is deterministic and reproducible. This runs a{" "}
+        {colCount}-move tree a few plies deep, where Crazy Stone ran thousands
+        of moves on a 9 by 9 board.
       </p>
     </div>
   );

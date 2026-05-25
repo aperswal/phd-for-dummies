@@ -529,9 +529,9 @@ export function PolicyGradientGrid() {
           onStep={onStep}
           onReset={onReset}
         />
-        <div className="w-40">
+        <div className="min-w-[7rem] max-w-[10rem] flex-1">
           <Slider
-            label="Speed"
+            label="Playback speed"
             value={speed}
             min={1}
             max={12}
@@ -542,46 +542,69 @@ export function PolicyGradientGrid() {
         </div>
       </div>
 
-      <SimPanel title="Knobs">
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="text-muted-foreground text-xs">critic</span>
-          {(
-            [
-              ["exact", "true value"],
-              ["compatible", "compatible"],
-              ["incompatible", "incompatible"],
-              ["reinforce", "sampled returns"],
-            ] as [CriticMode, string][]
-          ).map(([mode, label]) => (
-            <Toggle
-              key={mode}
-              label={label}
-              active={params.critic === mode}
-              onClick={() => intervene({ type: "setCritic", value: mode })}
-            />
-          ))}
+      <SimPanel title="Controls">
+        <div className="flex flex-col gap-1">
+          <span className="text-muted-foreground text-xs font-medium">
+            Critic — which value estimate drives the gradient step
+          </span>
+          <div className="flex flex-wrap gap-2">
+            {(
+              [
+                ["exact", "true value"],
+                ["compatible", "compatible"],
+                ["incompatible", "incompatible"],
+                ["reinforce", "sampled returns"],
+              ] as [CriticMode, string][]
+            ).map(([mode, label]) => (
+              <Toggle
+                key={mode}
+                label={label}
+                active={params.critic === mode}
+                onClick={() => intervene({ type: "setCritic", value: mode })}
+              />
+            ))}
+          </div>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="text-muted-foreground text-xs">value baseline</span>
-          <Toggle
-            label={params.baseline ? "on" : "off"}
-            active={params.baseline}
-            onClick={() =>
-              intervene({ type: "setBaseline", value: !params.baseline })
-            }
-          />
-          <Button
-            type="button"
-            size="sm"
-            variant="secondary"
-            onClick={() => intervene({ type: "resetPolicy" })}
-          >
-            Reset policy to uniform
-          </Button>
+        <div className="flex flex-col gap-1">
+          <span className="text-muted-foreground text-xs font-medium">
+            Value baseline — subtract V(s) to cut REINFORCE variance
+          </span>
+          <div className="flex flex-wrap gap-2">
+            <Toggle
+              label={params.baseline ? "on" : "off"}
+              active={params.baseline}
+              onClick={() =>
+                intervene({ type: "setBaseline", value: !params.baseline })
+              }
+            />
+            {params.critic === "reinforce" && (
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={() =>
+                  intervene({
+                    type: "setSeed",
+                    value: (state.rng + 97) & 0xffff,
+                  })
+                }
+              >
+                New sample
+              </Button>
+            )}
+            <Button
+              type="button"
+              size="sm"
+              variant="secondary"
+              onClick={() => intervene({ type: "resetPolicy" })}
+            >
+              Reset policy to uniform
+            </Button>
+          </div>
         </div>
         <div className="grid gap-3 sm:grid-cols-2">
           <Slider
-            label="alpha (learning rate)"
+            label="alpha — step size for each gradient update"
             value={params.alpha}
             min={0.2}
             max={8}
@@ -590,7 +613,7 @@ export function PolicyGradientGrid() {
             onChange={(value) => intervene({ type: "setAlpha", value })}
           />
           <Slider
-            label="gamma (discount)"
+            label="gamma — discount factor (higher = longer horizon)"
             value={params.gamma}
             min={0.8}
             max={0.99}
@@ -599,7 +622,7 @@ export function PolicyGradientGrid() {
             onChange={(value) => intervene({ type: "setGamma", value })}
           />
           <Slider
-            label="episodes per step (sampled returns)"
+            label="episodes per step — how many rollouts average each REINFORCE gradient"
             value={params.mcEpisodes}
             min={2}
             max={80}
@@ -607,16 +630,6 @@ export function PolicyGradientGrid() {
             display={String(params.mcEpisodes)}
             disabled={params.critic !== "reinforce"}
             onChange={(value) => intervene({ type: "setMcEpisodes", value })}
-          />
-          <Slider
-            label="seed (sampled returns)"
-            value={state.rng % 1000}
-            min={1}
-            max={40}
-            step={1}
-            display={String(state.rng % 1000)}
-            disabled={params.critic !== "reinforce"}
-            onChange={(value) => intervene({ type: "setSeed", value })}
           />
         </div>
       </SimPanel>
@@ -629,7 +642,11 @@ export function PolicyGradientGrid() {
         critic. The alignment readout is the cosine between the step actually
         taken and the exact policy gradient, computed separately only to score
         it. It holds at 1.00 for the true value and the compatible critic, drops
-        for the incompatible one, and jitters for sampled returns.
+        for the incompatible one, and jitters for sampled returns. Each preset
+        starts from a fixed seed so the run is fully reproducible; &ldquo;New
+        sample&rdquo; picks a fresh seed to explore a different episode stream.
+        Playback speed controls animation pacing only, not the paper&rsquo;s
+        math.
       </p>
     </div>
   );

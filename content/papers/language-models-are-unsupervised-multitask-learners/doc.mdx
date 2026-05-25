@@ -2,7 +2,7 @@
 
 _A model trained only to predict the next word, on text diverse enough that tasks show up inside it, learns to do those tasks with no extra training just by being asked in plain language, and it does this better the bigger it gets._
 
-![A clay-orange pixel reader sits with an open book between a sage scroll of stacked web pages feeding in from the left and three ink tags fanning out to the right labelled answer, know, and any, showing that one reader of the whole internet can answer any kind of question without being taught the task.](/papers/language-models-are-unsupervised-multitask-learners/hero.webp)
+![A clay-orange pixel reader sits with an open book between a sage scroll of stacked web pages feeding in from the left and three ink tags fanning out to the right labelled answer, know, and any, showing that one reader of the whole internet can answer any kind of question without being taught the task.](https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/language-models-are-unsupervised-multitask-learners/hero.webp)
 
 ## Read at your level
 
@@ -59,7 +59,7 @@ So the whole model is one autoregressive language model. It factors the probabil
 p(x) = product over n of p(s_n | s_1, ..., s_{n-1})
 ```
 
-![A row of blank pixel word tiles runs left to right with the last filled tile glowing clay-orange and a dashed empty slot for the next word, while a sage fan of three candidate tiles points down at the slot with arrows of different thickness and the thickest one winning, showing the model works by guessing the next word over and over.](/papers/language-models-are-unsupervised-multitask-learners/next-token.webp)
+![A row of blank pixel word tiles runs left to right with the last filled tile glowing clay-orange and a dashed empty slot for the next word, while a sage fan of three candidate tiles points down at the slot with arrows of different thickness and the thickest one winning, showing the model works by guessing the next word over and over.](https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/language-models-are-unsupervised-multitask-learners/next-token.webp)
 
 To generate, you compute the distribution over the next token, sample one, append it, and repeat. The simulation above is exactly this loop. At each step it scores the candidate next tokens, divides by a temperature, keeps the top k, softmaxes into a probability distribution, and samples.
 
@@ -67,7 +67,7 @@ Two design choices made the corpus work. First, the data. Instead of scraping al
 
 The single most important finding is the scaling curve. They trained four sizes, from 117M to 1542M parameters, and across nearly every task the zero-shot performance rose log-linearly with model size.
 
-![Four pixel readers grow taller from left to right, sage and small on the left up to a tall glowing clay-orange one on the right, with an ink trend arrow sweeping up across them and axis ticks beneath labelled smaller model and more free tasks, showing that a bigger model does more tasks zero-shot in a steady log-linear climb.](/papers/language-models-are-unsupervised-multitask-learners/scaling.webp)
+![Four pixel readers grow taller from left to right, sage and small on the left up to a tall glowing clay-orange one on the right, with an ink trend arrow sweeping up across them and axis ticks beneath labelled smaller model and more free tasks, showing that a bigger model does more tasks zero-shot in a steady log-linear climb.](https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/language-models-are-unsupervised-multitask-learners/scaling.webp)
 
 That straight-line climb is the real result. It says the model hadn't hit a ceiling, so more scale should keep helping. Load the **Tiny model fails** preset in the simulation, then walk the size up from 117M to 1542M and watch the probability on the correct answer rise the same way.
 
@@ -130,7 +130,7 @@ for step in range(max_tokens):
 
 The data is WebText, the text behind 45 million outbound Reddit links with at least 3 karma, cleaned and de-duplicated to about 8 million documents and 40 GB, with Wikipedia removed to avoid overlap with evaluation sets. Tasks are framed as prompts. Translation conditions on example pairs in the format `english = french`. Summarization appends `TL;DR:` after the article. Question answering appends the document and question and a final `A:`. The prompt is the entire interface.
 
-![A clay-orange pixel reader has two paper tags labelled hint taped to its input, the top tag leading to a summary scrap and the bottom tag leading to a sage question-and-answer scrap, showing that a short plain-language hint in the prompt tells the same model which task to do.](/papers/language-models-are-unsupervised-multitask-learners/prompt-as-task.webp)
+![A clay-orange pixel reader has two paper tags labelled hint taped to its input, the top tag leading to a summary scrap and the bottom tag leading to a sage question-and-answer scrap, showing that a short plain-language hint in the prompt tells the same model which task to do.](https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/language-models-are-unsupervised-multitask-learners/prompt-as-task.webp)
 
 That the prompt carries the task is testable, and the authors test it. Removing the `TL;DR:` hint drops summarization performance by 6.4 ROUGE points, which says the model really is keying off the natural-language instruction. In the simulation, load the summary preset and toggle the hint off mid-run to watch the same drop, the output drifting from a summary back toward the article's own words.
 

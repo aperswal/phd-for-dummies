@@ -111,7 +111,6 @@ export function ChainOfThought() {
     initialState("standard-fails"),
   );
   const [playing, setPlaying] = useState(false);
-  const [speed, setSpeed] = useState(1);
   const [presetId, setPresetId] = useState("standard-fails");
 
   const { params, revealed, log } = state;
@@ -124,7 +123,13 @@ export function ChainOfThought() {
     [],
   );
 
-  const resetClock = useFixedTimestep(playing, 900 / speed, () =>
+  const totalSteps = solution.steps.length;
+  const shown = mode.emitsSteps ? Math.min(revealed, totalSteps) : totalSteps;
+  const chainDone = !mode.emitsSteps || shown >= totalSteps;
+
+  // Pass `playing && !chainDone` so the fixed-timestep hook stops firing once
+  // the terminal state is reached without needing a setState inside an effect.
+  const resetClock = useFixedTimestep(playing && !chainDone, 900, () =>
     dispatch({ kind: "tick" }),
   );
 
@@ -149,9 +154,6 @@ export function ChainOfThought() {
     [resetClock],
   );
 
-  const totalSteps = solution.steps.length;
-  const shown = mode.emitsSteps ? Math.min(revealed, totalSteps) : totalSteps;
-  const chainDone = !mode.emitsSteps || shown >= totalSteps;
   const errorRate = mode.reasoningBefore
     ? stepErrorRate(params.scaleB)
     : stepErrorRate(100 / 12);
@@ -225,7 +227,9 @@ export function ChainOfThought() {
                     style={{
                       background:
                         broken && visible ? ACCENT : "var(--color-muted)",
-                      color: broken && visible ? "#fff" : undefined,
+                      // Use dark text on the clay-orange background for
+                      // sufficient contrast at this small size.
+                      color: broken && visible ? "#1a1007" : undefined,
                     }}
                   >
                     {emitted.index + 1}
@@ -266,24 +270,13 @@ export function ChainOfThought() {
         </div>
       </div>
 
-      <div className="flex flex-wrap items-center justify-between gap-3">
+      <div className="flex flex-wrap items-center gap-3">
         <PlayPauseStepControls
           playing={playing}
           onPlayPause={onPlayPause}
           onStep={onStep}
           onReset={onReset}
         />
-        <div className="w-40">
-          <Slider
-            label="Speed"
-            value={speed}
-            min={0.5}
-            max={3}
-            step={0.5}
-            display={`${speed.toFixed(1)}x`}
-            onChange={setSpeed}
-          />
-        </div>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
@@ -318,7 +311,7 @@ export function ChainOfThought() {
           </div>
 
           <Slider
-            label="Model scale (billions of parameters)"
+            label="Model size — drag past 100B to watch chain-of-thought emerge"
             value={params.scaleB}
             min={0.4}
             max={540}
@@ -327,15 +320,6 @@ export function ChainOfThought() {
             onChange={(value) =>
               intervene({ type: "setScale", value: nearestScale(value) })
             }
-          />
-          <Slider
-            label="Seed (reshuffles where the model slips)"
-            value={params.seed}
-            min={0}
-            max={12}
-            step={1}
-            display={String(params.seed)}
-            onChange={(value) => intervene({ type: "setSeed", value })}
           />
         </SimPanel>
 
@@ -388,7 +372,8 @@ export function ChainOfThought() {
         The reasoning here is hand-set so each step has a known right value and
         a broken step poisons the ones after it, the way the paper&apos;s error
         analysis describes. A real model writes the words itself, and the
-        emergence curve is sharper than this smooth stand-in. This runs{" "}
+        emergence curve is sharper than this smooth stand-in. Each preset uses a
+        fixed seed, so the same preset always produces the same run. This runs{" "}
         {PROBLEMS.length} short problems, where the paper tests thousands across
         five math, commonsense, and symbolic benchmarks.
       </p>

@@ -4,28 +4,34 @@
   "headline": "An agent that thinks and acts in the same breath, writing a reasoning note then taking a real action so each one fixes the other's blind spot.",
   "abstract": "While large language models (LLMs) have demonstrated impressive performance across tasks in language understanding and interactive decision making, their abilities for reasoning (e.g. chain-of-thought prompting) and acting (e.g. action plan generation) have primarily been studied as separate topics. In this paper, we explore the use of LLMs to generate both reasoning traces and task-specific actions in an interleaved manner, allowing for greater synergy between the two: reasoning traces help the model induce, track, and update action plans as well as handle exceptions, while actions allow it to interface with and gather additional information from external sources such as knowledge bases or environments. We apply our approach, named ReAct, to a diverse set of language and decision making tasks and demonstrate its effectiveness over state-of-the-art baselines in addition to improved human interpretability and trustworthiness. Concretely, on question answering (HotpotQA) and fact verification (Fever), ReAct overcomes prevalent issues of hallucination and error propagation in chain-of-thought reasoning by interacting with a simple Wikipedia API, and generating human-like task-solving trajectories that are more interpretable than baselines without reasoning traces. Furthermore, on two interactive decision making benchmarks (ALFWorld and WebShop), ReAct outperforms imitation and reinforcement learning methods by an absolute success rate of 34% and 10% respectively, while being prompted with only one or two in-context examples.",
   "date": "2026-05-24",
-  "tags": ["language models", "agents", "reasoning", "tool use", "prompting"],
+  "tags": [
+    "language models",
+    "agents",
+    "reasoning",
+    "tool use",
+    "prompting"
+  ],
   "source": {
     "name": "arXiv 2210.03629",
     "url": "https://arxiv.org/abs/2210.03629"
   },
   "images": [
     {
-      "src": "/papers/react-synergizing-reasoning-and-acting/hero.webp",
+      "src": "https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/react-synergizing-reasoning-and-acting/hero.webp",
       "alt": "A pixel-art open notebook on the left and a sage filing cabinet on the right, joined by a clay-orange loop arrow that circles from one to the other, like a detective who jots a thought then walks to the files to check it, showing that ReAct alternates a reasoning step with a grounded action so each feeds the next.",
       "width": 2752,
       "height": 1536,
       "caption": "A thought feeds an action, the action's result feeds the next thought, around and around until the answer is grounded."
     },
     {
-      "src": "/papers/react-synergizing-reasoning-and-acting/three-paths.webp",
+      "src": "https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/react-synergizing-reasoning-and-acting/three-paths.webp",
       "alt": "Three explorers head for the same flag along three lanes, one wandering off a cliff labelled guess, one stopped at a locked gate labelled stall, and a clay-orange one reaching the flag labelled ground, showing that reasoning alone hallucinates, acting alone gets stuck, and only interleaving the two arrives.",
       "width": 2400,
       "height": 1792,
       "caption": "Reasoning alone guesses and walks off a cliff, acting alone stalls at a gate, and only the two together reach the answer."
     },
     {
-      "src": "/papers/react-synergizing-reasoning-and-acting/dead-search.webp",
+      "src": "https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/react-synergizing-reasoning-and-acting/dead-search.webp",
       "alt": "An explorer beside an open empty filing drawer labelled empty while his clay-orange path arrow that was heading straight bends sharply and trails off, labelled derail, showing that when a search returns nothing the reasoning loses its footing and the agent gets stuck.",
       "width": 2400,
       "height": 1792,

@@ -24,6 +24,11 @@ import {
   type SimState,
 } from "@/components/visualizations/osworld-model";
 
+// ACCENT (clay-orange) = the warning/problem signal: missed clicks, gauge fill.
+// SAGE (sage green)    = progress/success: completed subgoals, landed clicks.
+// SLATE                = neutral secondary: popup-clearing steps.
+// Active subgoal uses a CSS foreground outline, not ACCENT, so "in progress"
+// never reads as "broken".
 const ACCENT = "#c2683f";
 const SAGE = "#7c8a6b";
 const SLATE = "#6b7785";
@@ -87,6 +92,7 @@ function Slider({
         max={max}
         step={step}
         value={value}
+        aria-label={label}
         onChange={(event) => onChange(Number(event.target.value))}
         className="h-1.5 w-full cursor-pointer"
         style={{ accentColor: ACCENT }}
@@ -129,7 +135,6 @@ export function OSWorldAgentLoop() {
     initialState("single-app"),
   );
   const [playing, setPlaying] = useState(false);
-  const [speed, setSpeed] = useState(1);
   const [presetId, setPresetId] = useState("single-app");
 
   const {
@@ -152,7 +157,7 @@ export function OSWorldAgentLoop() {
 
   // Stop the clock once the run reaches a terminal state, so play doesn't spin
   // on a finished task.
-  const resetClock = useFixedTimestep(playing && !finished, 900 / speed, () =>
+  const resetClock = useFixedTimestep(playing && !finished, 900, () =>
     dispatch({ kind: "tick" }),
   );
 
@@ -243,7 +248,7 @@ export function OSWorldAgentLoop() {
                   rx={7}
                   fill={done ? SAGE : "var(--color-muted)"}
                   fillOpacity={done ? 1 : active ? 1 : 0.45}
-                  stroke={active ? ACCENT : "transparent"}
+                  stroke={active ? "var(--color-foreground)" : "transparent"}
                   strokeWidth={2}
                 />
                 <text
@@ -363,24 +368,11 @@ export function OSWorldAgentLoop() {
           onPlayPause={onPlayPause}
           onStep={onStep}
           onReset={onReset}
-          disabled={finished && phase === "done"}
+          disabled={finished}
         />
-        <div className="flex items-center gap-3">
-          <Badge variant={reward === 1 ? "default" : "secondary"}>
-            {PHASE_TEXT[phase]}
-          </Badge>
-          <div className="w-32">
-            <Slider
-              label="Speed"
-              value={speed}
-              min={0.5}
-              max={3}
-              step={0.5}
-              display={`${speed.toFixed(1)}x`}
-              onChange={setSpeed}
-            />
-          </div>
-        </div>
+        <Badge variant={reward === 1 ? "default" : "secondary"}>
+          {PHASE_TEXT[phase]}
+        </Badge>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
@@ -397,7 +389,7 @@ export function OSWorldAgentLoop() {
           </div>
           <p className="text-muted-foreground text-xs">{task.note}</p>
           <span className="text-muted-foreground text-xs font-medium">
-            How the agent sees
+            How the agent sees — observation mode
           </span>
           <div className="flex flex-wrap gap-1.5">
             {OBSERVATION_MODES.map((mode) => (
@@ -412,7 +404,7 @@ export function OSWorldAgentLoop() {
             ))}
           </div>
           <span className="text-muted-foreground text-xs font-medium">
-            Window state (perturb mid-run)
+            Window state — perturb mid-run to watch the gauge drop
           </span>
           <div className="flex flex-wrap gap-1.5">
             {PERTURBATIONS.map((value) => (
@@ -425,7 +417,7 @@ export function OSWorldAgentLoop() {
             ))}
           </div>
           <Slider
-            label="Step budget"
+            label="Step budget — how many actions before the run fails"
             value={params.stepBudget}
             min={5}
             max={30}
@@ -433,15 +425,19 @@ export function OSWorldAgentLoop() {
             display={String(params.stepBudget)}
             onChange={(value) => intervene({ type: "setBudget", value })}
           />
-          <Slider
-            label="Seed (which way the dice fall)"
-            value={params.seed}
-            min={0}
-            max={20}
-            step={1}
-            display={String(params.seed)}
-            onChange={(value) => intervene({ type: "setSeed", value })}
-          />
+          {DEFAULT_BUDGET !== params.stepBudget && (
+            <p className="text-muted-foreground text-xs">
+              Default budget is {DEFAULT_BUDGET} steps, matching the paper.
+            </p>
+          )}
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            onClick={() => intervene({ type: "reshuffle" })}
+          >
+            New sample — try a different trajectory
+          </Button>
         </SimPanel>
 
         <SimPanel title="Inside the run">
@@ -457,11 +453,6 @@ export function OSWorldAgentLoop() {
               misses {attempts.filter((a) => a.outcome !== "land").length}
             </Badge>
           </div>
-          {DEFAULT_BUDGET !== params.stepBudget && (
-            <p className="text-muted-foreground text-xs">
-              Default budget is {DEFAULT_BUDGET} steps, matching the paper.
-            </p>
-          )}
           <div className="flex flex-col gap-1">
             <span className="text-muted-foreground text-xs font-medium">
               Event log
@@ -489,7 +480,9 @@ export function OSWorldAgentLoop() {
         beats raw screenshot), and each window perturbation scales it by the
         drop Figure 8 measured (original 50.79%, moved 36.65%, shrunk 15.04%,
         cluttered 25.39%). A real agent&apos;s accuracy comes from the model;
-        here it is a fixed rate so the loop is legible.
+        here it is a fixed rate so the loop is legible. Each preset uses a fixed
+        seed so the run is deterministic; press &ldquo;New sample&rdquo; to try
+        a different trajectory.
       </p>
     </div>
   );

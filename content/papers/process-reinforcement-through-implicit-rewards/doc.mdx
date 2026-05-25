@@ -2,7 +2,7 @@
 
 _A way to reward an AI for every reasoning step, not just the final answer, using a reward model that comes free from the language model itself and stays honest by updating online._
 
-![Two pixel lenses, a clay-orange one labelled policy and a sage one labelled frozen, both reading a column of three identical reasoning-step tiles, with an ink bracket turning the two readings into a row of clay-orange score bars, showing that a model scores every step for free by comparing its own reading against a frozen twin.](/papers/process-reinforcement-through-implicit-rewards/hero.webp)
+![Two pixel lenses, a clay-orange one labelled policy and a sage one labelled frozen, both reading a column of three identical reasoning-step tiles, with an ink bracket turning the two readings into a row of clay-orange score bars, showing that a model scores every step for free by comparing its own reading against a frozen twin.](https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/process-reinforcement-through-implicit-rewards/hero.webp)
 
 ## Read at your level
 
@@ -43,7 +43,7 @@ Here's the one new term for this section. A **reward** is the score the model is
 
 The problem was always where the step scores come from. You'd have to pay people to read thousands of solutions and grade every step, then train a separate model to copy those grades. Expensive, and it breaks. PRIME found a shortcut. It turns out that if you train a model the normal way, just on whether the final answer was right, that model secretly already knows how to score steps. You read out the score like this. Take the model you're training, and take a frozen copy of where it started. For each step, ask both "how likely is this step?" The score for that step is how much more the trained model likes it than the frozen copy does.
 
-![Two pixel stepping-stone paths climbing left to right, the upper one marked End only with a single clay-orange star on its last stone, the lower one marked Every step with a clay-orange tick on every stone, showing that an outcome reward scores only the final answer while a dense process reward scores each step.](/papers/process-reinforcement-through-implicit-rewards/sparse-vs-dense.webp)
+![Two pixel stepping-stone paths climbing left to right, the upper one marked End only with a single clay-orange star on its last stone, the lower one marked Every step with a clay-orange tick on every stone, showing that an outcome reward scores only the final answer while a dense process reward scores each step.](https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/process-reinforcement-through-implicit-rewards/sparse-vs-dense.webp)
 
 Quick numbers. Say a good step gets log-ratio 0.5 and a bad step gets minus 0.4. Multiply by a knob the paper calls beta, say 0.6, and the good step earns +0.3, the bad step earns minus 0.24. Now every single step has a number, and you never paid anyone to label a step.
 
@@ -65,7 +65,7 @@ r_φ(y_t) = β · log( π_φ(y_t | y_<t) / π_ref(y_t | y_<t) )
 
 That's a process reward at every token, and you got it from a model trained only on outcome labels. No step labels, ever. Because `π_φ` is just a language model, you initialize it from the model you already have (the SFT model) instead of training a reward model from scratch.
 
-![Two pixel lenses, a clay-orange one labelled policy and a sage one labelled frozen, both reading a column of three identical reasoning-step tiles, with an ink bracket turning the two readings into a row of clay-orange score bars, showing that a model scores every step for free by comparing its own reading against a frozen twin.](/papers/process-reinforcement-through-implicit-rewards/hero.webp)
+![Two pixel lenses, a clay-orange one labelled policy and a sage one labelled frozen, both reading a column of three identical reasoning-step tiles, with an ink bracket turning the two readings into a row of clay-orange score bars, showing that a model scores every step for free by comparing its own reading against a frozen twin.](https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/process-reinforcement-through-implicit-rewards/hero.webp)
 
 PRIME runs this inside the training loop. Each iteration samples `K` responses per prompt, grades them with an exact rule-based verifier (match for math, fraction of passing tests for code), reads out the token rewards with the equation above, and forms the advantage by combining a leave-one-out baseline on the process rewards with a leave-one-out baseline on the outcome rewards.
 
@@ -142,7 +142,7 @@ for each iteration:
 
 That last line is the one that matters most. Freeze it and you get a static reward the policy learns to game.
 
-![Two pixel line-chart panels, the left one labelled frozen showing a clay-orange reward curve climbing while a sage truth curve falls away, the right one labelled online showing both curves rising together, showing that a frozen reward gets gamed while a reward that keeps updating on fresh rollouts stays honest.](/papers/process-reinforcement-through-implicit-rewards/reward-hacking.webp)
+![Two pixel line-chart panels, the left one labelled frozen showing a clay-orange reward curve climbing while a sage truth curve falls away, the right one labelled online showing both curves rising together, showing that a frozen reward gets gamed while a reward that keeps updating on fresh rollouts stays honest.](https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/process-reinforcement-through-implicit-rewards/reward-hacking.webp)
 
 Load the **Frozen reward hacks** preset and inject the shortcut to watch the left panel happen live, then flip the PRM back to online to watch it snap to the right panel.
 

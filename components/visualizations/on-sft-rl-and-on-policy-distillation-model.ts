@@ -299,7 +299,6 @@ export type Intervention =
   | { type: "setRewardBias"; value: number }
   | { type: "setPivotStrength"; value: number }
   | { type: "setSpread"; value: number }
-  | { type: "setSeed"; value: number }
   | { type: "loadPreset"; id: string }
   | { type: "restore"; params: GeometryParams; label: string };
 
@@ -319,7 +318,7 @@ export const PRESETS: Preset[] = [
     id: "rl-cancels",
     label: "RL: noise cancels",
     blurb:
-      "A large batch of sparse RL gradients. Most are noise, a few carry the reward signal. Step the seed and watch the update stay small and trustworthy while the cloud reshuffles.",
+      "A large batch of sparse RL gradients. Most are noise, a few carry the reward signal. Press play and watch the update stay small and trustworthy while the cloud reshuffles across draws.",
     params: {
       method: "rl",
       batchSize: 140,
@@ -448,11 +447,6 @@ function applyIntervention(
       return {
         params: { ...params, spread: action.value },
         label: `spread -> ${action.value.toFixed(2)}`,
-      };
-    case "setSeed":
-      return {
-        params: { ...params, seed: action.value },
-        label: `seed -> ${action.value}`,
       };
     case "loadPreset": {
       const preset = getPreset(action.id);

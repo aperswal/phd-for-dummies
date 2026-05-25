@@ -2,7 +2,7 @@
 
 _A language model big enough learns a brand-new task from a handful of examples typed into its prompt, with no extra training, and the bigger it gets the better it learns this way._
 
-![A pixel-art apprentice reads a worn recipe card holding three worked examples, then writes the right answer to a fourth blank line on the same card, while a faint giant brain glows behind it, showing that a big enough language model learns a new task from a few examples in its prompt with no extra training.](/papers/language-models-are-few-shot-learners/hero.webp)
+![A pixel-art apprentice reads a worn recipe card holding three worked examples, then writes the right answer to a fourth blank line on the same card, while a faint giant brain glows behind it, showing that a big enough language model learns a new task from a few examples in its prompt with no extra training.](https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/language-models-are-few-shot-learners/hero.webp)
 
 ## Read at your level
 
@@ -71,11 +71,11 @@ One-shot:   description + 1 example + question
 Few-shot:   description + K examples + question
 ```
 
-![Three pixel recipe cards side by side, the first holding only an instruction line, the second an instruction plus one example, the third an instruction plus a stack of examples, all ending in the same blank prompt line, showing zero-shot, one-shot, and few-shot as the same prompt with more worked examples added.](/papers/language-models-are-few-shot-learners/three-settings.webp)
+![Three pixel recipe cards side by side, the first holding only an instruction line, the second an instruction plus one example, the third an instruction plus a stack of examples, all ending in the same blank prompt line, showing zero-shot, one-shot, and few-shot as the same prompt with more worked examples added.](https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/language-models-are-few-shot-learners/three-settings.webp)
 
 The key result is not just that few-shot works. It's how the benefit scales. Plot accuracy against the number of examples K in the prompt, and you get an in-context learning curve. For a big model that curve climbs steeply. For a small model it's almost flat. The ability to learn from the prompt is itself something that emerges with scale.
 
-![Three rising ink curves climb over a row of pixel example cards, a tall clay-orange curve for the big model climbing steeply, a short sage curve for the small model staying nearly flat, showing that adding more examples to the prompt helps a large model a lot and a small model almost not at all.](/papers/language-models-are-few-shot-learners/learning-curve.webp)
+![Three rising ink curves climb over a row of pixel example cards, a tall clay-orange curve for the big model climbing steeply, a short sage curve for the small model staying nearly flat, showing that adding more examples to the prompt helps a large model a lot and a small model almost not at all.](https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/language-models-are-few-shot-learners/learning-curve.webp)
 
 Work one example end to end. Take 2-digit addition. The full GPT-3 in the few-shot setting scores 100% on 2-digit addition, 98.9% on 2-digit subtraction, and 80.4% on 3-digit addition. The 13 billion model, the next size down, solves 2-digit addition only about half the time. The authors checked whether the model just memorized the answers from its training data, searched for the test problems in the training set, and found almost none, so the model is actually computing, not looking up.
 
@@ -123,7 +123,7 @@ Few-shot:   "Add the two numbers. 48 + 76 => 124. 12 + 9 => 21. ... 57 + 38 =>"
 
 Across all of this, the only knob is what sits in the prompt and how big the model is. To see why example count is bounded, the prompt lives inside a fixed context window of 2048 tokens, and each example spends some of that budget.
 
-![A pixel scroll with a fixed measuring tape down its edge holds a growing stack of example cards that fills toward a hard line marked full, with one clay-orange card spilling past the edge, showing that the context window is a fixed token budget that caps how many examples can fit in the prompt.](/papers/language-models-are-few-shot-learners/context-budget.webp)
+![A pixel scroll with a fixed measuring tape down its edge holds a growing stack of example cards that fills toward a hard line marked full, with one clay-orange card spilling past the edge, showing that the context window is a fixed token budget that caps how many examples can fit in the prompt.](https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/language-models-are-few-shot-learners/context-budget.webp)
 
 In the simulation, switch to the unscramble task and add examples while watching the context meter. Once it overflows, the earliest examples have to fall out of the prompt, which is the real wall the paper works against.
 

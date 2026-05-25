@@ -138,4 +138,18 @@ describe("the step reducer", () => {
     const after = computeAllocation(state.params);
     expect(after.realizedLoss).toBeGreaterThan(before.realizedLoss);
   });
+
+  it("reshuffles the empirical jitter without changing the axis or revealLog", () => {
+    let state = initialState("params-law");
+    const revealBefore = state.revealLog;
+    const axisBefore = state.params.axisId;
+    state = step(state, {
+      kind: "intervene",
+      action: { type: "reshuffle", seed: 42 },
+    });
+    expect(state.params.seed).toBe(42);
+    expect(state.params.axisId).toBe(axisBefore);
+    expect(state.revealLog).toBe(revealBefore);
+    expect(state.log.events.at(-1)?.label).toContain("reshuffle");
+  });
 });

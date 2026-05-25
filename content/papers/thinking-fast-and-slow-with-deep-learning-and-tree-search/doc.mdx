@@ -2,7 +2,7 @@
 
 _Split learning into a slow planner that searches and a fast net that copies it, and let each one make the other stronger every round until the pair beats the reigning champion._
 
-![A small clay-orange pixel lantern labelled fast sits across from a sage-green pixel tree labelled slow, joined by two curved ink arrows into a loop, showing a quick intuition and a slow search taking turns making each other stronger.](/papers/thinking-fast-and-slow-with-deep-learning-and-tree-search/hero.webp)
+![A small clay-orange pixel lantern labelled fast sits across from a sage-green pixel tree labelled slow, joined by two curved ink arrows into a loop, showing a quick intuition and a slow search taking turns making each other stronger.](https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/thinking-fast-and-slow-with-deep-learning-and-tree-search/hero.webp)
 
 ## Read at your level
 
@@ -72,7 +72,7 @@ for i = 1 .. N:
 
 Two steps repeat. **Imitation learning** trains the apprentice `π̂` to copy the expert's moves, like a student studying worked examples. **Expert improvement** rebuilds the expert using the better apprentice to guide search, like that student now reasoning with sharper intuition. Neither half is new on its own. Putting them in a loop where the expert keeps getting stronger is the contribution.
 
-![A clay-orange pixel notebook and a sage-green pixel tree pass a baton around an ink loop labelled copy and plan, showing that each round the fast learner copies the stronger planner and the planner then plans with the sharper learner.](/papers/thinking-fast-and-slow-with-deep-learning-and-tree-search/exit-loop.webp)
+![A clay-orange pixel notebook and a sage-green pixel tree pass a baton around an ink loop labelled copy and plan, showing that each round the fast learner copies the stronger planner and the planner then plans with the sharper learner.](https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/thinking-fast-and-slow-with-deep-learning-and-tree-search/exit-loop.webp)
 
 The expert is Monte Carlo Tree Search (MCTS). It picks which branch to explore with the UCT rule, which trades off exploiting moves that look good against exploring moves it hasn't tried much.
 
@@ -88,7 +88,7 @@ UCT_{P-NN}(s, a) = UCT(s, a) + w_a * π̂(a|s) / (n(s, a) + 1)
 
 That extra term pulls the search toward moves the apprentice likes, strongest when the search hasn't visited the move yet. They found `w_a = 100` worked best, close to the average number of simulations per move at the root.
 
-![A sage-green pixel tree with one clay-orange branch lit up and an ink arrow labelled hunch pointing at it, showing the learner's hunch steering where the slow search spends most of its effort.](/papers/thinking-fast-and-slow-with-deep-learning-and-tree-search/uct-bias.webp)
+![A sage-green pixel tree with one clay-orange branch lit up and an ink arrow labelled hunch pointing at it, showing the learner's hunch steering where the slow search spends most of its effort.](https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/thinking-fast-and-slow-with-deep-learning-and-tree-search/uct-bias.webp)
 
 In the simulation, the small tree on the right shows this directly. Turn the apprentice prior on and the visits pile onto the move the apprentice favors. Turn it off and the search splits its visits more evenly, because now only its own raw reading guides it.
 
@@ -145,7 +145,7 @@ L_V = -z log[ V(s) ] - (1 - z) log[ 1 - V(s) ]
 
 **Results with effect sizes.** Against REINFORCE warm-started from the same network, ExIt learned stronger policies faster and showed no instability across 5 runs, where REINFORCE's curve jittered and barely rose. Online ExIt beat batch ExIt, and retaining a larger aggregated dataset helped a little more. Adding a value network beat policy-only ExIt cleanly once datasets passed roughly 550,000 positions. The final agent won 75.3% of games against MoHeX 1.0 at 10,000 iterations each, 59.3% against a 100,000-iteration MoHeX, and 55.6% against a 4-second-per-move MoHeX running over six times slower than the searcher, all while trained tabula rasa with no game-specific knowledge beyond the rules.
 
-![A clay-orange rising path labelled ExIt climbs above a sage-green path, while a flat jagged ink line labelled old stays near the bottom, showing that splitting planning from learning climbs faster and steadier than learning both at once.](/papers/thinking-fast-and-slow-with-deep-learning-and-tree-search/gap-climb.webp)
+![A clay-orange rising path labelled ExIt climbs above a sage-green path, while a flat jagged ink line labelled old stays near the bottom, showing that splitting planning from learning climbs faster and steadier than learning both at once.](https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/thinking-fast-and-slow-with-deep-learning-and-tree-search/gap-climb.webp)
 
 In the simulation, the orange and green lines are the apprentice and the expert, and the dashed line is MoHeX. The flat noisy path in the paper's REINFORCE comparison is what you get when you load the REINFORCE preset and the single line refuses to climb.
 

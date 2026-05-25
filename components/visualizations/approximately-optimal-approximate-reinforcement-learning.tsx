@@ -686,9 +686,9 @@ export function ConservativePolicyIteration() {
           onReset={onReset}
           disabled={state.done && !playing}
         />
-        <div className="w-40">
+        <div className="w-48">
           <Slider
-            label="Speed"
+            label="Playback pace (rounds per second)"
             value={speed}
             min={1}
             max={16}
@@ -744,7 +744,7 @@ export function ConservativePolicyIteration() {
         </div>
         <div className="grid gap-3 sm:grid-cols-2">
           <Slider
-            label="manual alpha (mixture step)"
+            label="manual alpha — how far to move toward the greedy policy each round"
             value={params.alpha}
             min={0.01}
             max={1}
@@ -754,7 +754,7 @@ export function ConservativePolicyIteration() {
             onChange={(value) => intervene({ type: "setAlpha", value })}
           />
           <Slider
-            label="chooser error (value estimate)"
+            label="chooser error — how noisy the value estimates are (epsilon)"
             value={params.chooserError}
             min={0}
             max={0.6}
@@ -763,22 +763,13 @@ export function ConservativePolicyIteration() {
             onChange={(value) => intervene({ type: "setChooserError", value })}
           />
           <Slider
-            label="gamma (discount)"
+            label="gamma — discount factor, controls how much future reward counts"
             value={params.gamma}
             min={0.8}
             max={0.97}
             step={0.01}
             display={params.gamma.toFixed(2)}
             onChange={(value) => intervene({ type: "setGamma", value })}
-          />
-          <Slider
-            label="seed (chooser error pattern)"
-            value={state.rng % 1000}
-            min={1}
-            max={40}
-            step={1}
-            display={String(state.rng % 1000)}
-            onChange={(value) => intervene({ type: "setSeed", value })}
           />
         </div>
       </SimPanel>
@@ -790,9 +781,10 @@ export function ConservativePolicyIteration() {
         visitation under the restart distribution, asks an approximate greedy
         chooser for a proposal, then mixes toward it by the chosen step. The
         chooser sees value estimates carrying error that varies each round, so a
-        worse chooser stops the run at a worse policy. This runs one small MDP,
-        not thousands of states, so the visitation and advantages are exact
-        rather than sampled.
+        worse chooser stops the run at a worse policy. The chooser&apos;s error
+        pattern is fixed per preset (deterministic seed), so the same preset
+        always produces the same run. This runs one small MDP, not thousands of
+        states, so the visitation and advantages are exact rather than sampled.
       </p>
     </div>
   );

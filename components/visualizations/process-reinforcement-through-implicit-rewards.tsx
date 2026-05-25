@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useReducer, useState } from "react";
+import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 
 import { EventLogPanel } from "@/components/simulation/event-log";
 import { SimPanel } from "@/components/simulation/sim-panel";
@@ -21,9 +21,9 @@ import {
   type PrimeState,
 } from "@/components/visualizations/process-reinforcement-through-implicit-rewards-model";
 
-const ACCENT = "#c2683f"; // clay-orange: true accuracy / the sound step
-const SAGE = "#6f7d5f"; // sage: PRM accuracy
-const SLATE = "#7c8a99"; // slate: reported reward
+const ACCENT = "#c2683f"; // clay-orange: reward hacking signal / true accuracy line
+const SAGE = "#6f7d5f"; // sage: good/healthy — PRM accuracy line, correct move bars
+const SLATE = "#7c8a99"; // slate: reported reward line, shortcut move bars
 
 type ViewAction =
   | { kind: "tick" }
@@ -39,8 +39,10 @@ function pct(value: number): string {
   return `${Math.round(value * 100)}%`;
 }
 
+// Sage marks the good/correct move; clay-orange is reserved for the hacking
+// warning so the same color never means both "correct" and "problem" on screen.
 const MOVE_COLOR: Record<Move, string> = {
-  correct: ACCENT,
+  correct: SAGE,
   shortcut: SLATE,
   wrong: "var(--color-muted-foreground)",
 };
@@ -171,6 +173,14 @@ export function ImplicitRewardTraining() {
     [resetClock],
   );
 
+  // Scroll the batch table to the bottom whenever a new batch arrives so the
+  // live action is always visible rather than silently hidden below the fold.
+  const batchTableRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const container = batchTableRef.current;
+    if (container) container.scrollTop = container.scrollHeight;
+  }, [lastBatch]);
+
   const maxTick = Math.max(state.tick, 30);
   const innerH = CHART_H - PAD_T - PAD_B;
   const hacking = state.hackGap > 0.18;
@@ -298,7 +308,7 @@ export function ImplicitRewardTraining() {
         />
         <div className="w-40">
           <Slider
-            label="Speed"
+            label="Playback speed (not a paper parameter)"
             value={speed}
             min={0.5}
             max={4}
@@ -342,20 +352,40 @@ export function ImplicitRewardTraining() {
 
       <div className="grid gap-4 sm:grid-cols-2">
         <SimPanel title="Controls">
-          <div className="flex flex-wrap gap-1.5">
-            <Toggle
-              label={params.prmOnline ? "PRM: online" : "PRM: frozen"}
-              active={params.prmOnline}
-              onClick={() => intervene({ type: "togglePrmOnline" })}
-            />
-            <Toggle
-              label={params.prmFromScratch ? "init: scratch" : "init: SFT"}
-              active={!params.prmFromScratch}
-              onClick={() => intervene({ type: "togglePrmFromScratch" })}
-            />
+          <div className="flex flex-col gap-1">
+            <span className="text-muted-foreground text-xs font-medium">
+              PRM update mode
+            </span>
+            <div className="flex flex-wrap gap-1.5">
+              <Toggle
+                label={
+                  params.prmOnline
+                    ? "Online (keeps reward honest)"
+                    : "Frozen (reward drifts)"
+                }
+                active={params.prmOnline}
+                onClick={() => intervene({ type: "togglePrmOnline" })}
+              />
+            </div>
+          </div>
+          <div className="flex flex-col gap-1">
+            <span className="text-muted-foreground text-xs font-medium">
+              PRM initialization
+            </span>
+            <div className="flex flex-wrap gap-1.5">
+              <Toggle
+                label={
+                  params.prmFromScratch
+                    ? "From scratch (zero reward)"
+                    : "From SFT model"
+                }
+                active={!params.prmFromScratch}
+                onClick={() => intervene({ type: "togglePrmFromScratch" })}
+              />
+            </div>
           </div>
           <Slider
-            label="beta (implicit-reward weight)"
+            label="beta — how much weight the implicit process reward carries (Eq 3)"
             value={params.beta}
             min={0.1}
             max={1.5}
@@ -364,7 +394,7 @@ export function ImplicitRewardTraining() {
             onChange={(value) => intervene({ type: "setBeta", value })}
           />
           <Slider
-            label="K (rollouts per prompt)"
+            label="K — rollouts per prompt; more rollouts stabilize the leave-one-out advantage"
             value={params.rollouts}
             min={2}
             max={16}
@@ -373,7 +403,7 @@ export function ImplicitRewardTraining() {
             onChange={(value) => intervene({ type: "setRollouts", value })}
           />
           <Slider
-            label="policy step size"
+            label="Policy learning rate — how aggressively the policy updates each step"
             value={params.policyLr}
             min={0.1}
             max={1.2}
@@ -382,22 +412,13 @@ export function ImplicitRewardTraining() {
             onChange={(value) => intervene({ type: "setPolicyLr", value })}
           />
           <Slider
-            label="PRM step size"
+            label="PRM learning rate — how fast the online PRM corrects its preferences"
             value={params.prmLr}
             min={0}
             max={1}
             step={0.05}
             display={params.prmLr.toFixed(2)}
             onChange={(value) => intervene({ type: "setPrmLr", value })}
-          />
-          <Slider
-            label="seed"
-            value={params.seed}
-            min={1}
-            max={20}
-            step={1}
-            display={String(params.seed)}
-            onChange={(value) => intervene({ type: "setSeed", value })}
           />
         </SimPanel>
 
@@ -437,54 +458,73 @@ export function ImplicitRewardTraining() {
             <Badge variant="outline">PRM acc {pct(state.prmAccuracy)}</Badge>
           </div>
 
-          <div className="ring-foreground/10 max-h-40 overflow-y-auto rounded-lg ring-1">
-            <table className="w-full text-left text-xs">
-              <thead className="bg-card text-muted-foreground sticky top-0">
-                <tr>
-                  <th className="px-2 py-1 font-medium">rollout</th>
-                  <th className="px-2 py-1 text-right font-medium">verifier</th>
-                  <th className="px-2 py-1 text-right font-medium">
-                    process r
-                  </th>
-                  <th className="px-2 py-1 text-right font-medium">
-                    advantage
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="font-mono">
-                {lastBatch.length === 0 ? (
+          {/* Wrapper provides the scroll affordance: the fade mask at the bottom
+              signals more content is below, since macOS overlay scrollbars
+              are invisible at rest. */}
+          <div className="relative">
+            <div
+              ref={batchTableRef}
+              className="ring-foreground/10 max-h-40 overflow-y-auto rounded-lg ring-1"
+            >
+              <table className="w-full text-left text-xs">
+                <thead className="bg-card text-muted-foreground sticky top-0">
                   <tr>
-                    <td
-                      className="text-muted-foreground px-2 py-1.5"
-                      colSpan={4}
-                    >
-                      Step once to sample a batch of rollouts.
-                    </td>
+                    <th className="px-2 py-1 font-medium">rollout</th>
+                    <th className="px-2 py-1 text-right font-medium">
+                      verifier
+                    </th>
+                    <th className="px-2 py-1 text-right font-medium">
+                      process r
+                    </th>
+                    <th className="px-2 py-1 text-right font-medium">
+                      advantage
+                    </th>
                   </tr>
-                ) : (
-                  lastBatch.map((row, i) => (
-                    <tr
-                      key={`batch-${i}`}
-                      className={
-                        row.outcome > 0
-                          ? "text-foreground"
-                          : "text-muted-foreground"
-                      }
-                    >
-                      <td className="px-2 py-1">{MOVE_LABELS[row.move]}</td>
-                      <td className="px-2 py-1 text-right">{row.outcome}</td>
-                      <td className="px-2 py-1 text-right">
-                        {row.processReward.toFixed(2)}
-                      </td>
-                      <td className="px-2 py-1 text-right">
-                        {row.advantage >= 0 ? "+" : ""}
-                        {row.advantage.toFixed(2)}
+                </thead>
+                <tbody className="font-mono">
+                  {lastBatch.length === 0 ? (
+                    <tr>
+                      <td
+                        className="text-muted-foreground px-2 py-1.5"
+                        colSpan={4}
+                      >
+                        Step once to sample a batch of rollouts.
                       </td>
                     </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
+                  ) : (
+                    lastBatch.map((row, i) => (
+                      <tr
+                        key={`batch-${i}`}
+                        className={
+                          row.outcome > 0
+                            ? "text-foreground"
+                            : "text-muted-foreground"
+                        }
+                      >
+                        <td className="px-2 py-1">{MOVE_LABELS[row.move]}</td>
+                        <td className="px-2 py-1 text-right">{row.outcome}</td>
+                        <td className="px-2 py-1 text-right">
+                          {row.processReward.toFixed(2)}
+                        </td>
+                        <td className="px-2 py-1 text-right">
+                          {row.advantage >= 0 ? "+" : ""}
+                          {row.advantage.toFixed(2)}
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+            {/* Gradient fade signals more rows are below the visible area */}
+            <div
+              className="pointer-events-none absolute inset-x-0 bottom-0 h-6 rounded-b-lg"
+              style={{
+                background:
+                  "linear-gradient(to bottom, transparent, var(--color-card, var(--color-background)))",
+              }}
+              aria-hidden
+            />
           </div>
 
           <div className="flex flex-col gap-1">
@@ -513,7 +553,9 @@ export function ImplicitRewardTraining() {
         tokens, and the outcome verifier is a clean rule where the paper&apos;s
         is exact-match on math and unit tests on code. The online cross-entropy
         update on rollouts is Algorithm 1&apos;s line 8, the one thing that
-        keeps the reward honest.
+        keeps the reward honest. Every run is fully deterministic: the same
+        preset always produces the same trajectory. Reset restores the preset
+        from scratch.
       </p>
     </div>
   );

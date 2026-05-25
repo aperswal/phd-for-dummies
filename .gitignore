@@ -73,3 +73,6 @@ ehthumbs.db
 
 # image-generation tooling lives outside the published repo (this is the Next.js app only)
 /Script-Image-Gen/
+
+# one-shot blob upload / image tooling and its manifest (not part of the deployed app)
+/scripts/

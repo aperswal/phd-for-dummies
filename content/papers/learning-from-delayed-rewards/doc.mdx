@@ -2,7 +2,7 @@
 
 _An agent can learn the best thing to do in every situation with no map of its world, just by edging a table of move-by-move scores toward each reward it bumps into, until the value of a distant goal seeps backward through every step that leads to it._
 
-![A top-down pixel dungeon grid on aged parchment with a glowing clay-orange treasure chest labelled Goal in the corner, its warm glow fading room by room across the grid while a short ink arrow in every room points toward the chest, showing that a reward at the goal seeps backward until every spot knows the way to it.](/papers/learning-from-delayed-rewards/hero.webp)
+![A top-down pixel dungeon grid on aged parchment with a glowing clay-orange treasure chest labelled Goal in the corner, its warm glow fading room by room across the grid while a short ink arrow in every room points toward the chest, showing that a reward at the goal seeps backward until every spot knows the way to it.](https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/learning-from-delayed-rewards/hero.webp)
 
 ## Read at your level
 
@@ -49,13 +49,13 @@ Here's the move. For every door in every room, the agent keeps a single number, 
 
 Picture two rooms. You leave the "now" room through a door, you collect whatever reward sits between them, and you arrive in the "next" room, which already has a glow that says how good it is from there. You feed that glow back to update the score on the door you just used.
 
-![Two pixel stone rooms labelled now and next on parchment, a clay-orange reward coin between them, an ink arrow leaving the now room through a door and a curved ink arrow feeding the glowing next room's value back to revise the number written on the door, showing that one step nudges a single move's score toward the reward plus the best value of where it leads.](/papers/learning-from-delayed-rewards/q-update.webp)
+![Two pixel stone rooms labelled now and next on parchment, a clay-orange reward coin between them, an ink arrow leaving the now room through a door and a curved ink arrow feeding the glowing next room's value back to revise the number written on the door, showing that one step nudges a single move's score toward the reward plus the best value of where it leads.](https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/learning-from-delayed-rewards/q-update.webp)
 
 Do that over and over. The room with the treasure pushes its value into its neighbors, they push it into theirs, and the good news flows backward through the whole world one step at a time.
 
 One more knob matters. A reward far away is worth a bit less than the same reward right now, so each step back the glow dims a little. That's the **discount**, and it's why the agent prefers a short path to a long one even when both reach the treasure.
 
-![A row of pixel stone rooms on parchment leading away from a glowing clay-orange treasure chest labelled goal, the warm glow a clear notch dimmer in each room further off, with an ink bracket under each room and a distance arrow beneath, showing that a far-off reward is worth a little less with every step so its value fades with distance.](/papers/learning-from-delayed-rewards/discount.webp)
+![A row of pixel stone rooms on parchment leading away from a glowing clay-orange treasure chest labelled goal, the warm glow a clear notch dimmer in each room further off, with an ink bracket under each room and a distance arrow beneath, showing that a far-off reward is worth a little less with every step so its value fades with distance.](https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/learning-from-delayed-rewards/discount.webp)
 
 ## For a college student
 
@@ -110,7 +110,7 @@ The problem this solves is control without a model. If you can frame your task a
 
 The single most useful property for deployment is that it's **off-policy**. The policy the agent follows while collecting data does not have to be the policy it's learning. You can drive the system with anything, a random controller, an old hand-tuned heuristic, a safety-constrained policy, even logged history, and Q-learning still converges on the optimal policy underneath, as long as every action gets tried in every state enough times. The simulation makes this concrete. Run the pure-random preset and the agent moves with no plan while the learned arrows still lock onto the best route.
 
-![A pixel dungeon on parchment with a treasure chest in the corner, a meandering sage-green dashed path labelled wander tracing an explorer's random route, and a separate field of clean solid black ink arrows in every room all pointing along the shortest route to the chest labelled learn, showing that an agent can wander any way it likes and still learn the one best route.](/papers/learning-from-delayed-rewards/explore.webp)
+![A pixel dungeon on parchment with a treasure chest in the corner, a meandering sage-green dashed path labelled wander tracing an explorer's random route, and a separate field of clean solid black ink arrows in every room all pointing along the shortest route to the chest labelled learn, showing that an agent can wander any way it likes and still learn the one best route.](https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/learning-from-delayed-rewards/explore.webp)
 
 That "try every action in every state enough times" clause is the operating envelope, and it's where the plain version breaks. The tabular method keeps one number per state-action pair and needs to visit them all repeatedly, so cost scales with the size of the state space. A grid of rooms is fine. A camera feed or a continuous control problem has effectively infinite states, and you can't enumerate them. The exploration bill is real too, and you watch it come due in the no-exploration preset, where a greedy agent commits to the first route it finds and never discovers a better one. Coverage stalls and the policy stays wrong. In production this is the explore-versus-exploit tension, and it doesn't solve itself.
 

@@ -23,7 +23,6 @@ import {
 } from "@/components/visualizations/playing-atari-with-deep-reinforcement-learning-model";
 
 const ACCENT = "#c2683f";
-const ACCENT_SOFT = "#e0b59f";
 const SAGE = "#7d8a6a";
 
 function reducer(state: SimState, action: Input): SimState {
@@ -38,6 +37,7 @@ interface SliderProps {
   step: number;
   display: string;
   onChange: (value: number) => void;
+  ariaLabel: string;
 }
 
 function Slider({
@@ -48,6 +48,7 @@ function Slider({
   step: stepSize,
   display,
   onChange,
+  ariaLabel,
 }: SliderProps) {
   return (
     <label className="flex flex-col gap-1 text-xs">
@@ -61,6 +62,7 @@ function Slider({
         max={max}
         step={stepSize}
         value={value}
+        aria-label={ariaLabel}
         onChange={(event) => onChange(Number(event.target.value))}
         className="h-1.5 w-full cursor-pointer"
         style={{ accentColor: ACCENT }}
@@ -91,8 +93,8 @@ function Toggle({
   );
 }
 
-// A small sparkline of recent maxAbsQ. The y axis is log-ish so a calm run reads
-// flat near the bottom and a divergent run shoots to the top.
+// A small sparkline of recent maxAbsQ. The y axis is log-ish so a calm run
+// reads flat near the bottom and a divergent run shoots to the top.
 function QPlot({
   history,
   diverged,
@@ -130,6 +132,137 @@ function QPlot({
   );
 }
 
+// The catch-game grid rendered as a standalone SVG so it can be sized
+// independently of the Q-value display.
+function GameGrid({
+  ballCol,
+  ballRow,
+  paddleCol,
+  bestActionLabel,
+}: {
+  ballCol: number;
+  ballRow: number;
+  paddleCol: number;
+  bestActionLabel: string;
+}) {
+  // Cell is sized so the 5-column grid fills a ~300px canvas comfortably.
+  const cell = 52;
+  const gridX = 20;
+  const gridY = 20;
+  const viewW = gridX * 2 + GRID_W * cell;
+  const viewH = gridY + 5 * cell + 32;
+  const cx = (col: number) => gridX + col * cell + cell / 2;
+
+  return (
+    <svg
+      viewBox={`0 0 ${viewW} ${viewH}`}
+      className="w-full"
+      role="img"
+      aria-label={`Catch game: ball at column ${ballCol}, row ${ballRow}; paddle at column ${paddleCol}. Network prefers action: ${bestActionLabel}.`}
+    >
+      {Array.from({ length: GRID_W }).map((_, col) =>
+        Array.from({ length: 5 }).map((__, row) => (
+          <rect
+            key={`g-${col}-${row}`}
+            x={gridX + col * cell + 2}
+            y={gridY + row * cell + 2}
+            width={cell - 4}
+            height={cell - 4}
+            rx={5}
+            className="fill-foreground/5"
+          />
+        )),
+      )}
+
+      <circle
+        cx={cx(ballCol)}
+        cy={gridY + ballRow * cell + cell / 2}
+        r={cell / 2 - 8}
+        fill={ACCENT}
+      />
+
+      <rect
+        x={gridX + paddleCol * cell + 5}
+        y={gridY + 4 * cell + cell / 2 - 6}
+        width={cell - 10}
+        height={12}
+        rx={4}
+        fill={SAGE}
+      />
+
+      <text
+        x={gridX}
+        y={gridY + 5 * cell + 20}
+        className="fill-muted-foreground"
+        style={{ fontSize: 12 }}
+      >
+        ball drops — paddle catches
+      </text>
+    </svg>
+  );
+}
+
+// Q-value bar chart rendered in HTML so it scales naturally at any width.
+function QValueBars({
+  q,
+  bestAction,
+}: {
+  q: number[];
+  bestAction: number;
+}) {
+  // Normalize bars against the max absolute Q so the chart always uses its
+  // full height, and label the chosen action clearly.
+  const maxAbs = Math.max(1, ...q.map(Math.abs));
+  return (
+    <div className="flex flex-col gap-1 p-4">
+      <span className="text-muted-foreground mb-1 text-xs">
+        Q-value per action
+      </span>
+      <div className="flex items-end gap-2" style={{ height: 96 }}>
+        {ACTIONS.map((name, a) => {
+          const value = q[a] ?? 0;
+          const pct = Math.abs(value) / maxAbs;
+          const isBest = a === bestAction;
+          return (
+            <div
+              key={`qbar-${name}`}
+              className="flex flex-1 flex-col items-center gap-1"
+            >
+              {/* value label above bar */}
+              <span
+                className="text-muted-foreground font-mono text-xs"
+                aria-hidden
+              >
+                {value.toFixed(2)}
+              </span>
+              {/* bar */}
+              <div
+                className="w-full rounded"
+                style={{
+                  height: `${Math.max(pct * 72, 2)}px`,
+                  backgroundColor: isBest ? ACCENT : "currentColor",
+                  opacity: isBest ? 1 : 0.18,
+                }}
+              />
+              {/* action name */}
+              <span
+                className="text-xs"
+                style={{
+                  fontWeight: isBest ? 600 : 400,
+                  color: isBest ? "inherit" : undefined,
+                }}
+              >
+                {name}
+                {isBest ? " ★" : ""}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 export function AtariReplay() {
   const [state, dispatch] = useReducer(reducer, undefined, () =>
     initialState("stable"),
@@ -144,12 +277,17 @@ export function AtariReplay() {
   const bestAction = q.indexOf(Math.max(...q));
   const avgReturn = meanReturn(metrics.returnsWindow);
 
+  // When the run diverges the model freezes. Derive an effective playing flag
+  // that stops the fixed-timestep timer automatically without setState-in-effect.
+  // The Play button reflects this derived state so it reads "paused" on divergence.
+  const isPlaying = playing && !metrics.diverged;
+
   const intervene = useCallback(
     (action: Intervention) => dispatch({ kind: "intervene", action }),
     [],
   );
 
-  const resetClock = useFixedTimestep(playing, 110 / speed, () =>
+  const resetClock = useFixedTimestep(isPlaying, 110 / speed, () =>
     dispatch({ kind: "tick" }),
   );
 
@@ -174,19 +312,9 @@ export function AtariReplay() {
     [intervene, resetClock],
   );
 
-  // SVG layout for the catch grid plus the per-action value bars.
-  const width = 1000;
-  const cell = 56;
-  const gridX = 28;
-  const gridY = 24;
-  const gridPx = GRID_W * cell;
-  const barsX = gridX + gridPx + 70;
-  const barMax = 200;
-  const barW = 64;
-  const cx = (col: number) => gridX + col * cell + cell / 2;
-
   return (
     <div className="not-prose my-8 flex flex-col gap-4">
+      {/* Spine: preset scenarios that teach the paper's core contrast */}
       <div className="flex flex-wrap items-center gap-2">
         {PRESETS.map((preset) => (
           <Button
@@ -205,144 +333,59 @@ export function AtariReplay() {
         {PRESETS.find((preset) => preset.id === presetId)?.blurb}
       </p>
 
-      <div className="ring-foreground/10 overflow-hidden rounded-xl ring-1">
-        <svg
-          viewBox={`0 0 ${width} 330`}
-          className="w-full"
-          role="img"
-          aria-label={`A catch game grid with the ball at column ${game.ballCol}, row ${game.ballRow}, and the paddle at column ${game.paddleCol}. The Q-network favours the action '${ACTIONS[bestAction]}'.`}
-        >
-          {Array.from({ length: GRID_W }).map((_, col) =>
-            Array.from({ length: 5 }).map((__, row) => (
-              <rect
-                key={`g-${col}-${row}`}
-                x={gridX + col * cell + 2}
-                y={gridY + row * cell + 2}
-                width={cell - 4}
-                height={cell - 4}
-                rx={6}
-                className="fill-foreground/5"
-              />
-            )),
-          )}
-
-          <circle
-            cx={cx(game.ballCol)}
-            cy={gridY + game.ballRow * cell + cell / 2}
-            r={cell / 2 - 9}
-            fill={ACCENT}
+      {/* Game scene: grid and Q-values stacked so both are legible at any width */}
+      <div className="ring-foreground/10 grid gap-0 overflow-hidden rounded-xl ring-1 sm:grid-cols-2">
+        <div className="border-foreground/10 p-4 sm:border-r">
+          <GameGrid
+            ballCol={game.ballCol}
+            ballRow={game.ballRow}
+            paddleCol={game.paddleCol}
+            bestActionLabel={ACTIONS[bestAction] ?? "stay"}
           />
-
-          <rect
-            x={gridX + game.paddleCol * cell + 6}
-            y={gridY + 4 * cell + cell / 2 - 7}
-            width={cell - 12}
-            height={14}
-            rx={5}
-            fill={SAGE}
-          />
-
-          <text
-            x={gridX}
-            y={gridY + 5 * cell + 22}
-            className="fill-muted-foreground"
-            style={{ fontSize: 13 }}
-          >
-            ball drops, paddle catches
-          </text>
-
-          {ACTIONS.map((name, a) => {
-            const value = q[a] ?? 0;
-            const norm = Math.max(-1, Math.min(1, value / 2));
-            const magnitude = Math.abs(norm) * (barMax / 2);
-            const zero = gridY + barMax / 2;
-            const x = barsX + a * (barW + 26);
-            const top = norm >= 0 ? zero - magnitude : zero;
-            const isBest = a === bestAction;
-            return (
-              <g key={`bar-${name}`}>
-                <rect
-                  x={x}
-                  y={top}
-                  width={barW}
-                  height={Math.max(magnitude, 1)}
-                  rx={4}
-                  fill={isBest ? ACCENT : ACCENT_SOFT}
-                />
-                <text
-                  x={x + barW / 2}
-                  y={zero + barMax / 2 + 20}
-                  textAnchor="middle"
-                  className="fill-foreground"
-                  style={{ fontSize: 13, fontWeight: isBest ? 600 : 400 }}
-                >
-                  {name}
-                </text>
-                <text
-                  x={x + barW / 2}
-                  y={norm >= 0 ? top - 6 : top + magnitude + 14}
-                  textAnchor="middle"
-                  className="fill-muted-foreground"
-                  style={{ fontSize: 11 }}
-                >
-                  {value.toFixed(2)}
-                </text>
-              </g>
-            );
-          })}
-          <line
-            x1={barsX - 14}
-            y1={gridY + barMax / 2}
-            x2={barsX + 3 * (barW + 26)}
-            y2={gridY + barMax / 2}
-            stroke="currentColor"
-            strokeOpacity={0.2}
-          />
-          <text
-            x={barsX}
-            y={gridY - 4}
-            className="fill-muted-foreground"
-            style={{ fontSize: 13 }}
-          >
-            Q-value per action
-          </text>
-        </svg>
+        </div>
+        <QValueBars q={q} bestAction={bestAction} />
       </div>
 
+      {/* Value estimate sparkline */}
       <div className="flex flex-col gap-1">
         <div className="text-muted-foreground flex items-center justify-between text-xs">
           <span>value estimate over time (log scale)</span>
-          <span
-            className={
-              metrics.diverged
-                ? "font-medium text-[color:var(--accent-orange,#c2683f)]"
-                : ""
-            }
-            style={metrics.diverged ? { color: ACCENT } : undefined}
-          >
-            {metrics.diverged ? "value diverged" : "value bounded"}
-          </span>
+          {metrics.diverged && (
+            <span
+              className="font-semibold"
+              style={{ color: ACCENT }}
+              role="status"
+              aria-live="polite"
+            >
+              ⚠ value diverged — replay stopped
+            </span>
+          )}
+          {!metrics.diverged && (
+            <span className="text-muted-foreground">value bounded</span>
+          )}
         </div>
-        <div className="text-foreground ring-foreground/10 overflow-hidden rounded-xl ring-1">
+        <div className="ring-foreground/10 overflow-hidden rounded-xl ring-1">
           <QPlot history={metrics.qHistory} diverged={metrics.diverged} />
         </div>
       </div>
 
+      {/* Transport controls + playback speed (pace, not paper mechanism) */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <PlayPauseStepControls
-          playing={playing}
+          playing={isPlaying}
           onPlayPause={onPlayPause}
           onStep={onStep}
           onReset={onReset}
         />
         <div className="w-40">
           <Slider
-            label="Speed"
+            label="Playback speed"
             value={speed}
             min={1}
             max={10}
             step={1}
-            display={`${speed}x`}
+            display={`${speed}×`}
+            ariaLabel="Playback speed — controls how fast the animation plays, not anything in the paper"
             onChange={setSpeed}
           />
         </div>
@@ -357,7 +400,7 @@ export function AtariReplay() {
               onClick={() => intervene({ type: "toggleReplay" })}
             />
             <Toggle
-              label="Pin ball (shift)"
+              label="Pin ball to one column"
               active={params.forceColumn >= 0}
               onClick={() =>
                 intervene({
@@ -368,68 +411,67 @@ export function AtariReplay() {
             />
           </div>
           <Slider
-            label="Replay buffer size"
+            label="Replay buffer size — how many past transitions the memory holds"
             value={params.bufferCapacity}
             min={2}
             max={800}
             step={2}
             display={String(params.bufferCapacity)}
+            ariaLabel="Replay buffer capacity"
             onChange={(value) =>
               intervene({ type: "setBufferCapacity", value })
             }
           />
           <Slider
-            label="Minibatch size"
+            label="Minibatch size — transitions sampled per update step"
             value={params.batchSize}
             min={1}
             max={32}
             step={1}
             display={String(params.batchSize)}
+            ariaLabel="Minibatch size"
             onChange={(value) => intervene({ type: "setBatchSize", value })}
           />
           <Slider
-            label="Learning rate"
+            label="Learning rate — step size for each weight update"
             value={params.learningRate}
             min={0.02}
             max={0.5}
             step={0.01}
             display={params.learningRate.toFixed(2)}
+            ariaLabel="Learning rate"
             onChange={(value) => intervene({ type: "setLearningRate", value })}
           />
           <Slider
-            label="Epsilon (exploration)"
+            label="Epsilon — fraction of steps the agent picks a random action"
             value={params.epsilon}
             min={0}
             max={1}
             step={0.01}
             display={params.epsilon.toFixed(2)}
+            ariaLabel="Epsilon exploration rate"
             onChange={(value) => intervene({ type: "setEpsilon", value })}
-          />
-          <Slider
-            label="Gamma (discount)"
-            value={params.gamma}
-            min={0.5}
-            max={0.99}
-            step={0.01}
-            display={params.gamma.toFixed(2)}
-            onChange={(value) => intervene({ type: "setGamma", value })}
           />
         </SimPanel>
 
         <SimPanel title="Inside the loop">
           <div className="flex flex-wrap gap-2 text-xs">
             <Badge variant="secondary">step {metrics.step}</Badge>
-            <Badge variant={params.replayOn ? "outline" : "default"}>
+            <Badge variant={params.replayOn ? "outline" : "secondary"}>
               replay {params.replayOn ? "on" : "off"}
             </Badge>
-            <Badge variant="outline">best move {ACTIONS[bestAction]}</Badge>
-            <Badge variant={metrics.diverged ? "default" : "outline"}>
+            <Badge variant="outline">
+              best move {ACTIONS[bestAction] ?? "stay"}
+            </Badge>
+            <Badge variant={metrics.diverged ? "destructive" : "outline"}>
               max |Q|{" "}
-              {metrics.maxAbsQ < 1000 ? metrics.maxAbsQ.toFixed(2) : "blown up"}
+              {metrics.maxAbsQ < 1000
+                ? metrics.maxAbsQ.toFixed(2)
+                : "blown up"}
             </Badge>
             <Badge variant="outline">avg return {avgReturn.toFixed(2)}</Badge>
           </div>
-          <div className="ring-foreground/10 max-h-44 overflow-y-auto rounded-lg ring-1">
+          <div className="ring-foreground/10 rounded-lg ring-1">
             <table className="w-full text-left text-xs">
               <thead className="bg-card text-muted-foreground sticky top-0">
                 <tr>
@@ -453,7 +495,7 @@ export function AtariReplay() {
                       {(q[a] ?? 0).toFixed(3)}
                     </td>
                     <td className="px-2 py-1 text-right">
-                      {a === bestAction ? "greedy" : ""}
+                      {a === bestAction ? "greedy ★" : ""}
                     </td>
                   </tr>
                 ))}
@@ -482,13 +524,14 @@ export function AtariReplay() {
       <p className="text-muted-foreground text-xs">
         This runs the inner loop of Algorithm 1 exactly: behave
         epsilon-greedily, store each transition, sample a minibatch, and regress
-        toward the target r + gamma&middot;max Q(s&apos;). Two honest
-        simplifications stand in for the paper&apos;s scale. The game is a 5 by
-        5 catch grid, not an Atari screen, and the Q-network is a linear
+        toward the target r + &gamma;&middot;max Q(s&apos;). Two honest
+        simplifications stand in for the paper&apos;s scale. The game is a 5
+        &times; 5 catch grid, not an Atari screen, and the Q-network is a linear
         approximator over a few overlapping tile features, not a convolutional
-        net. The overlap is on purpose, since it recreates the deadly triad the
-        paper warns about. With replay off the value estimate runs away; with
-        replay on the same learning rate stays bounded.
+        net. The overlap is on purpose — it recreates the deadly triad the paper
+        warns about. With replay off the value estimate runs away; with replay on
+        the same learning rate stays bounded. The discount factor gamma is fixed
+        at 0.95; the run is deterministic for any given preset.
       </p>
     </div>
   );

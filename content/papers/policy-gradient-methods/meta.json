@@ -17,28 +17,28 @@
   },
   "images": [
     {
-      "src": "/papers/policy-gradient-methods/hero.webp",
+      "src": "https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/policy-gradient-methods/hero.webp",
       "alt": "A pixel control board of slider levers each capped with a direction arrow, one clay-orange lever glowing and pushed up by an inked nudge arrow, beside a faint maze where a small robot walks toward a goal star, showing that a policy is a set of dials you tune directly, pushing up the moves that beat the situation's average instead of memorizing the worth of every spot.",
       "width": 2752,
       "height": 1536,
       "caption": "A policy is a board of dials you tune directly, nudging up whichever move beat the situation's average."
     },
     {
-      "src": "/papers/policy-gradient-methods/value-vs-policy.webp",
+      "src": "https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/policy-gradient-methods/value-vs-policy.webp",
       "alt": "A split field-journal page, on the left two doors topped by tall value bars with a hard arrow snapping to the taller under the word flip, on the right the same two doors with two smooth clay-orange dials under the word smooth, showing that picking the highest-valued action flips the choice abruptly while tuning the policy's own dials changes behavior gently.",
       "width": 2400,
       "height": 1792,
       "caption": "Grabbing the highest-valued door flips the choice abruptly; tuning the policy's dials changes behavior gently."
     },
     {
-      "src": "/papers/policy-gradient-methods/policy-gradient-theorem.webp",
+      "src": "https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/policy-gradient-methods/policy-gradient-theorem.webp",
       "alt": "Three maze panels shaded from pale to deep green by how often each is visited, one opened to two action dials where the better dial is pushed up in clay-orange by a learning-nudge arrow, and a faint crossed-out ignored-shift arrow to the side, showing that the gradient nudges each action by its advantage weighted by how often you stand there and never by how the tuning shifts which spots you visit.",
       "width": 2400,
       "height": 1792,
       "caption": "Nudge each action by its advantage, weighted by how often you stand there; the shift in which spots you visit drops out."
     },
     {
-      "src": "/papers/policy-gradient-methods/compatible-critic.webp",
+      "src": "https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/policy-gradient-methods/compatible-critic.webp",
       "alt": "A central slider lever wired to two round gauges, a clay-orange matched meter whose needle lands on a check mark and a slate mismatched meter whose needle swings off to a cross, showing that a value critic built from the policy's own dials reads the advantage exactly right while a mismatched critic gives biased advice.",
       "width": 2400,
       "height": 1792,

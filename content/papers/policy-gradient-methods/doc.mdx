@@ -2,7 +2,7 @@
 
 _Instead of memorizing the worth of every situation and acting greedily, tune the policy's dials directly along the gradient of expected reward, a gradient you can estimate from experience that never depends on how your tuning shifts which situations you face, and which a value critic shaped to match the policy reproduces with zero bias._
 
-![A pixel control board of slider levers each capped with a direction arrow, one clay-orange lever glowing and pushed up by an inked nudge arrow, beside a faint maze where a small robot walks toward a goal star, showing that a policy is a set of dials you tune directly, pushing up the moves that beat the situation's average instead of memorizing the worth of every spot.](/papers/policy-gradient-methods/hero.webp)
+![A pixel control board of slider levers each capped with a direction arrow, one clay-orange lever glowing and pushed up by an inked nudge arrow, beside a faint maze where a small robot walks toward a goal star, showing that a policy is a set of dials you tune directly, pushing up the moves that beat the situation's average instead of memorizing the worth of every spot.](https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/policy-gradient-methods/hero.webp)
 
 ## Read at your level
 
@@ -41,7 +41,7 @@ Think about learning a video game. One way is to rate every situation in your he
 
 Rating every situation has a hidden problem. Picture two doors, and you've scored the left one at 5.0 and the right at 5.1. You walk right. Nudge those scores a hair and suddenly the left is 5.1 and the right is 5.0, so you flip and walk left. A tiny change in a number caused a total change in behavior. That jumpiness is why the rating approach is hard to pin down.
 
-![A split field-journal page, on the left two doors topped by tall value bars with a hard arrow snapping to the taller under the word flip, on the right the same two doors with two smooth clay-orange dials under the word smooth, showing that picking the highest-valued action flips the choice abruptly while tuning the policy's own dials changes behavior gently.](/papers/policy-gradient-methods/value-vs-policy.webp)
+![A split field-journal page, on the left two doors topped by tall value bars with a hard arrow snapping to the taller under the word flip, on the right the same two doors with two smooth clay-orange dials under the word smooth, showing that picking the highest-valued action flips the choice abruptly while tuning the policy's own dials changes behavior gently.](https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/policy-gradient-methods/value-vs-policy.webp)
 
 The habit approach is smooth instead. Your policy is a set of dials, one per move in each situation, and each dial sets how likely you are to make that move. Turn a dial a little and your behavior changes a little. No flipping.
 
@@ -76,7 +76,7 @@ A(s, a) = Q(s, a) - V(s)
 
 Nudge each action's dial by its advantage, scaled by how likely you already are to take it and how often you stand in that state. Advantage above zero pushes the dial up, below zero pushes it down.
 
-![Three maze panels shaded from pale to deep green by how often each is visited, one opened to two action dials where the better dial is pushed up in clay-orange by a learning-nudge arrow, and a faint crossed-out ignored-shift arrow to the side, showing that the gradient nudges each action by its advantage weighted by how often you stand there and never by how the tuning shifts which spots you visit.](/papers/policy-gradient-methods/policy-gradient-theorem.webp)
+![Three maze panels shaded from pale to deep green by how often each is visited, one opened to two action dials where the better dial is pushed up in clay-orange by a learning-nudge arrow, and a faint crossed-out ignored-shift arrow to the side, showing that the gradient nudges each action by its advantage weighted by how often you stand there and never by how the tuning shifts which spots you visit.](https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/policy-gradient-methods/policy-gradient-theorem.webp)
 
 You still need `Q(s, a)`, which you don't know. The simplest fix is Williams' REINFORCE. Use the actual return you observed after `(s, a)` as an unbiased sample of `Q`, subtract a baseline, and you get an honest gradient with no value function at all. It works, but the returns are noisy, so it learns slowly. The simulation above lets you watch that. The sampled-returns mode climbs in fits and starts, and turning the baseline off makes it lurch much worse.
 
@@ -146,7 +146,7 @@ gradient of rho = sum over s of d(s) * sum over a of (gradient of pi(s, a)) * f_
 
 For a softmax policy the compatible critic is forced to be mean-zero over actions in each state, so it represents the advantage, not the value. A state-value baseline can be added back for free to cut variance.
 
-![A central slider lever wired to two round gauges, a clay-orange matched meter whose needle lands on a check mark and a slate mismatched meter whose needle swings off to a cross, showing that a value critic built from the policy's own dials reads the advantage exactly right while a mismatched critic gives biased advice.](/papers/policy-gradient-methods/compatible-critic.webp)
+![A central slider lever wired to two round gauges, a clay-orange matched meter whose needle lands on a check mark and a slate mismatched meter whose needle swings off to a cross, showing that a value critic built from the policy's own dials reads the advantage exactly right while a mismatched critic gives biased advice.](https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/policy-gradient-methods/compatible-critic.webp)
 
 **Theorem 3, convergence.** Alternate two steps, fit the compatible critic to its optimum, then take a gradient step on the policy, with step sizes that shrink but don't vanish too fast. For any MDP with bounded rewards this converges so the gradient goes to zero, a locally optimal policy. It's the first such guarantee for policy iteration with general differentiable function approximation, in pointed contrast to the divergence that value-based approximation can suffer.
 

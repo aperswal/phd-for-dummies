@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useReducer, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -21,8 +21,12 @@ import {
   type SimState,
 } from "@/components/visualizations/webarena-model";
 
+// ACCENT = clay-orange: fail / wrong / off-target (one meaning throughout)
 const ACCENT = "#c2683f";
+// SAGE = sage-green: pass / on-target / progress (one meaning throughout)
 const SAGE = "#7d8c6a";
+// SEED_COUNT must match the slider range in the model (0–11 inclusive)
+const SEED_COUNT = 12;
 
 const PLAN_LABELS: Record<PlanName, string> = {
   reference: "Reference path",
@@ -126,7 +130,7 @@ export function WebArenaAgent() {
 
   const intervene = useCallback(
     (action: Intervention) => dispatch({ kind: "intervene", action }),
-    [],
+    [dispatch],
   );
 
   const resetClock = useCallback(() => {
@@ -171,6 +175,14 @@ export function WebArenaAgent() {
   const metric: Metric = params.metric;
   const visibleScore =
     metric === "functional" ? reward.functional : reward.surface;
+
+  // Event log: scroll to top when a new entry appears (list is newest-first).
+  const logScrollRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (logScrollRef.current) {
+      logScrollRef.current.scrollTop = 0;
+    }
+  }, [state.log.length]);
 
   return (
     <div className="not-prose my-8 flex flex-col gap-4">
@@ -220,7 +232,7 @@ export function WebArenaAgent() {
                   </span>
                 </span>
               )}
-              {world && Object.keys(world.repoFiles).length > 0 && (
+              {world && world.repoFiles["README"] !== undefined && (
                 <span>
                   README:{" "}
                   <span className="text-foreground">
@@ -243,7 +255,9 @@ export function WebArenaAgent() {
                 </span>
               )}
               {world && world.gaveUp && (
-                <span style={{ color: ACCENT }}>agent stopped early</span>
+                <span style={{ color: ACCENT }}>
+                  ✗ agent stopped early
+                </span>
               )}
             </div>
           </div>
@@ -284,8 +298,8 @@ export function WebArenaAgent() {
               })}
             </ol>
             {resolved.note && (
-              <p className="mt-1 text-xs" style={{ color: ACCENT }}>
-                {resolved.note}
+              <p className="text-muted-foreground mt-1 text-xs">
+                ℹ {resolved.note}
               </p>
             )}
           </div>
@@ -363,27 +377,23 @@ export function WebArenaAgent() {
             The UA hint tells the agent it may stop if a task looks impossible.
             It rescues unachievable tasks and trips feasible ones.
           </p>
-          <div className="flex flex-col gap-1">
-            <span className="text-muted-foreground flex items-center justify-between text-xs">
-              <span>Seed (changes the give-up roll)</span>
-              <span className="text-foreground font-mono">{params.seed}</span>
-            </span>
-            <input
-              type="range"
-              min={0}
-              max={11}
-              step={1}
-              value={params.seed}
-              onChange={(event) =>
+          <div className="flex items-center gap-3">
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              onClick={() =>
                 intervene({
                   type: "setSeed",
-                  value: Number(event.target.value),
+                  value: (params.seed + 1) % SEED_COUNT,
                 })
               }
-              className="h-1.5 w-full cursor-pointer"
-              style={{ accentColor: ACCENT }}
-              aria-label="Seed"
-            />
+            >
+              Try another seed
+            </Button>
+            <span className="text-muted-foreground text-xs">
+              Resamples whether the UA hint trips the agent on this task.
+            </span>
           </div>
         </Panel>
 
@@ -485,32 +495,45 @@ export function WebArenaAgent() {
             <span className="text-muted-foreground text-xs font-medium">
               Event log
             </span>
-            <div className="ring-foreground/10 max-h-28 overflow-y-auto rounded-lg ring-1">
-              {state.log.length === 0 ? (
-                <p className="text-muted-foreground px-2 py-1.5 text-xs">
-                  Step the agent, change the plan, or flip the UA hint to start
-                  the log.
-                </p>
-              ) : (
-                <ul className="text-xs">
-                  {[...state.log].reverse().map((entry) => (
-                    <li key={entry.id}>
-                      <button
-                        type="button"
-                        className="text-muted-foreground hover:bg-foreground/5 w-full px-2 py-1 text-left font-mono"
-                        onClick={() =>
-                          intervene({
-                            type: "restore",
-                            params: entry.snapshot,
-                            label: `rewind to step ${entry.id}`,
-                          })
-                        }
-                      >
-                        {entry.id}. {entry.label}
-                      </button>
-                    </li>
-                  ))}
-                </ul>
+            {/* Relative wrapper lets the bottom-fade mask sit flush against the scroll edge. */}
+            <div className="relative">
+              <div
+                ref={logScrollRef}
+                className="ring-foreground/10 max-h-28 overflow-y-auto rounded-lg ring-1"
+              >
+                {state.log.length === 0 ? (
+                  <p className="text-muted-foreground px-2 py-1.5 text-xs">
+                    Step the agent, change the plan, or flip the UA hint to
+                    start the log.
+                  </p>
+                ) : (
+                  <ul className="text-xs">
+                    {[...state.log].reverse().map((entry) => (
+                      <li key={entry.id}>
+                        <button
+                          type="button"
+                          className="text-muted-foreground hover:bg-foreground/5 w-full px-2 py-1 text-left font-mono"
+                          onClick={() =>
+                            intervene({
+                              type: "restore",
+                              params: entry.snapshot,
+                              label: `rewind to step ${entry.id}`,
+                            })
+                          }
+                        >
+                          {entry.id}. {entry.label}
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+              {/* Fade mask signals that content continues below the visible area. */}
+              {state.log.length > 3 && (
+                <div
+                  aria-hidden
+                  className="from-background pointer-events-none absolute right-0 bottom-0 left-0 h-5 rounded-b-lg bg-gradient-to-t to-transparent"
+                />
               )}
             </div>
           </div>
@@ -522,8 +545,11 @@ export function WebArenaAgent() {
         shopping, repo, and information sites, where the real benchmark runs 812
         tasks over four full self-hosted websites. The functional checks read
         the world state the actions wrote, exactly as the paper&apos;s reward
-        functions do. The 14.41% headline is GPT-4&apos;s end-to-end success
-        rate, against 78.24% for humans.
+        functions do. Runs are deterministic: same preset and same seed produce
+        the same trajectory. &ldquo;Try another seed&rdquo; resamples whether
+        the UA hint trips the agent on the current feasible task. The 14.41%
+        headline is GPT-4&apos;s end-to-end success rate, against 78.24% for
+        humans.
       </p>
     </div>
   );

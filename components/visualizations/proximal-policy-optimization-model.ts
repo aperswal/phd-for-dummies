@@ -487,12 +487,10 @@ export type Intervention =
   | { type: "setEpsilon"; value: number }
   | { type: "setEpochs"; value: number }
   | { type: "setAlpha"; value: number }
-  | { type: "setGamma"; value: number }
   | { type: "setBeta"; value: number }
   | { type: "setMinibatch"; value: boolean }
   | { type: "setNoise"; value: number }
   | { type: "resetPolicy" }
-  | { type: "setSeed"; value: number }
   | { type: "loadPreset"; id: string }
   | { type: "restore"; snapshot: Snapshot; label: string };
 
@@ -644,11 +642,6 @@ function applyIntervention(
         state: { ...state, params: { ...state.params, alpha: action.value } },
         label: `step size -> ${action.value.toFixed(2)}`,
       };
-    case "setGamma":
-      return {
-        state: withParams(state, { gamma: action.value }),
-        label: `gamma -> ${action.value.toFixed(2)}`,
-      };
     case "setBeta":
       return {
         state: withParams(state, { beta: action.value }),
@@ -680,11 +673,6 @@ function applyIntervention(
           }),
         ),
         label: "policy reset to uniform",
-      };
-    case "setSeed":
-      return {
-        state: { ...state, rng: action.value >>> 0 },
-        label: `seed -> ${action.value}`,
       };
     case "loadPreset": {
       const preset = getPreset(action.id);

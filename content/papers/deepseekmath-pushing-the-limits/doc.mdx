@@ -2,7 +2,7 @@
 
 _A 7-billion-parameter open model reaches near-GPT-4 math scores by mining the web for math and training with GRPO, a reinforcement learning method that grades a group of answers against their own average instead of paying for a separate judge._
 
-![A field-journal page with two rows. The top row labelled PPO shows an answer scroll feeding into a sage robot judge holding a gavel. The bottom row labelled GRPO shows a clay-orange group of answer scrolls with a dashed average line through them and, where the judge would sit, only an empty outline crossed out, showing that GRPO drops the separate judge and grades answers against their own group average.](/papers/deepseekmath-pushing-the-limits/hero.webp)
+![A field-journal page with two rows. The top row labelled PPO shows an answer scroll feeding into a sage robot judge holding a gavel. The bottom row labelled GRPO shows a clay-orange group of answer scrolls with a dashed average line through them and, where the judge would sit, only an empty outline crossed out, showing that GRPO drops the separate judge and grades answers against their own group average.](https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/deepseekmath-pushing-the-limits/hero.webp)
 
 ## Read at your level
 
@@ -61,7 +61,7 @@ GRPO keeps the clip and the KL but kills the value function. For each question `
 Â_i = (r_i - mean(r)) / std(r)
 ```
 
-![Four pixel-art answer scrolls of different heights standing for their reward scores, with a dashed line marking the group average running across them; scrolls above the line get an ink arrow pushing up and scrolls below get an arrow pushing down, showing that an answer's advantage is its reward measured against the group average.](/papers/deepseekmath-pushing-the-limits/group-baseline.webp)
+![Four pixel-art answer scrolls of different heights standing for their reward scores, with a dashed line marking the group average running across them; scrolls above the line get an ink arrow pushing up and scrolls below get an arrow pushing down, showing that an answer's advantage is its reward measured against the group average.](https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/deepseekmath-pushing-the-limits/group-baseline.webp)
 
 Subtracting the mean is the baseline. Dividing by the standard deviation rescales the advantages so a group where everyone scored about the same produces small nudges and a group with a clear winner produces large ones. The group average is an unbiased estimate of the expected reward for that question, which is exactly what the value function was trying to predict, so the group does the value function's job for free.
 
@@ -89,7 +89,7 @@ Deployment cost has a tradeoff baked in. You save the critic, but you pay in sam
 
 The expected improvement is real but narrow, and the narrowness is the operating envelope you must plan around. On GSM8K the instruct model went from 82.9% to 88.2% and on MATH from 46.8% to 51.7%. But the paper is unusually honest about what kind of gain that is. RL improved the chance the model's top answer is correct (Maj@K) and barely moved the chance that at least one of many samples is correct (Pass@K). In plain terms, RL made the model better at choosing among answers it could already generate, not at generating new correct answers. If your task needs genuinely new capability rather than sharper selection, GRPO on its own will disappoint you.
 
-![Two crates of answer tokens labelled before and after. The before crate holds a scattered mix where only a couple of tokens are the clay-orange correct one. The after crate holds the same distinct token shapes but now the correct clay-orange token is stacked tall, showing that the model picks the correct answer far more often without gaining any new answer it could not already produce.](/papers/deepseekmath-pushing-the-limits/maj-not-pass.webp)
+![Two crates of answer tokens labelled before and after. The before crate holds a scattered mix where only a couple of tokens are the clay-orange correct one. The after crate holds the same distinct token shapes but now the correct clay-orange token is stacked tall, showing that the model picks the correct answer far more often without gaining any new answer it could not already produce.](https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/deepseekmath-pushing-the-limits/maj-not-pass.webp)
 
 The failure mode to watch is reward hacking. GRPO faithfully chases whatever the reward model scores high, so a reward model with a blind spot becomes a target the policy learns to exploit. The paper notes even carefully annotated process-reward datasets carry around 20% label errors. Load the **Reward hacking** preset in the simulation to watch the policy abandon the correct answer for a wrong one the reward model was tricked into liking.
 

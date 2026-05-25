@@ -7,9 +7,8 @@
 // is summarized here by which source content the next target word is reaching for,
 // so the alignment patterns are ones a reader can recognize (monotonic copy, and a
 // reordered noun phrase). A trained model learns W_a, U_a, v_a and the annotations
-// from data; here they are hand-set so the patterns are legible. The only
-// randomness is an optional seeded jitter on the annotations, drawn from the
-// shared seeded rng, so a given seed reproduces the exact same run.
+// from data; here they are hand-set so the patterns are legible. The run is fully
+// deterministic: no randomness is applied to the annotations.
 
 import { at } from "@/lib/simulation/array";
 import {
@@ -18,7 +17,6 @@ import {
   type EventLog,
   type SimEvent,
 } from "@/lib/simulation/history";
-import { mulberry32 } from "@/lib/simulation/rng";
 
 // The annotation h_j of a source word carries a few named content channels. The
 // BiRNN in the paper builds these from both directions; here each source word
@@ -257,16 +255,6 @@ function dot(a: number[], b: number[]): number {
   return sum;
 }
 
-// Only the optional annotation jitter uses randomness, and it draws from the
-// shared seeded rng, so a given seed reproduces the exact same run.
-function jitter(annotations: number[][], seed: number): number[][] {
-  if (seed === 0) return annotations;
-  const rng = mulberry32(seed);
-  return annotations.map((vector) =>
-    vector.map((value) => value + (rng() - 0.5) * 0.1),
-  );
-}
-
 function softmax(energies: number[]): number[] {
   const max = energies.length > 0 ? Math.max(...energies) : 0;
   const exps = energies.map((value) => Math.exp(value - max));
@@ -285,7 +273,6 @@ export interface AlignParams {
   // The alignment-network gain v_a, scaling the energies before softmax. Higher
   // sharpens toward a hard alignment; lower blurs toward a uniform read.
   sharpness: number;
-  seed: number;
 }
 
 export interface AlignResult {
@@ -314,7 +301,7 @@ export interface AlignResult {
 // and the weighted sum of annotations gives the context.
 export function computeAlignment(params: AlignParams): AlignResult {
   const pair = getPair(params.pairId);
-  const annotations = jitter(pair.annotations, params.seed);
+  const annotations = pair.annotations;
   const n = pair.source.length;
   const step = Math.min(Math.max(params.step, 0), pair.target.length - 1);
   const query = at(pair.queries, step);
@@ -375,7 +362,6 @@ export type Intervention =
   | { type: "setPair"; id: string }
   | { type: "toggleBottleneck" }
   | { type: "setSharpness"; value: number }
-  | { type: "setSeed"; value: number }
   | { type: "loadPreset"; id: string }
   | { type: "restore"; params: AlignParams; label: string };
 
@@ -401,7 +387,6 @@ export const PRESETS: Preset[] = [
       step: 0,
       bottleneck: false,
       sharpness: 4,
-      seed: 0,
     },
   },
   {
@@ -414,7 +399,6 @@ export const PRESETS: Preset[] = [
       step: 1,
       bottleneck: false,
       sharpness: 5,
-      seed: 0,
     },
   },
   {
@@ -427,7 +411,6 @@ export const PRESETS: Preset[] = [
       step: 6,
       bottleneck: true,
       sharpness: 4,
-      seed: 0,
     },
   },
   {
@@ -440,7 +423,6 @@ export const PRESETS: Preset[] = [
       step: 6,
       bottleneck: false,
       sharpness: 4,
-      seed: 0,
     },
   },
 ];
@@ -500,11 +482,6 @@ function applyIntervention(
       return {
         params: { ...params, sharpness: action.value },
         label: `sharpness -> ${action.value.toFixed(1)}`,
-      };
-    case "setSeed":
-      return {
-        params: { ...params, seed: action.value },
-        label: `seed -> ${action.value}`,
       };
     case "loadPreset": {
       const preset = getPreset(action.id);

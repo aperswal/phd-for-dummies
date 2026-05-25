@@ -4,35 +4,41 @@
   "headline": "Instead of hand-coding a reward, you let a person pick which of two short clips looks better and train the agent against a reward model fit to those picks, using feedback on under 1% of its experience.",
   "abstract": "For sophisticated reinforcement learning (RL) systems to interact usefully with real-world environments, we need to communicate complex goals to these systems. In this work, we explore goals defined in terms of (non-expert) human preferences between pairs of trajectory segments. We show that this approach can effectively solve complex RL tasks without access to the reward function, including Atari games and simulated robot locomotion, while providing feedback on less than 1% of our agent's interactions with the environment. This reduces the cost of human oversight far enough that it can be practically applied to state-of-the-art RL systems. To demonstrate the flexibility of our approach, we show that we can successfully train complex novel behaviors with about an hour of human time. These behaviors and environments are considerably more complex than any which have been previously learned from human feedback.",
   "date": "2026-05-24",
-  "tags": ["reinforcement learning", "human feedback", "reward modeling", "preference learning", "AI alignment"],
+  "tags": [
+    "reinforcement learning",
+    "human feedback",
+    "reward modeling",
+    "preference learning",
+    "AI alignment"
+  ],
   "source": {
     "name": "arXiv 1706.03741",
     "url": "https://arxiv.org/abs/1706.03741"
   },
   "images": [
     {
-      "src": "/papers/deep-reinforcement-learning-from-human-preferences/hero.webp",
+      "src": "https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/deep-reinforcement-learning-from-human-preferences/hero.webp",
       "alt": "A loop on aged parchment with three pixel-art stations, a robot trying moves in a small world, two short film clips held side by side with a clay-orange hand pointing at the better one, and a reward gauge that feeds back to the robot, showing that a human picks the nicer clip and the agent trains against a reward built from those picks.",
       "width": 2752,
       "height": 1536,
       "caption": "The agent acts, a person picks which of two clips looks better, and that pick trains the reward the agent chases next."
     },
     {
-      "src": "/papers/deep-reinforcement-learning-from-human-preferences/three-loops.webp",
+      "src": "https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/deep-reinforcement-learning-from-human-preferences/three-loops.webp",
       "alt": "Three pixel-art gears linked in a ring on parchment, one labelled act, one labelled compare, one labelled fit, ink arrows showing trajectories flowing from act to compare and reward flowing from fit back to act, showing the three processes that run at the same time and feed each other.",
       "width": 2752,
       "height": 1536,
       "caption": "Three processes run at once: the agent acts, the human compares clips, and the reward model fits the comparisons."
     },
     {
-      "src": "/papers/deep-reinforcement-learning-from-human-preferences/bradley-terry.webp",
+      "src": "https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/deep-reinforcement-learning-from-human-preferences/bradley-terry.webp",
       "alt": "A pixel-art balance scale on parchment weighing two stacks of small reward coins, one stack taller, with an ink S-curve beside it showing the taller stack winning more often but not always, illustrating that the chance a clip is preferred rises smoothly with how much more total reward it earns.",
       "width": 2400,
       "height": 1792,
       "caption": "The chance a person prefers a clip rises smoothly with the gap in its total predicted reward, never a hard cutoff."
     },
     {
-      "src": "/papers/deep-reinforcement-learning-from-human-preferences/proxy-gap.webp",
+      "src": "https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/deep-reinforcement-learning-from-human-preferences/proxy-gap.webp",
       "alt": "A pixel-art Pong paddle on parchment endlessly bouncing a ball in a long volley while a true-score counter stays at zero, with a thin ink crack splitting a reward gauge from the real goal flag, showing that a reward fit only on old offline clips can be gamed into behavior that scores nothing.",
       "width": 2400,
       "height": 1792,

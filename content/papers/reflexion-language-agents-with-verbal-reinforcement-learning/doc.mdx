@@ -2,7 +2,7 @@
 
 _An agent that gets better at a task by writing notes to itself about why it failed and reading them before its next try, learning without ever changing a single weight._
 
-![A pixel-art adventurer slumped beside a failed task on the left, a glowing clay-orange field journal in the center where a quill writes a lesson learned, and the same adventurer on the right stacking crates to a flag, with ink arrows leading failure to journal to success, showing that the agent improves by writing down what went wrong and reading it before the next try.](/papers/reflexion-language-agents-with-verbal-reinforcement-learning/hero.webp)
+![A pixel-art adventurer slumped beside a failed task on the left, a glowing clay-orange field journal in the center where a quill writes a lesson learned, and the same adventurer on the right stacking crates to a flag, with ink arrows leading failure to journal to success, showing that the agent improves by writing down what went wrong and reading it before the next try.](https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/reflexion-language-agents-with-verbal-reinforcement-learning/hero.webp)
 
 ## Read at your level
 
@@ -55,7 +55,7 @@ You should care about this because it's one of the cleanest demonstrations that 
 
 The motivation is cost. Traditional reinforcement learning improves a policy by computing gradients and updating weights, which for a large language model means a lot of compute and many samples. The authors ask whether you can get policy improvement from language alone. Treat the agent's memory as part of its policy. Improving the policy then means writing better text into that memory, which an LLM can do in one forward pass.
 
-![Four helpers passing one task around a ring connected by ink arrows: a pixel actor tries the task, a wax stamp marks a pass-or-fail verdict, a glowing clay-orange note card holds the lesson, and a sage-green shelf of cards is the memory that hands the lesson back to the actor, showing the four parts of the Reflexion loop.](/papers/reflexion-language-agents-with-verbal-reinforcement-learning/loop.webp)
+![Four helpers passing one task around a ring connected by ink arrows: a pixel actor tries the task, a wax stamp marks a pass-or-fail verdict, a glowing clay-orange note card holds the lesson, and a sage-green shelf of cards is the memory that hands the lesson back to the actor, showing the four parts of the Reflexion loop.](https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/reflexion-language-agents-with-verbal-reinforcement-learning/loop.webp)
 
 The framework has three models that pass a task around a loop. The **Actor** is an LLM that reads the current state plus its memory and produces an action. The **Evaluator** scores a finished trajectory and returns a reward, often just binary pass or fail. The **Self-Reflection** model is another LLM that reads the failed trajectory and its reward and writes a verbal lesson. That lesson lands in **memory**, which the Actor reads on the next attempt.
 
@@ -134,7 +134,7 @@ The Evaluator is the part that flexes per task. For reasoning they grade by exac
 
 The memory has an edge. It holds only the last few lessons, so a fresh reflection can push an old one out of the window and the agent forgets a fix it already found.
 
-![A short wooden pixel shelf holding three lesson cards, with a glowing clay-orange new card sliding onto one end and the oldest sage-green card tumbling off the far edge labelled forgotten, showing that memory holds only the last few lessons so an old one falls off when a new one arrives.](/papers/reflexion-language-agents-with-verbal-reinforcement-learning/memory-window.webp)
+![A short wooden pixel shelf holding three lesson cards, with a glowing clay-orange new card sliding onto one end and the oldest sage-green card tumbling off the far edge labelled forgotten, showing that memory holds only the last few lessons so an old one falls off when a new one arrives.](https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/reflexion-language-agents-with-verbal-reinforcement-learning/memory-window.webp)
 
 In the simulation, build up a couple of lessons on the **Reflexion** preset, then drag the memory window down to 1 and watch the oldest lesson get evicted, so a step the agent had mastered can break again.
 

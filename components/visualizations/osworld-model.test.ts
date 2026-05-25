@@ -165,9 +165,13 @@ describe("popups cost a step without progress", () => {
       kind: "intervene",
       action: { type: "setPerturbation", value: "shrink" },
     });
+    // Reshuffle once to move off the preset seed; the exact seed value
+    // doesn't matter here — we just need misses to be common enough that
+    // a popup may appear, which screenshot + shrink + bookkeeping guarantees
+    // across almost any seed.
     state = step(state, {
       kind: "intervene",
-      action: { type: "setSeed", value: 9 },
+      action: { type: "reshuffle" },
     });
     state = runToEnd(state);
     const clears = state.attempts.filter((a) => a.subgoal === "close popup");
@@ -178,6 +182,43 @@ describe("popups cost a step without progress", () => {
     }
     // The grade is still a clean 0 or 1.
     expect(state.reward === 0 || state.reward === 1).toBe(true);
+  });
+});
+
+describe("reshuffle intervention", () => {
+  it("advances the seed by 1 and resets trajectory to step 0", () => {
+    const before = initialState("single-app");
+    const originalSeed = before.params.seed;
+    // Advance one tick so the run is no longer at step 0.
+    const mid = step(before, { kind: "tick" });
+    expect(mid.step).toBe(1);
+    const after = step(mid, {
+      kind: "intervene",
+      action: { type: "reshuffle" },
+    });
+    expect(after.params.seed).toBe((originalSeed + 1) % 100);
+    expect(after.step).toBe(0);
+    expect(after.attempts).toHaveLength(0);
+  });
+
+  it("produces a different outcome than the original seed on some runs", () => {
+    // Across many reshuffles at least one run differs from the first, confirming
+    // that the seed advance actually changes the trajectory.
+    const base = initialState("single-app");
+    const firstEnd = runToEnd({ ...base });
+    let foundDifferent = false;
+    let current = base;
+    for (let i = 0; i < 20 && !foundDifferent; i++) {
+      current = step(current, {
+        kind: "intervene",
+        action: { type: "reshuffle" },
+      });
+      const end = runToEnd({ ...current });
+      if (end.reward !== firstEnd.reward || end.step !== firstEnd.step) {
+        foundDifferent = true;
+      }
+    }
+    expect(foundDifferent).toBe(true);
   });
 });
 

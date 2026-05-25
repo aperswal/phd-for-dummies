@@ -185,8 +185,11 @@ export function AgentQSearch() {
     [],
   );
 
-  const resetClock = useFixedTimestep(playing, 850 / speed, () =>
-    dispatch({ kind: "tick" }),
+  // Freeze the animation loop when the budget is spent so no-op ticks don't run.
+  const resetClock = useFixedTimestep(
+    playing && state.phase !== "done",
+    850 / speed,
+    () => dispatch({ kind: "tick" }),
   );
 
   const onPlayPause = useCallback(() => {
@@ -332,7 +335,7 @@ export function AgentQSearch() {
                     rx={4}
                     fill={fill}
                     fillOpacity={l.node.dead ? 0.25 : 0.92}
-                    stroke={isInspected ? "#000" : "transparent"}
+                    stroke={isInspected ? "#fff" : "transparent"}
                     strokeWidth={2}
                   />
                 ) : (
@@ -344,7 +347,7 @@ export function AgentQSearch() {
                     fillOpacity={l.node.dead ? 0.2 : 0.9}
                     stroke={
                       isInspected
-                        ? "#000"
+                        ? "#fff"
                         : l.node.poisoned
                           ? DANGER
                           : "transparent"
@@ -419,6 +422,7 @@ export function AgentQSearch() {
             onPlayPause={onPlayPause}
             onStep={onStep}
             onReset={onReset}
+            disabled={state.phase === "done"}
           />
           <Button
             type="button"
@@ -431,9 +435,9 @@ export function AgentQSearch() {
             Back
           </Button>
         </div>
-        <div className="w-40">
+        <div className="w-36 shrink-0">
           <Slider
-            label="Speed"
+            label="Playback pace — how fast rollouts advance"
             value={speed}
             min={0.5}
             max={3}
@@ -467,7 +471,7 @@ export function AgentQSearch() {
       <div className="grid gap-4 sm:grid-cols-2">
         <SimPanel title="Search knobs">
           <Slider
-            label="Exploration c_exp (0 = greedy)"
+            label="Exploration constant c_exp — 0 = greedy, higher = try more branches"
             value={params.cExp}
             min={0}
             max={3}
@@ -476,40 +480,22 @@ export function AgentQSearch() {
             onChange={(value) => intervene({ type: "setCExp", value })}
           />
           <Slider
-            label="alpha: trust rollouts vs critic"
+            label="alpha — how much to trust rollout values vs the critic (1 = rollouts only)"
             value={params.alpha}
             min={0}
             max={1}
             step={0.05}
-            display={`${params.alpha.toFixed(2)} (1=rollouts)`}
+            display={params.alpha.toFixed(2)}
             onChange={(value) => intervene({ type: "setAlpha", value })}
           />
           <Slider
-            label="DPO pair threshold"
+            label="DPO threshold — minimum value gap before a sibling pair becomes a training example"
             value={params.threshold}
             min={0.05}
             max={0.9}
             step={0.05}
             display={params.threshold.toFixed(2)}
             onChange={(value) => intervene({ type: "setThreshold", value })}
-          />
-          <Slider
-            label="Rollout noise"
-            value={params.rolloutNoise}
-            min={0}
-            max={1}
-            step={0.05}
-            display={params.rolloutNoise.toFixed(2)}
-            onChange={(value) => intervene({ type: "setRolloutNoise", value })}
-          />
-          <Slider
-            label="Search budget (rollouts)"
-            value={params.budget}
-            min={4}
-            max={40}
-            step={2}
-            display={String(params.budget)}
-            onChange={(value) => intervene({ type: "setBudget", value })}
           />
         </SimPanel>
 
@@ -526,7 +512,7 @@ export function AgentQSearch() {
           </div>
 
           {inspected && inspectedPage ? (
-            <div className="ring-foreground/10 rounded-lg p-2 text-xs ring-1">
+            <div className="ring-foreground/10 rounded-lg p-3 text-xs ring-1">
               <p className="text-foreground font-medium">
                 {inspectedPage.label}
               </p>
@@ -574,24 +560,34 @@ export function AgentQSearch() {
             <span className="text-muted-foreground text-xs font-medium">
               Preference pairs for DPO
             </span>
-            <div className="ring-foreground/10 max-h-24 overflow-y-auto rounded-lg text-xs ring-1">
-              {state.prefPairs.length === 0 ? (
-                <p className="text-muted-foreground px-2 py-1.5">
-                  No sibling gap clears the threshold yet. Run more rollouts.
-                </p>
-              ) : (
-                <ul>
-                  {state.prefPairs.map((pair, i) => (
-                    <li
-                      key={`${pair.nodeId}-${i}`}
-                      className="text-muted-foreground px-2 py-1"
-                    >
-                      <span className="text-foreground">{pair.pageLabel}</span>:
-                      prefer &quot;{pair.preferred}&quot; over &quot;
-                      {pair.rejected}&quot; (gap {pair.gap.toFixed(2)})
-                    </li>
-                  ))}
-                </ul>
+            {/* Relative wrapper lets the gradient mask sit above the scrollable list. */}
+            <div className="relative">
+              <div className="ring-foreground/10 max-h-24 overflow-y-auto rounded-lg text-xs ring-1">
+                {state.prefPairs.length === 0 ? (
+                  <p className="text-muted-foreground px-2 py-1.5">
+                    No sibling gap clears the threshold yet. Run more rollouts.
+                  </p>
+                ) : (
+                  <ul>
+                    {state.prefPairs.map((pair, i) => (
+                      <li
+                        key={`${pair.nodeId}-${i}`}
+                        className="text-muted-foreground px-2 py-1"
+                      >
+                        <span className="text-foreground">{pair.pageLabel}</span>
+                        : prefer &quot;{pair.preferred}&quot; over &quot;
+                        {pair.rejected}&quot; (gap {pair.gap.toFixed(2)})
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+              {/* Fade mask signals that more rows exist below the visible area. */}
+              {state.prefPairs.length > 3 && (
+                <div
+                  aria-hidden
+                  className="from-background pointer-events-none absolute bottom-0 left-0 right-0 h-6 rounded-b-lg bg-gradient-to-t to-transparent"
+                />
               )}
             </div>
           </div>
@@ -619,8 +615,10 @@ export function AgentQSearch() {
         booking task standing in for OpenTable. The per-action critic ranks, the
         actor proposals, and each action&apos;s true reach-the-goal chance are
         hand-set so the search is legible; a trained agent learns these from
-        data. The DPO fine-tuning step itself is summarised by the preference
-        pairs the search produces, not run as gradient descent here.
+        data. Rollout stochasticity and the 24-rollout budget are fixed per
+        preset. The DPO fine-tuning step itself is summarised by the preference
+        pairs the search produces, not run as gradient descent here. Runs are
+        deterministic: the same preset always produces the same tree.
       </p>
     </div>
   );

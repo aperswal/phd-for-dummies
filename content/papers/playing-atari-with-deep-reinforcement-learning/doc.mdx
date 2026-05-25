@@ -2,7 +2,7 @@
 
 _A single network learns to play seven Atari games straight from the screen pixels by trying moves, scoring its own guesses about future points, and shuffling a memory of past moments so the learning never spirals out of control._
 
-![A pixel-art robot holds a joystick while a clay-orange loop arrow runs from an Atari screen of a blocky paddle-and-ball game into the robot and back out as reward, with a score ticking up, showing that the agent learns to play from nothing but the picture on the screen and the points it earns.](/papers/playing-atari-with-deep-reinforcement-learning/hero.webp)
+![A pixel-art robot holds a joystick while a clay-orange loop arrow runs from an Atari screen of a blocky paddle-and-ball game into the robot and back out as reward, with a score ticking up, showing that the agent learns to play from nothing but the picture on the screen and the points it earns.](https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/playing-atari-with-deep-reinforcement-learning/hero.webp)
 
 ## Read at your level
 
@@ -63,7 +63,7 @@ The discount `γ` (between 0 and 1) makes points sooner worth more than points l
 Q*(s, a) = E[ r + γ max_a' Q*(s', a') ]
 ```
 
-![A bright clay-orange coin labelled now sits beside a fading row of smaller sage coins labelled later, joined by an ink plus sign and brace into one total, showing that the value of a move is the reward you get now plus a discounted guess of all the score still to come.](/papers/playing-atari-with-deep-reinforcement-learning/bellman.webp)
+![A bright clay-orange coin labelled now sits beside a fading row of smaller sage coins labelled later, joined by an ink plus sign and brace into one total, showing that the value of a move is the reward you get now plus a discounted guess of all the score still to come.](https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/playing-atari-with-deep-reinforcement-learning/bellman.webp)
 
 You can't store `Q*` for every screen, there are far too many, so you approximate it with a neural network `Q(s, a; θ)`. Train it by turning the Bellman equation into a regression target. The target for one stored transition is `y = r + γ max_a' Q(s', a'; θ)`, and you minimize the squared error against the network's current prediction.
 
@@ -75,7 +75,7 @@ Take a gradient step on that and you have Q-learning with a neural network. The 
 
 The stabilizer is experience replay. Store transitions `(s, a, r, s')` in a buffer, and each step sample a random minibatch to train on instead of the latest transition. Two things improve. Each experience gets reused in many updates, so you're data-efficient. And the random sample breaks the correlation between consecutive frames, which smooths the training distribution and stops the network from chasing its own tail. The behavior is ε-greedy, mostly take the best-looking action, but with probability ε pick at random so you keep exploring.
 
-![A wooden box brimming with numbered memory cards while a hand pulls a shuffled handful from the middle and hands it to a practice slate, showing that experience replay studies a random mix of past moments instead of only the very last one.](/papers/playing-atari-with-deep-reinforcement-learning/replay.webp)
+![A wooden box brimming with numbered memory cards while a hand pulls a shuffled handful from the middle and hands it to a practice slate, showing that experience replay studies a random mix of past moments instead of only the very last one.](https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/playing-atari-with-deep-reinforcement-learning/replay.webp)
 
 The simulation above runs this exact loop on a tiny catch game. Press play with replay on and the value estimate stays flat while the paddle learns. Turn replay off at the same learning rate and watch it diverge. That isn't a quirk of the toy, it's the deadly triad biting, the same instability the buffer tames at full scale.
 

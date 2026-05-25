@@ -2,7 +2,7 @@
 
 _A benchmark that drops AI agents into a realistic Salesforce org and finds that even the best ones solve fewer than two-thirds of everyday customer-service tasks._
 
-![A pixel-art help-desk agent at a desk pulls a chain of linked record cards from a filing cabinet toward a customer's question bubble, with ink arrows tracing the dependency from card to card, showing that answering a real CRM question means chaining many connected lookups in order.](/papers/crmarena/hero.webp)
+![A pixel-art help-desk agent at a desk pulls a chain of linked record cards from a filing cabinet toward a customer's question bubble, with ink arrows tracing the dependency from card to card, showing that answering a real CRM question means chaining many connected lookups in order.](https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/crmarena/hero.webp)
 
 ## Read at your level
 
@@ -62,7 +62,7 @@ A = { execute <query>, submit <result> }
 
 The agent issues a query, reads the observation, queries again, and eventually submits. The reward is 1 if the submitted answer exactly matches the ground truth, 0 otherwise. Knowledge QA is graded with F1 since it's open-ended text, but everything else is exact match.
 
-![Four pixel record cards in a row joined by a chain, with the second link snapped in clay-orange and the two cards after it faded gray, showing that one wrong call early in a dependent chain wastes everything that comes after it.](/papers/crmarena/dependency-chain.webp)
+![Four pixel record cards in a row joined by a chain, with the second link snapped in clay-orange and the two cards after it faded gray, showing that one wrong call early in a dependent chain wastes everything that comes after it.](https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/crmarena/dependency-chain.webp)
 
 The dependency chain is why this is hard. A task isn't one lookup, it's a sequence where each call's arguments come from the previous call's result. Break a link early and every step downstream inherits the error. Step the **Reasoner clears it** preset in the simulation to watch a model walk the chain, then load **Weak model stalls** to watch one snap an early link and never recover.
 
@@ -76,7 +76,7 @@ The headline number is the warning. The best agent, an o1-class reasoning model 
 
 The deployment cost has a sharp edge you need to plan around. Custom tools are not a free win. Strong models (gpt-4o, claude-3.5-sonnet) score higher when you give them function-calling tools. Weak models score lower with the same tools, because they can't call the functions cleanly and the extra schema just trips them up. The paper measured this directly by pulling functions out one at a time. For gpt-4o, removing a calculation function dropped its score by up to 26.7 points, the function was clearly helping. For weaker models the same removal sometimes raised the score, meaning the function was a net drag. Run the **Tools backfire (weak)** preset and you'll see a weak agent fail just as often with the fancy tools as without them.
 
-![A skilled pixel worker wields a gear-shaped tool smoothly on the left while a clumsy worker fumbles the very same tool on the right, with an up arrow over the skilled side and a down arrow over the clumsy one, showing that a handed tool helps a strong agent but trips up a weak one.](/papers/crmarena/tools-backfire.webp)
+![A skilled pixel worker wields a gear-shaped tool smoothly on the left while a clumsy worker fumbles the very same tool on the right, with an up arrow over the skilled side and a down arrow over the clumsy one, showing that a handed tool helps a strong agent but trips up a weak one.](https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/crmarena/tools-backfire.webp)
 
 Cost matters too. The paper found gpt-4o the most cost-effective across frameworks, lowest cost per instance and fewest turns. The expensive reasoning models score higher but burn far more tokens. The practical read is to use a strong general model with good function-calling, write tools only if your model is strong enough to use them, and budget for a real failure rate. Watch the consistency too. The pass^k metric, the chance an agent gets the same task right on all k tries, drops fast as k grows for every framework. An agent that passes once may flunk the next identical request, which is a problem when you're running the same workflow thousands of times a day.
 

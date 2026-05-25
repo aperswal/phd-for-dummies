@@ -85,7 +85,6 @@ export type Intervention =
   | { type: "setCPuct"; value: number }
   | { type: "setRolloutNoise"; value: number }
   | { type: "setValueNoise"; value: number }
-  | { type: "setSeed"; value: number }
   | { type: "boostPrior"; node: number }
   | { type: "resetPrior"; node: number }
   | { type: "lieValue"; node: number; value: number }
@@ -647,10 +646,6 @@ function applyIntervention(state: SimState, action: Intervention): SimState {
         ...state,
         params: { ...state.params, valueNoise: clamp(action.value, 0, 1) },
       };
-    case "setSeed": {
-      const next = initialState(presetGuess(state), action.value >>> 0);
-      return { ...next, log: logEvent(next, `seed = ${action.value}`) };
-    }
     case "boostPrior": {
       const nodes = state.nodes.map((n) =>
         n.id === action.node ? { ...n, priorBias: 3 } : { ...n },
@@ -737,20 +732,6 @@ function moveLabel(state: SimState, node: TreeNode): string {
       ? (MOVE_NAMES[parent.childSlot] ?? `move ${parent.childSlot}`)
       : "node";
   return `${parentName} reply ${node.childSlot + 1}`;
-}
-
-// The seed/preset interventions need to rebuild the tree. We infer the preset
-// from the prior layout (the trap presets boost move 1's prior), which is the
-// only thing that distinguishes their starting trees.
-function presetGuess(state: SimState): string {
-  const move1 = state.nodes.find(
-    (n) => n.parent === state.root && n.childSlot === 1,
-  );
-  if (move1 && move1.prior > 0.5) {
-    // value-lies runs at lambda 0 (rollouts off); trap keeps lambda 0.5.
-    return state.params.lambda <= 0.01 ? "value-lies" : "trap";
-  }
-  return "honest";
 }
 
 // ---- The reducer ------------------------------------------------------------

@@ -18,28 +18,28 @@
   },
   "images": [
     {
-      "src": "/papers/on-sft-rl-and-on-policy-distillation/hero.webp",
+      "src": "https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/on-sft-rl-and-on-policy-distillation/hero.webp",
       "alt": "Three framed pixel-art tug-of-war panels in a row, where the left team pulls in scattered directions and the cart barely moves, the middle team pulls together in a fan and the cart rolls far, and the right team has one huge clay-orange rope yanking the cart off a cliff, showing that SFT, RL, and self-distillation are three different shapes of pulling force and the shape decides the outcome.",
       "width": 2752,
       "height": 1536,
       "caption": "Three training methods are three shapes of pull: scattered forces that cancel, a coherent fan that moves the cart, and one rope that drags it off a cliff."
     },
     {
-      "src": "/papers/on-sft-rl-and-on-policy-distillation/tipping-point.webp",
+      "src": "https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/on-sft-rl-and-on-policy-distillation/tipping-point.webp",
       "alt": "A pixel-art chart where a sage-green trail rises fast then flattens out under a dashed fence-topped ceiling line while a clay-orange trail starts slow then steepens and crosses above both near the right, with the crossing circled, showing that off-policy methods plateau below the teacher ceiling while reinforcement learning starts slow but is unbounded by it.",
       "width": 2400,
       "height": 1792,
       "caption": "Off-policy methods plateau under the teacher ceiling; RL starts slow but crosses past it, and that crossing is the tipping point."
     },
     {
-      "src": "/papers/on-sft-rl-and-on-policy-distillation/pivot-token.webp",
+      "src": "https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/on-sft-rl-and-on-policy-distillation/pivot-token.webp",
       "alt": "A row of evenly short pixel-art figures on a stage with one single towering clay-orange bar near the middle, a dashed cap line drawn across near its top and a downward ink arrow over it, showing that one pivot token the teacher loves and the student barely supports dominates the training loss until a per-token clip caps it.",
       "width": 2400,
       "height": 1792,
       "caption": "One pivot token, far taller than the rest, dominates the loss until a per-token KL clip caps its contribution."
     },
     {
-      "src": "/papers/on-sft-rl-and-on-policy-distillation/three-dials.webp",
+      "src": "https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/on-sft-rl-and-on-policy-distillation/three-dials.webp",
       "alt": "Three brass pixel-art control dials on a warm wooden workshop panel with sage-green trim, each clay-orange pointer set to a different angle with inked tick marks, showing that every post-training method is just a setting of three dials for how the data is sampled, who scores each token, and where the teaching comes from.",
       "width": 2752,
       "height": 1536,

@@ -125,6 +125,8 @@ export interface LogEntry {
   snapshot: SimState;
 }
 
+// Seed is fixed at initialState and not exposed as a UI control — the run is
+// deterministic by design; same preset always produces the same trajectory.
 export type Intervention =
   | { type: "setGroupSize"; value: number }
   | { type: "setKlCoef"; value: number }
@@ -134,7 +136,6 @@ export type Intervention =
   | { type: "toggleNormalizeStd" }
   | { type: "setHack"; kindIndex: number }
   | { type: "setHackBonus"; value: number }
-  | { type: "setSeed"; value: number }
   | { type: "loadPreset"; id: string }
   | { type: "restore"; snapshot: SimState; label: string };
 
@@ -526,11 +527,6 @@ function applyIntervention(
       return {
         state: { ...state, params: { ...params, hackBonus: action.value } },
         label: `hack bonus -> ${action.value.toFixed(1)}`,
-      };
-    case "setSeed":
-      return {
-        state: { ...state, seed: action.value, rngCursor: 0 },
-        label: `seed -> ${action.value}`,
       };
     case "loadPreset": {
       const preset = getPreset(action.id);

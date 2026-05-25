@@ -17,21 +17,21 @@
   },
   "images": [
     {
-      "src": "/papers/mastering-chess-and-shogi-by-self-play/hero.webp",
+      "src": "https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/mastering-chess-and-shogi-by-self-play/hero.webp",
       "alt": "A pixel chessboard sits at the root of forking forest trails, one trail worn clay-orange with heavy footprints while the others stay faint sage green, an ink arrow marking the most-walked branch, showing that the search explores the most promising lines hardest and plays the branch it walked most.",
       "width": 2048,
       "height": 1152,
       "caption": "The search grows a tree out of one position, walks the promising lines hardest, and plays the branch it visited most."
     },
     {
-      "src": "/papers/mastering-chess-and-shogi-by-self-play/puct.webp",
+      "src": "https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/mastering-chess-and-shogi-by-self-play/puct.webp",
       "alt": "A pixel hiker at a forked trail weighs three things, a signpost map for the net's hunch, a worn footpath for the move's track record, and a fresh untouched path for the rarely-tried bonus, three ink arrows converging into one clay-orange chosen arrow, showing that each step down the tree balances prior, value, and visit count.",
       "width": 2048,
       "height": 1536,
       "caption": "Every step down the tree balances the net's hunch, the move's track record, and a bonus for moves barely tried."
     },
     {
-      "src": "/papers/mastering-chess-and-shogi-by-self-play/self-play-loop.webp",
+      "src": "https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/mastering-chess-and-shogi-by-self-play/self-play-loop.webp",
       "alt": "A ring of three pixel tiles joined by clay-orange arrows, a brain-chip for the neural net, a small search tree, and a scroll of self-play games, showing that search makes the net stronger and the stronger net makes the search smarter, round after round.",
       "width": 2048,
       "height": 2048,

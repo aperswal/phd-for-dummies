@@ -515,7 +515,6 @@ export type Intervention =
   | { type: "setEpisodes"; value: number }
   | { type: "setAlpha"; value: number }
   | { type: "resetPolicy" }
-  | { type: "setSeed"; value: number }
   | { type: "loadPreset"; id: string }
   | { type: "restore"; snapshot: Snapshot; label: string };
 
@@ -688,11 +687,6 @@ function applyIntervention(
           steps: 0,
         }),
         label: "policy reset to uniform",
-      };
-    case "setSeed":
-      return {
-        state: { ...state, rng: action.value >>> 0 },
-        label: `seed -> ${action.value}`,
       };
     case "loadPreset": {
       const preset = getPreset(action.id);

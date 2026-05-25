@@ -299,7 +299,7 @@ export function ClippedSurrogate() {
                   y={cellY + cellH / 2 + 5}
                   textAnchor="middle"
                   className="fill-foreground"
-                  fill={isGoal ? "#fff" : undefined}
+                  fill={isGoal ? "var(--color-background)" : undefined}
                   style={{ fontSize: 14, fontWeight: 600 }}
                 >
                   {isGoal ? "goal" : i === 0 ? "start" : `s${i}`}
@@ -390,7 +390,11 @@ export function ClippedSurrogate() {
             const adv = inspectAdv[a] ?? 0;
             const y = bandTop + 38 + a * 56;
             const outside = r > hi || r < lo;
-            const dotColor = adv >= 0 ? ACCENT : SAGE;
+            // SAGE = on-track / healthy (positive advantage means this action
+            // helps). Muted foreground = discouraging action. ACCENT is reserved
+            // for the trust-region-broken warning signal so it stays unambiguous.
+            const dotColor =
+              adv >= 0 ? SAGE : "var(--color-muted-foreground)";
             return (
               <g key={`ratio-${a}`}>
                 <text
@@ -427,7 +431,7 @@ export function ClippedSurrogate() {
                   style={{ fontSize: 10 }}
                 >
                   {r.toFixed(2)}
-                  {outside ? " clipped" : ""}
+                  {outside ? " ✕ clipped" : ""}
                 </text>
               </g>
             );
@@ -474,7 +478,7 @@ export function ClippedSurrogate() {
         />
         <div className="w-40">
           <Slider
-            label="Speed"
+            label="Playback speed (animation only)"
             value={speed}
             min={0.5}
             max={3}
@@ -500,7 +504,7 @@ export function ClippedSurrogate() {
             ))}
           </div>
           <Slider
-            label="Clip width epsilon"
+            label="Clip width ε — how far the ratio may move before the gradient goes flat"
             value={params.epsilon}
             min={0.05}
             max={0.8}
@@ -509,7 +513,7 @@ export function ClippedSurrogate() {
             onChange={(value) => intervene({ type: "setEpsilon", value })}
           />
           <Slider
-            label="Reuse epochs K (per batch)"
+            label="Reuse epochs K — gradient steps per batch before refreshing the snapshot"
             value={params.epochs}
             min={1}
             max={50}
@@ -518,7 +522,7 @@ export function ClippedSurrogate() {
             onChange={(value) => intervene({ type: "setEpochs", value })}
           />
           <Slider
-            label="Step size"
+            label="Step size α (learning rate)"
             value={params.alpha}
             min={0.5}
             max={8}
@@ -528,7 +532,7 @@ export function ClippedSurrogate() {
           />
           {params.objective === "kl" && (
             <Slider
-              label="KL penalty beta"
+              label="KL penalty β — how hard the penalty resists moving away from the snapshot"
               value={params.beta}
               min={0}
               max={8}
@@ -538,16 +542,7 @@ export function ClippedSurrogate() {
             />
           )}
           <Slider
-            label="Discount gamma"
-            value={params.gamma}
-            min={0.8}
-            max={0.99}
-            step={0.01}
-            display={params.gamma.toFixed(2)}
-            onChange={(value) => intervene({ type: "setGamma", value })}
-          />
-          <Slider
-            label="Advantage noise"
+            label="Advantage noise — sampling noise on the advantage estimate (0 = exact)"
             value={params.noise}
             min={0}
             max={1}
@@ -585,7 +580,7 @@ export function ClippedSurrogate() {
               {(inspectAdv[1] ?? 0).toFixed(2)}
             </Badge>
           </div>
-          <div className="ring-foreground/10 max-h-40 overflow-y-auto rounded-lg ring-1">
+          <div className="ring-foreground/10 rounded-lg ring-1">
             <table className="w-full text-left text-xs">
               <thead className="bg-card text-muted-foreground sticky top-0">
                 <tr>
@@ -640,14 +635,16 @@ export function ClippedSurrogate() {
 
       <p className="text-muted-foreground text-xs">
         Each tick is one inner gradient step on the frozen snapshot batch; after
-        K of them the round ends and the snapshot refreshes (Algorithm 1). The
+        K epochs the round ends and the snapshot refreshes (Algorithm 1). The
         advantage is solved exactly on this {GOAL}-state corridor, so the
         surrogate is exact up to the softmax policy class; real PPO estimates it
         from samples, which the noise slider stands in for. The trust-region
-        light tracks KL(snapshot, policy), the quantity the clip bounds. This
-        corridor is forgiving enough that even a divergent no-clip run still
-        finds the goal, where on a real task like HalfCheetah the same
-        destructive updates sink the return outright.
+        light tracks KL(snapshot, policy), the quantity the clip bounds. Discount
+        gamma is fixed at 0.97. The playback-speed dial controls animation pace
+        only and does not affect the gradient math. This corridor is forgiving
+        enough that even a divergent no-clip run still finds the goal, where on a
+        real task like HalfCheetah the same destructive updates sink the return
+        outright.
       </p>
     </div>
   );

@@ -72,6 +72,7 @@ function Slider({
         max={max}
         step={stepSize}
         value={value}
+        aria-label={label}
         onChange={(event) => onChange(Number(event.target.value))}
         className="h-1.5 w-full cursor-pointer"
         style={{ accentColor: ACCENT }}
@@ -102,45 +103,61 @@ function EventLog({
   events: LogEntry[];
   onRestore: (entry: LogEntry) => void;
 }) {
+  // Events are displayed newest-first so new entries appear at the top without
+  // needing autoscroll. The fade gradient signals more entries exist below.
   return (
-    <div className="ring-foreground/10 max-h-28 overflow-y-auto rounded-lg ring-1">
-      {events.length === 0 ? (
-        <p className="text-muted-foreground px-2 py-1.5 text-xs">
-          Switch the algorithm, drag a weight, or reseed to start the log.
-        </p>
-      ) : (
-        <ul className="text-xs">
-          {[...events].reverse().map((entry) => (
-            <li key={entry.id}>
-              <button
-                type="button"
-                className="text-muted-foreground hover:bg-foreground/5 w-full px-2 py-1 text-left font-mono"
-                onClick={() => onRestore(entry)}
-              >
-                {entry.id}. step {entry.step} {entry.label}
-              </button>
-            </li>
-          ))}
-        </ul>
+    <div className="relative">
+      <div className="ring-foreground/10 max-h-28 overflow-y-auto rounded-lg ring-1">
+        {events.length === 0 ? (
+          <p className="text-muted-foreground px-2 py-1.5 text-xs">
+            Switch the algorithm, drag a weight, or resample to start the log.
+          </p>
+        ) : (
+          <ul className="text-xs">
+            {[...events].reverse().map((entry) => (
+              <li key={entry.id}>
+                <button
+                  type="button"
+                  className="text-muted-foreground hover:bg-foreground/5 w-full px-2 py-1 text-left font-mono"
+                  onClick={() => onRestore(entry)}
+                >
+                  {entry.id}. step {entry.step} {entry.label}
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+      {events.length > 3 && (
+        <div
+          className="pointer-events-none absolute bottom-0 left-0 right-0 h-6 rounded-b-lg"
+          style={{
+            background: "linear-gradient(to bottom, transparent, var(--card))",
+          }}
+        />
       )}
     </div>
   );
 }
 
-// Advances the model by one training step per fixed interval, frame-rate
+// Fixed autoplay interval. Speed is not a dial: this sim advances in discrete
+// training steps the reader drives manually; the interval only affects how fast
+// autoplay runs, not the paper's ideas.
+const TICK_INTERVAL_MS = 220;
+
+// Advances the model by one training step every TICK_INTERVAL_MS, frame-rate
 // independent, built on the shared animation-frame loop. Returns a reset for the
 // accumulator so timing starts clean on play and reset.
-function useTrainingClock(
-  active: boolean,
-  intervalMs: number,
-  onTick: () => void,
-): () => void {
+function useTrainingClock(active: boolean, onTick: () => void): () => void {
   const accumulator = useRef(0);
   useAnimationFrame(active, (deltaMs) => {
     accumulator.current += deltaMs;
     let steps = 0;
-    while (accumulator.current >= intervalMs && steps < MAX_STEPS_PER_FRAME) {
-      accumulator.current -= intervalMs;
+    while (
+      accumulator.current >= TICK_INTERVAL_MS &&
+      steps < MAX_STEPS_PER_FRAME
+    ) {
+      accumulator.current -= TICK_INTERVAL_MS;
       onTick();
       steps += 1;
     }
@@ -290,59 +307,73 @@ function GroupTable({
     );
   }
 
+  const showFade = state.rollouts.length > 8;
+
   return (
-    <div className="ring-foreground/10 max-h-64 overflow-y-auto rounded-lg ring-1">
-      <table className="w-full text-left text-xs">
-        <thead className="bg-card text-muted-foreground sticky top-0">
-          <tr>
-            <th className="px-2 py-1 font-medium">#</th>
-            <th className="px-2 py-1 font-medium">turn 1 (search)</th>
-            <th className="px-2 py-1 font-medium">turn 2 (answer)</th>
-            <th className="px-2 py-1 text-right font-medium">A₁</th>
-            <th className="px-2 py-1 text-right font-medium">A₂</th>
-          </tr>
-        </thead>
-        <tbody className="font-mono">
-          {state.rollouts.map((rollout) => {
-            const adv = advById.get(rollout.id);
-            return (
-              <tr
-                key={rollout.id}
-                className={
-                  inspect === rollout.id
-                    ? "bg-foreground/5"
-                    : "text-muted-foreground"
-                }
-                onMouseEnter={() => onInspect(rollout.id)}
-                onFocus={() => onInspect(rollout.id)}
-                tabIndex={0}
-              >
-                <td className="px-2 py-1">{rollout.id}</td>
-                <td className="px-2 py-1">
-                  <span
-                    className={rollout.toolExecuted ? "text-foreground" : ""}
-                  >
-                    {rollout.toolExecuted ? "tool" : "no-tool"}
-                  </span>
-                  {" / "}
-                  <span className={rollout.retrieved ? "text-foreground" : ""}>
-                    {rollout.retrieved ? "found" : "miss"}
-                  </span>
-                </td>
-                <td className="px-2 py-1">
-                  <span
-                    className={rollout.answerCorrect ? "text-foreground" : ""}
-                  >
-                    {rollout.answerCorrect ? "correct" : "wrong"}
-                  </span>
-                </td>
-                <td className="px-2 py-1">{bar(adv?.turn1 ?? 0)}</td>
-                <td className="px-2 py-1">{bar(adv?.turn2 ?? 0)}</td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
+    <div className="relative">
+      <div className="ring-foreground/10 max-h-64 overflow-y-auto rounded-lg ring-1">
+        <table className="w-full text-left text-xs">
+          <thead className="bg-card text-muted-foreground sticky top-0">
+            <tr>
+              <th className="px-2 py-1 font-medium">#</th>
+              <th className="px-2 py-1 font-medium">turn 1 (search)</th>
+              <th className="px-2 py-1 font-medium">turn 2 (answer)</th>
+              <th className="px-2 py-1 text-right font-medium">A₁</th>
+              <th className="px-2 py-1 text-right font-medium">A₂</th>
+            </tr>
+          </thead>
+          <tbody className="font-mono">
+            {state.rollouts.map((rollout) => {
+              const adv = advById.get(rollout.id);
+              return (
+                <tr
+                  key={rollout.id}
+                  className={
+                    inspect === rollout.id
+                      ? "bg-foreground/5"
+                      : "text-muted-foreground"
+                  }
+                  onMouseEnter={() => onInspect(rollout.id)}
+                  onFocus={() => onInspect(rollout.id)}
+                  tabIndex={0}
+                >
+                  <td className="px-2 py-1">{rollout.id}</td>
+                  <td className="px-2 py-1">
+                    <span
+                      className={rollout.toolExecuted ? "text-foreground" : ""}
+                    >
+                      {rollout.toolExecuted ? "tool ✓" : "no-tool"}
+                    </span>
+                    {" / "}
+                    <span
+                      className={rollout.retrieved ? "text-foreground" : ""}
+                    >
+                      {rollout.retrieved ? "found ✓" : "miss"}
+                    </span>
+                  </td>
+                  <td className="px-2 py-1">
+                    <span
+                      className={rollout.answerCorrect ? "text-foreground" : ""}
+                    >
+                      {rollout.answerCorrect ? "correct ✓" : "wrong"}
+                    </span>
+                  </td>
+                  <td className="px-2 py-1">{bar(adv?.turn1 ?? 0)}</td>
+                  <td className="px-2 py-1">{bar(adv?.turn2 ?? 0)}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+      {showFade && (
+        <div
+          className="pointer-events-none absolute bottom-0 left-0 right-0 h-8 rounded-b-lg"
+          style={{
+            background: "linear-gradient(to bottom, transparent, var(--card))",
+          }}
+        />
+      )}
     </div>
   );
 }
@@ -353,7 +384,6 @@ export function TurnLevelCredit() {
     initialFromPreset("mt-stable"),
   );
   const [playing, setPlaying] = useState(false);
-  const [speed, setSpeed] = useState(1);
   const [inspect, setInspect] = useState<number | null>(null);
 
   const intervene = useCallback(
@@ -361,7 +391,7 @@ export function TurnLevelCredit() {
     [],
   );
 
-  const resetClock = useTrainingClock(playing, 220 / speed, () =>
+  const resetClock = useTrainingClock(playing, () =>
     dispatch({ kind: "tick" }),
   );
 
@@ -391,6 +421,12 @@ export function TurnLevelCredit() {
       intervene({ type: "setWeight", key, value }),
     [intervene],
   );
+
+  // Advance to the next seed value to show a different random sample. The
+  // individual seed number has no pedagogical meaning; only the variety matters.
+  const onResample = useCallback(() => {
+    intervene({ type: "setSeed", value: (state.seed % 30) + 1 });
+  }, [intervene, state.seed]);
 
   const algorithm = getAlgorithm(state.algorithm);
   const spread = turn1Spread(state.advantages);
@@ -424,24 +460,13 @@ export function TurnLevelCredit() {
         <CurveChart state={state} />
       </div>
 
-      <div className="flex flex-wrap items-center justify-between gap-3">
+      <div className="flex flex-wrap items-center gap-3">
         <PlayPauseStepControls
           playing={playing}
           onPlayPause={onPlayPause}
           onStep={onStep}
           onReset={onReset}
         />
-        <div className="w-40">
-          <Slider
-            label="Speed"
-            value={speed}
-            min={0.5}
-            max={4}
-            step={0.5}
-            display={`${speed.toFixed(1)}x`}
-            onChange={setSpeed}
-          />
-        </div>
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
@@ -488,7 +513,7 @@ export function TurnLevelCredit() {
 
         <Panel title="Turn rewards">
           <Slider
-            label="Tool execution reward (turn 1)"
+            label="Tool execution reward — points for turn 1 running the search tool"
             value={state.weights.toolExecution}
             min={0}
             max={0.5}
@@ -497,7 +522,7 @@ export function TurnLevelCredit() {
             onChange={(value) => setWeight("toolExecution", value)}
           />
           <Slider
-            label="Retrieval reward (turn 1)"
+            label="Retrieval reward — bonus when the search returns the ground-truth answer"
             value={state.weights.retrieval}
             min={0}
             max={1}
@@ -506,7 +531,7 @@ export function TurnLevelCredit() {
             onChange={(value) => setWeight("retrieval", value)}
           />
           <Slider
-            label="Search penalty λₛ (per search)"
+            label="Search penalty λₛ — cost per search, discourages over-searching (drag to 0 to see collapse)"
             value={state.weights.searchPenalty}
             min={0}
             max={0.4}
@@ -515,7 +540,7 @@ export function TurnLevelCredit() {
             onChange={(value) => setWeight("searchPenalty", value)}
           />
           <Slider
-            label="Exact-match reward (turn 2)"
+            label="Exact-match reward — payoff when turn 2 produces the correct answer"
             value={state.weights.exactMatch}
             min={0.2}
             max={2}
@@ -524,7 +549,7 @@ export function TurnLevelCredit() {
             onChange={(value) => setWeight("exactMatch", value)}
           />
           <Slider
-            label="α (outcome share inside turn-1 advantage)"
+            label="α — how much of the outcome advantage bleeds back into turn 1's credit (equation 5)"
             value={state.weights.alpha}
             min={0}
             max={1}
@@ -533,7 +558,7 @@ export function TurnLevelCredit() {
             onChange={(value) => setWeight("alpha", value)}
           />
           <Slider
-            label="Group size G"
+            label="Group size G — rollouts per update; larger groups stabilize normalization"
             value={state.groupSize}
             min={4}
             max={16}
@@ -541,15 +566,20 @@ export function TurnLevelCredit() {
             display={String(state.groupSize)}
             onChange={(value) => intervene({ type: "setGroupSize", value })}
           />
-          <Slider
-            label="Seed"
-            value={state.seed}
-            min={1}
-            max={30}
-            step={1}
-            display={String(state.seed)}
-            onChange={(value) => intervene({ type: "setSeed", value })}
-          />
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <span className="text-muted-foreground text-xs">
+              Sample #{state.seed} — draw a different random group to check
+              robustness
+            </span>
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              onClick={onResample}
+            >
+              New sample
+            </Button>
+          </div>
           <div className="flex flex-col gap-1">
             <span className="text-muted-foreground text-xs font-medium">
               Event log
@@ -571,12 +601,15 @@ export function TurnLevelCredit() {
       <p className="text-muted-foreground text-xs">
         The advantages here are exactly the paper&apos;s math: each turn&apos;s
         reward is group-normalized, A = (R &minus; mean) / std, and
-        MT-GRPO&apos;s turn-1 advantage is A₁ = Aᴵ + α·Aᴼ (equation 5). The
-        training loop is a stand-in. Each step nudges the agent&apos;s behavior
-        toward whatever the advantages reward, so unsignalled behavior drifts
-        and forgets, which is why outcome-only credit lets tool use collapse. A
-        real run trains a 7B model with a critic, not four propensities, but the
-        credit-assignment story is the same one.
+        MT-GRPO&apos;s turn-1 advantage is A₁ = Aᴵ + α·Aᴼ (equation 5). Each
+        preset starts from a fixed seed so the run is fully deterministic;
+        &ldquo;New sample&rdquo; advances the seed to show a different random
+        group. The training loop is a stand-in. Each step nudges the
+        agent&apos;s behavior toward whatever the advantages reward, so
+        unsignalled behavior drifts and forgets, which is why outcome-only
+        credit lets tool use collapse. A real run trains a 7B model with a
+        critic, not four propensities, but the credit-assignment story is the
+        same one.
       </p>
     </div>
   );

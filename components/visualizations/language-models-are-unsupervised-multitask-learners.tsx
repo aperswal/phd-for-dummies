@@ -2,6 +2,7 @@
 
 import {
   useCallback,
+  useEffect,
   useMemo,
   useReducer,
   useRef,
@@ -79,6 +80,7 @@ function Slider({
         max={max}
         step={stepSize}
         value={value}
+        aria-label={label}
         onChange={(event) => onChange(Number(event.target.value))}
         className="h-1.5 w-full cursor-pointer"
         style={{ accentColor: ACCENT }}
@@ -125,26 +127,45 @@ function EventLog({
   events: SimEvent[];
   onRestore: (event: SimEvent) => void;
 }) {
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  // Newest events appear at the top; scroll there whenever a new event is added.
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = 0;
+    }
+  }, [events.length]);
+
   return (
-    <div className="ring-foreground/10 max-h-28 overflow-y-auto rounded-lg ring-1">
-      {events.length === 0 ? (
-        <p className="text-muted-foreground px-2 py-1.5 text-xs">
-          Step, change the prompt, or toggle the hint to start the log.
-        </p>
-      ) : (
-        <ul className="text-xs">
-          {[...events].reverse().map((event) => (
-            <li key={event.id}>
-              <button
-                type="button"
-                className="text-muted-foreground hover:bg-foreground/5 w-full px-2 py-1 text-left font-mono"
-                onClick={() => onRestore(event)}
-              >
-                {event.id}. {event.label}
-              </button>
-            </li>
-          ))}
-        </ul>
+    // Relative container so the fade mask can sit flush at the bottom edge.
+    <div className="relative">
+      <div
+        ref={scrollRef}
+        className="ring-foreground/10 max-h-28 overflow-y-auto rounded-lg ring-1"
+      >
+        {events.length === 0 ? (
+          <p className="text-muted-foreground px-2 py-1.5 text-xs">
+            Step, change the prompt, or toggle the hint to start the log.
+          </p>
+        ) : (
+          <ul className="text-xs">
+            {[...events].reverse().map((event) => (
+              <li key={event.id}>
+                <button
+                  type="button"
+                  className="text-muted-foreground hover:bg-foreground/5 w-full px-2 py-1 text-left font-mono"
+                  onClick={() => onRestore(event)}
+                >
+                  {event.id}. {event.label}
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+      {/* Fade mask signals more entries are hidden below when the list overflows. */}
+      {events.length > 3 && (
+        <div className="from-card pointer-events-none absolute right-0 bottom-0 left-0 h-5 rounded-b-lg bg-gradient-to-t to-transparent" />
       )}
     </div>
   );
@@ -285,7 +306,10 @@ export function ZeroShotGenerator() {
                   className="rounded-md px-2 py-1 font-mono text-sm"
                   style={{
                     background: isGold ? ACCENT : "var(--color-muted)",
-                    color: isGold ? "#fff" : undefined,
+                    // Use a theme token so the label stays legible in dark mode.
+                    color: isGold
+                      ? "var(--color-primary-foreground)"
+                      : undefined,
                   }}
                 >
                   {token}
@@ -323,8 +347,10 @@ export function ZeroShotGenerator() {
                   <span className="w-28 truncate font-mono">
                     {c.token}
                     {c.isGold && (
+                      // Star glyph so the gold token is identified by shape
+                      // AND color, never color alone.
                       <span className="ml-1" style={{ color: ACCENT }}>
-                        *
+                        ★
                       </span>
                     )}
                   </span>
@@ -358,10 +384,12 @@ export function ZeroShotGenerator() {
           onPlayPause={onPlayPause}
           onStep={onStep}
           onReset={onReset}
+          // Disable transport once the run is done so the terminal state is clear.
+          disabled={finished}
         />
         <div className="w-40">
           <Slider
-            label="Speed"
+            label="Playback speed"
             value={speed}
             min={0.5}
             max={3}
@@ -406,7 +434,7 @@ export function ZeroShotGenerator() {
             </div>
           </div>
           <Slider
-            label="Temperature"
+            label="Temperature — sharpens or flattens the sampling distribution"
             value={params.temperature}
             min={0.2}
             max={2}
@@ -415,7 +443,7 @@ export function ZeroShotGenerator() {
             onChange={(value) => intervene({ type: "setTemperature", value })}
           />
           <Slider
-            label="Top-k"
+            label="Top-k — how many candidate tokens the model keeps"
             value={params.topK}
             min={1}
             max={6}
@@ -423,15 +451,17 @@ export function ZeroShotGenerator() {
             display={String(params.topK)}
             onChange={(value) => intervene({ type: "setTopK", value })}
           />
-          <Slider
-            label="Seed"
-            value={params.seed}
-            min={0}
-            max={20}
-            step={1}
-            display={String(params.seed)}
-            onChange={(value) => intervene({ type: "setSeed", value })}
-          />
+          {/* Seed is fixed per preset for reproducibility. Reshuffle advances
+              it by a large prime so the reader can try a different sample
+              without a meaningless 0–20 dial. */}
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            onClick={() => intervene({ type: "reshuffle" })}
+          >
+            Reshuffle sample
+          </Button>
         </Panel>
 
         <Panel title="Inside the run">
@@ -443,47 +473,53 @@ export function ZeroShotGenerator() {
               hint {params.hintPresent ? "present" : "removed"}
             </Badge>
           </div>
-          <div className="ring-foreground/10 max-h-44 overflow-y-auto rounded-lg ring-1">
-            <table className="w-full text-left text-xs">
-              <thead className="bg-card text-muted-foreground sticky top-0">
-                <tr>
-                  <th className="px-2 py-1 font-medium">token</th>
-                  <th className="px-2 py-1 text-right font-medium">base</th>
-                  <th className="px-2 py-1 text-right font-medium">boost</th>
-                  <th className="px-2 py-1 text-right font-medium">prob</th>
-                </tr>
-              </thead>
-              <tbody className="font-mono">
-                {candidates.map((c) => (
-                  <tr
-                    key={`row-${c.token}`}
-                    className={
-                      c === topCandidate
-                        ? "text-foreground"
-                        : "text-muted-foreground"
-                    }
-                  >
-                    <td className="px-2 py-1">
-                      {c.token}
-                      {c.isGold && (
-                        <span className="ml-1" style={{ color: ACCENT }}>
-                          *
-                        </span>
-                      )}
-                    </td>
-                    <td className="px-2 py-1 text-right">
-                      {c.base.toFixed(2)}
-                    </td>
-                    <td className="px-2 py-1 text-right">
-                      {c.taskBoost.toFixed(2)}
-                    </td>
-                    <td className="px-2 py-1 text-right">
-                      {c.masked ? "cut" : percent(c.prob)}
-                    </td>
+          <div className="relative">
+            <div className="ring-foreground/10 max-h-44 overflow-y-auto rounded-lg ring-1">
+              <table className="w-full text-left text-xs">
+                <thead className="bg-card text-muted-foreground sticky top-0">
+                  <tr>
+                    <th className="px-2 py-1 font-medium">token</th>
+                    <th className="px-2 py-1 text-right font-medium">base</th>
+                    <th className="px-2 py-1 text-right font-medium">boost</th>
+                    <th className="px-2 py-1 text-right font-medium">prob</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="font-mono">
+                  {candidates.map((c) => (
+                    <tr
+                      key={`row-${c.token}`}
+                      className={
+                        c === topCandidate
+                          ? "text-foreground"
+                          : "text-muted-foreground"
+                      }
+                    >
+                      <td className="px-2 py-1">
+                        {c.token}
+                        {c.isGold && (
+                          <span className="ml-1" style={{ color: ACCENT }}>
+                            ★
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-2 py-1 text-right">
+                        {c.base.toFixed(2)}
+                      </td>
+                      <td className="px-2 py-1 text-right">
+                        {c.taskBoost.toFixed(2)}
+                      </td>
+                      <td className="px-2 py-1 text-right">
+                        {c.masked ? "cut" : percent(c.prob)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            {/* Fade mask signals more rows are hidden below when the table overflows. */}
+            {candidates.length > 5 && (
+              <div className="from-card pointer-events-none absolute right-0 bottom-0 left-0 h-5 rounded-b-lg bg-gradient-to-t to-transparent" />
+            )}
           </div>
           <div className="flex flex-col gap-1">
             <span className="text-muted-foreground text-xs font-medium">
@@ -509,9 +545,10 @@ export function ZeroShotGenerator() {
         network, so the gold answer winning is legible rather than learned.
         Model size sets how hard the model leans toward the correct
         continuation, which is the log-linear lift of Figure 1, and the hint
-        switch is the paper&apos;s {"TL;DR:"} ablation. This runs {TASKS.length}{" "}
-        tasks over a handful of tokens; GPT-2 runs over a 50,257-token
-        vocabulary and 40 GB of text.
+        switch is the paper&apos;s {"TL;DR:"} ablation. Each preset starts from a
+        fixed seed so every run is reproducible; use Reshuffle to try a
+        different sample. This runs {TASKS.length} tasks over a handful of
+        tokens; GPT-2 runs over a 50,257-token vocabulary and 40 GB of text.
       </p>
     </div>
   );

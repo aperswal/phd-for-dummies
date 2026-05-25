@@ -130,9 +130,11 @@ describe("the step reducer", () => {
     expect(b.generated).toEqual(a.generated);
   });
 
-  it("changes the run when the seed changes on a flat distribution", () => {
+  it("reshuffle advances the seed and changes the run on a flat distribution", () => {
     // A tiny model at high temperature has a near-uniform next-token
     // distribution, so the seed genuinely steers which token gets sampled.
+    // Reshuffle replaces the setSeed slider: it advances the seed by a large
+    // prime so the reader gets a different sample without a meaningless dial.
     const flat: GenParams = {
       taskId: "qa",
       sizeIndex: 0,
@@ -146,13 +148,14 @@ describe("the step reducer", () => {
       params: flat,
       rngState: flat.seed >>> 0,
     });
-    const reseeded = runToEnd({
-      ...initialState("small-model"),
-      params: { ...flat, seed: 17 },
-      rngState: 17 >>> 0,
-    });
-    expect(reseeded.generated.length).toBeGreaterThan(0);
-    expect(reseeded.generated).not.toEqual(baseRun.generated);
+    const reshuffled = step(
+      { ...initialState("small-model"), params: flat, rngState: flat.seed >>> 0 },
+      { kind: "intervene", action: { type: "reshuffle" } },
+    );
+    expect(reshuffled.params.seed).not.toBe(flat.seed);
+    const reshuffledRun = runToEnd(reshuffled);
+    expect(reshuffledRun.generated.length).toBeGreaterThan(0);
+    expect(reshuffledRun.generated).not.toEqual(baseRun.generated);
   });
 
   it("loads a preset by id", () => {

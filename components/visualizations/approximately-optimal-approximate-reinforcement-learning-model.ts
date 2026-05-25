@@ -425,7 +425,6 @@ export type Intervention =
   | { type: "setGamma"; value: number }
   | { type: "setChooserError"; value: number }
   | { type: "setRestart"; value: RestartMode }
-  | { type: "setSeed"; value: number }
   | { type: "resetPolicy" }
   | { type: "loadPreset"; id: string }
   | { type: "restore"; snapshot: Snapshot; label: string };
@@ -608,15 +607,6 @@ function applyIntervention(
           }),
         ),
         label: `restart -> ${action.value}`,
-      };
-    case "setSeed":
-      return {
-        state: deriveAndChoose({
-          ...state,
-          rng: action.value >>> 0,
-          done: false,
-        }),
-        label: `seed -> ${action.value}`,
       };
     case "resetPolicy":
       return {

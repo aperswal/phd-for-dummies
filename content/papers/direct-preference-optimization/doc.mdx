@@ -2,7 +2,7 @@
 
 _A way to teach a language model what people prefer in one direct training step, skipping the separate reward model and reinforcement learning that the old recipe needed._
 
-![A stack of preference cards splits into two inked routes: the long top route runs through a wig-wearing judge holding a scale and loops back before reaching a pixel robot, while the bold bottom route labelled direct goes straight from the cards to the robot, showing that DPO drops the separate reward model and reinforcement learning loop and trains the model in one step.](/papers/direct-preference-optimization/hero.webp)
+![A stack of preference cards splits into two inked routes: the long top route runs through a wig-wearing judge holding a scale and loops back before reaching a pixel robot, while the bold bottom route labelled direct goes straight from the cards to the robot, showing that DPO drops the separate reward model and reinforcement learning loop and trains the model in one step.](https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/direct-preference-optimization/hero.webp)
 
 ## Read at your level
 
@@ -57,7 +57,7 @@ max_pi  E_{x ~ D, y ~ pi}[ r(x, y) ]  -  beta * KL( pi(y|x) || pi_ref(y|x) )
 
 That `beta` controls the leash. A bigger `beta` keeps the trained policy closer to the reference.
 
-![A pixel robot on a leash anchored to a wooden stake tagged beta, straining toward a clay-orange treat but held back, with an inked arc marking how far it can roam, showing that beta sets how far the trained model is allowed to drift from the model it started as.](/papers/direct-preference-optimization/beta-leash.webp)
+![A pixel robot on a leash anchored to a wooden stake tagged beta, straining toward a clay-orange treat but held back, with an inked arc marking how far it can roam, showing that beta sets how far the trained model is allowed to drift from the model it started as.](https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/direct-preference-optimization/beta-leash.webp)
 
 Now the key move. This objective has a known closed-form solution. The optimal policy is
 
@@ -73,7 +73,7 @@ r(x, y) = beta * log( pi_r(y|x) / pi_ref(y|x) ) + beta * log Z(x)
 
 So the reward is just `beta` times the log-ratio of the policy to the reference, plus a term that depends only on the question `x`, not on the answer.
 
-![A pixel robot with a gauge dial sketched inside its chest, the needle leaning toward a clay-orange smiling reply tile and away from a faded one, showing that the language model carries its own reward score as the log-ratio of how much likelier it makes a reply than the reference model.](/papers/direct-preference-optimization/implicit-reward.webp)
+![A pixel robot with a gauge dial sketched inside its chest, the needle leaning toward a clay-orange smiling reply tile and away from a faded one, showing that the language model carries its own reward score as the log-ratio of how much likelier it makes a reply than the reference model.](https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/direct-preference-optimization/implicit-reward.webp)
 
 Here's why that `log Z(x)` term stops being a problem. Human preferences follow the Bradley-Terry model, which says the chance you prefer answer 1 over answer 2 depends only on the _difference_ of their rewards. When you subtract two rewards for the same question, the `beta * log Z(x)` term is identical in both, so it cancels. The preference probability comes out in terms of the policy alone. Plug that into the same maximum-likelihood loss you'd use to fit a reward model, and you get the DPO objective.
 
@@ -107,7 +107,7 @@ grad L_DPO = -beta * E[ sigma(r_hat(x, y_l) - r_hat(x, y_w)) * ( grad log pi(y_w
 
 where `r_hat(x, y) = beta * log(pi_theta(y|x)/pi_ref(y|x))` is the implicit reward. The `sigma(r_hat_l - r_hat_w)` factor is an adaptive per-example weight. When the implicit reward already orders a pair correctly, the weight is near zero and the example contributes almost nothing. When the model has the pair backwards, the weight is large.
 
-![Two pixel seesaw scales, the top one already level beside a thin sage nudge arrow and the bottom one tipped the wrong way beside a thick clay-orange shove arrow, showing that DPO leans hardest on the pairs the model currently ranks wrong and barely touches the pairs it already ranks right.](/papers/direct-preference-optimization/sigma-weight.webp)
+![Two pixel seesaw scales, the top one already level beside a thin sage nudge arrow and the bottom one tipped the wrong way beside a thick clay-orange shove arrow, showing that DPO leans hardest on the pairs the model currently ranks wrong and barely touches the pairs it already ranks right.](https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/direct-preference-optimization/sigma-weight.webp)
 
 The paper's Appendix Table 3 shows that dropping this weight, optimizing the bare log-ratio margin, degenerates the policy. The simulation reproduces that. Toggle the adaptive weight off and the preferred mass collapses toward one while the KL runs away.
 

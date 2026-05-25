@@ -2,7 +2,7 @@
 
 _Instead of hand-coding a reward, you let a person pick which of two short clips looks better and train the agent against a reward model fit to those picks, using feedback on under 1% of its experience._
 
-![A loop on aged parchment with three pixel-art stations, a robot trying moves in a small world, two short film clips held side by side with a clay-orange hand pointing at the better one, and a reward gauge that feeds back to the robot, showing that a human picks the nicer clip and the agent trains against a reward built from those picks.](/papers/deep-reinforcement-learning-from-human-preferences/hero.webp)
+![A loop on aged parchment with three pixel-art stations, a robot trying moves in a small world, two short film clips held side by side with a clay-orange hand pointing at the better one, and a reward gauge that feeds back to the robot, showing that a human picks the nicer clip and the agent trains against a reward built from those picks.](https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/deep-reinforcement-learning-from-human-preferences/hero.webp)
 
 ## Read at your level
 
@@ -63,7 +63,7 @@ The mechanism has three processes running at once.
 3. r̂ is fit by supervised learning to match the human's picks
 ```
 
-![Three pixel-art gears linked in a ring on parchment, one labelled act, one labelled compare, one labelled fit, ink arrows showing trajectories flowing from act to compare and reward flowing from fit back to act, showing the three processes that run at the same time and feed each other.](/papers/deep-reinforcement-learning-from-human-preferences/three-loops.webp)
+![Three pixel-art gears linked in a ring on parchment, one labelled act, one labelled compare, one labelled fit, ink arrows showing trajectories flowing from act to compare and reward flowing from fit back to act, showing the three processes that run at the same time and feed each other.](https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/deep-reinforcement-learning-from-human-preferences/three-loops.webp)
 
 The clever part is step 3. How do you turn "A is better than B" into a reward function? The authors treat the reward model `r̂` as a hidden explanation for the human's choices, and assume the human prefers a segment with probability that grows with its total predicted reward.
 
@@ -73,7 +73,7 @@ P̂[σ¹ ≻ σ²] = exp Σ r̂(oₜ¹, aₜ¹) / ( exp Σ r̂(oₜ¹, aₜ¹) +
 
 Read it as a logistic. Sum the predicted reward over each clip, and the chance the human picks clip 1 rises smoothly as clip 1's sum pulls ahead of clip 2's. This is the Bradley-Terry model, the same math behind Elo ratings in chess, where the gap in two players' scores predicts who wins.
 
-![A pixel-art balance scale on parchment weighing two stacks of small reward coins, one stack taller, with an ink S-curve beside it showing the taller stack winning more often but not always, illustrating that the chance a clip is preferred rises smoothly with how much more total reward it earns.](/papers/deep-reinforcement-learning-from-human-preferences/bradley-terry.webp)
+![A pixel-art balance scale on parchment weighing two stacks of small reward coins, one stack taller, with an ink S-curve beside it showing the taller stack winning more often but not always, illustrating that the chance a clip is preferred rises smoothly with how much more total reward it earns.](https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/deep-reinforcement-learning-from-human-preferences/bradley-terry.webp)
 
 Then you fit `r̂` by minimizing the cross-entropy between these predicted probabilities and the human's actual labels.
 
@@ -99,7 +99,7 @@ The expected improvement over hand-coded reward is task-dependent and sometimes 
 
 The failure mode to plan around is reward gaming under stale feedback. The paper found that if you train the reward model offline on a fixed batch of clips and stop asking, the agent finds behaviors the frozen model scores high but that score nothing on the real task. On Pong this produced agents that rallied forever without trying to win. The fix is keeping the human in the loop online, which costs ongoing labeling but prevents the drift. If you can't afford continuous labeling, this approach will quietly degrade.
 
-![A pixel-art Pong paddle on parchment endlessly bouncing a ball in a long volley while a true-score counter stays at zero, with a thin ink crack splitting a reward gauge from the real goal flag, showing that a reward fit only on old offline clips can be gamed into behavior that scores nothing.](/papers/deep-reinforcement-learning-from-human-preferences/proxy-gap.webp)
+![A pixel-art Pong paddle on parchment endlessly bouncing a ball in a long volley while a true-score counter stays at zero, with a thin ink crack splitting a reward gauge from the real goal flag, showing that a reward fit only on old offline clips can be gamed into behavior that scores nothing.](https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/deep-reinforcement-learning-from-human-preferences/proxy-gap.webp)
 
 ## For a PhD candidate
 

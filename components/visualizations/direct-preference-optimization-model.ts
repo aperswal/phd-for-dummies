@@ -292,7 +292,6 @@ export type Intervention =
   | { type: "setBeta"; value: number }
   | { type: "setLearningRate"; value: number }
   | { type: "toggleAdaptiveWeight" }
-  | { type: "setSeed"; value: number }
   | { type: "flipPair"; index: number }
   | { type: "removePair"; index: number }
   | { type: "addPair"; promptId: string; winner: number; loser: number }
@@ -441,24 +440,6 @@ function applyIntervention(state: SimState, action: Intervention): SimState {
         params: { ...state.params, useAdaptiveWeight: on },
       };
       return logged(next, `sigma weight ${on ? "on" : "off"}`);
-    }
-    case "setSeed": {
-      const refLogits = buildLogits(action.value);
-      const logits: Record<string, number[]> = {};
-      for (const prompt of PROMPTS) {
-        logits[prompt.id] = [...(refLogits[prompt.id] ?? [])];
-      }
-      const next: SimState = {
-        ...state,
-        params: { ...state.params, seed: action.value },
-        logits,
-        refLogits,
-        tick: 0,
-      };
-      return logged(
-        { ...next, loss: datasetLoss(next) },
-        `seed -> ${action.value}`,
-      );
     }
     case "flipPair": {
       const dataset = state.dataset.map((p, i) =>

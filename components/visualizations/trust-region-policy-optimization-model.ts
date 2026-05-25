@@ -390,9 +390,7 @@ export type Snapshot = Omit<SimState, "log">;
 export type Intervention =
   | { type: "setUpdate"; value: UpdateMode }
   | { type: "setDelta"; value: number }
-  | { type: "setGamma"; value: number }
   | { type: "setEstError"; value: number }
-  | { type: "setSeed"; value: number }
   | { type: "resetPolicy" }
   | { type: "loadPreset"; id: string }
   | { type: "restore"; snapshot: Snapshot; label: string };
@@ -894,11 +892,6 @@ export function initialState(
   };
 }
 
-function refreshOptimal(state: SimState): SimState {
-  const vStar = optimalValues(state.mdp, state.params.gamma);
-  return { ...state, optimal: at(vStar, state.mdp.start) };
-}
-
 function applyIntervention(
   state: SimState,
   action: Intervention,
@@ -922,17 +915,6 @@ function applyIntervention(
         },
         label: `delta -> ${action.value.toFixed(3)}`,
       };
-    case "setGamma":
-      return {
-        state: refreshOptimal(
-          derive({
-            ...state,
-            params: { ...state.params, gamma: action.value },
-            done: false,
-          }),
-        ),
-        label: `gamma -> ${action.value.toFixed(2)}`,
-      };
     case "setEstError":
       return {
         state: derive({
@@ -941,11 +923,6 @@ function applyIntervention(
           done: false,
         }),
         label: `estimate error -> ${action.value.toFixed(2)}`,
-      };
-    case "setSeed":
-      return {
-        state: derive({ ...state, seed: action.value >>> 0, done: false }),
-        label: `seed -> ${action.value}`,
       };
     case "resetPolicy":
       return {

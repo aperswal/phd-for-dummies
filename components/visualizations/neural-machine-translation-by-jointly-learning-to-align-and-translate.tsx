@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useReducer, useState } from "react";
+import { useCallback, useMemo, useReducer, useRef, useState } from "react";
 
 import { EventLogPanel } from "@/components/simulation/event-log";
 import { SimPanel } from "@/components/simulation/sim-panel";
@@ -20,7 +20,9 @@ import {
 } from "@/components/visualizations/neural-machine-translation-by-jointly-learning-to-align-and-translate-model";
 
 const ACCENT = "#c2683f";
-const ACCENT_SOFT = "#e0b59f";
+// Non-argmax bars use ACCENT at 35% opacity so they remain visible in both
+// light and dark mode without a hardcoded light-only hex.
+const ACCENT_BAR_OPACITY = 0.35;
 
 type ViewAction =
   | { kind: "tick" }
@@ -67,6 +69,7 @@ function Slider({
         max={max}
         step={step}
         value={value}
+        aria-label={label}
         onChange={(event) => onChange(Number(event.target.value))}
         className="h-1.5 w-full cursor-pointer"
         style={{ accentColor: ACCENT }}
@@ -105,6 +108,7 @@ export function AlignAndTranslate() {
   const [speed, setSpeed] = useState(1);
   const [presetId, setPresetId] = useState("monotonic");
   const [inspect, setInspect] = useState<number | null>(null);
+  const tableRef = useRef<HTMLDivElement>(null);
 
   const { params, log } = state;
   const result = useMemo(() => computeAlignment(params), [params]);
@@ -128,6 +132,7 @@ export function AlignAndTranslate() {
   const onReset = useCallback(() => {
     setPlaying(false);
     resetClock();
+    setInspect(null);
     dispatch({ kind: "reset", presetId });
   }, [presetId, resetClock]);
 
@@ -156,6 +161,10 @@ export function AlignAndTranslate() {
   const centerX = (i: number) => margin + (i + 0.5) * slot;
   const outputX = width / 2;
   const argmax = result.argmax;
+
+  // Show the scroll fade only for long sentences (> 6 words) whose rows
+  // exceed the max-h-44 cap.
+  const showScrollFade = source.length > 6;
 
   return (
     <div className="not-prose my-8 flex flex-col gap-4">
@@ -254,7 +263,8 @@ export function AlignAndTranslate() {
                   width={w}
                   height={h}
                   rx={3}
-                  fill={j === argmax ? ACCENT : ACCENT_SOFT}
+                  fill={ACCENT}
+                  fillOpacity={j === argmax ? 1 : ACCENT_BAR_OPACITY}
                 />
                 {weight > 0.04 && (
                   <text
@@ -284,7 +294,7 @@ export function AlignAndTranslate() {
               x={outputX}
               y={outputY + 4}
               textAnchor="middle"
-              fill="#fff"
+              fill="var(--color-primary-foreground, #fff)"
               style={{ fontSize: Math.min(15, slot * 0.32), fontWeight: 600 }}
             >
               {result.target[result.step]}
@@ -342,9 +352,9 @@ export function AlignAndTranslate() {
           onStep={onStep}
           onReset={onReset}
         />
-        <div className="w-40">
+        <div className="min-w-[8rem] max-w-[12rem] flex-1">
           <Slider
-            label="Speed"
+            label="Playback speed (how fast the animation steps)"
             value={speed}
             min={0.5}
             max={3}
@@ -379,22 +389,13 @@ export function AlignAndTranslate() {
               : "Off: the decoder re-reads the source for each word, the paper's RNNsearch."}
           </p>
           <Slider
-            label="Alignment sharpness (the gain v_a)"
+            label="Alignment sharpness — how focused each read is (v_a: higher = one dominant source word; lower = weight spread evenly)"
             value={params.sharpness}
             min={0.5}
             max={10}
             step={0.5}
             display={params.sharpness.toFixed(1)}
             onChange={(value) => intervene({ type: "setSharpness", value })}
-          />
-          <Slider
-            label="Seed (nudges the annotations)"
-            value={params.seed}
-            min={0}
-            max={12}
-            step={1}
-            display={params.seed === 0 ? "off" : String(params.seed)}
-            onChange={(value) => intervene({ type: "setSeed", value })}
           />
         </SimPanel>
 
@@ -413,40 +414,56 @@ export function AlignAndTranslate() {
               spread {result.entropy.toFixed(2)} nats
             </Badge>
           </div>
-          <div className="ring-foreground/10 max-h-44 overflow-y-auto rounded-lg ring-1">
-            <table className="w-full text-left text-xs">
-              <thead className="bg-card text-muted-foreground sticky top-0">
-                <tr>
-                  <th className="px-2 py-1 font-medium">source word</th>
-                  <th className="px-2 py-1 text-right font-medium">energy</th>
-                  <th className="px-2 py-1 text-right font-medium">weight</th>
-                </tr>
-              </thead>
-              <tbody className="font-mono">
-                {source.map((token, j) => (
-                  <tr
-                    key={`row-${j}`}
-                    className={
-                      j === inspect
-                        ? "bg-foreground/5"
-                        : j === argmax
-                          ? "text-foreground"
-                          : "text-muted-foreground"
-                    }
-                    onMouseEnter={() => setInspect(j)}
-                    onFocus={() => setInspect(j)}
-                  >
-                    <td className="px-2 py-1">{token}</td>
-                    <td className="px-2 py-1 text-right">
-                      {(result.energies[j] ?? 0).toFixed(2)}
-                    </td>
-                    <td className="px-2 py-1 text-right">
-                      {percent(result.weights[j] ?? 0)}
-                    </td>
+          <div className="relative">
+            <div
+              ref={tableRef}
+              className="ring-foreground/10 max-h-44 overflow-y-auto rounded-lg ring-1"
+            >
+              <table className="w-full text-left text-xs">
+                <thead className="bg-card text-muted-foreground sticky top-0">
+                  <tr>
+                    <th className="px-2 py-1 font-medium">source word</th>
+                    <th className="px-2 py-1 text-right font-medium">energy</th>
+                    <th className="px-2 py-1 text-right font-medium">weight</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="font-mono">
+                  {source.map((token, j) => (
+                    <tr
+                      key={`row-${j}`}
+                      className={
+                        j === inspect
+                          ? "bg-foreground/5"
+                          : j === argmax
+                            ? "text-foreground"
+                            : "text-muted-foreground"
+                      }
+                      onMouseEnter={() => setInspect(j)}
+                      onFocus={() => setInspect(j)}
+                    >
+                      <td className="px-2 py-1">{token}</td>
+                      <td className="px-2 py-1 text-right">
+                        {(result.energies[j] ?? 0).toFixed(2)}
+                      </td>
+                      <td className="px-2 py-1 text-right">
+                        {percent(result.weights[j] ?? 0)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            {/* Fade mask — visible only when the table can scroll (long sentence). */}
+            {showScrollFade && (
+              <div
+                className="pointer-events-none absolute bottom-0 left-0 right-0 h-6 rounded-b-lg"
+                style={{
+                  background:
+                    "linear-gradient(to bottom, transparent, var(--color-card))",
+                }}
+                aria-hidden="true"
+              />
+            )}
           </div>
           <div className="flex flex-col gap-1">
             <span className="text-muted-foreground text-xs font-medium">
@@ -474,8 +491,8 @@ export function AlignAndTranslate() {
         <span className="font-mono">c = &Sigma; &alpha; h</span>. The source
         annotations and what each output word reaches for are hand-set so the
         alignments are legible, where a trained model learns those from data.
-        This runs a few short sentences; the paper&apos;s model runs 1000-unit
-        RNNs over sentences of 30 to 50 words.
+        The run is fully deterministic. This runs a few short sentences; the
+        paper&apos;s model runs 1000-unit RNNs over sentences of 30 to 50 words.
       </p>
     </div>
   );

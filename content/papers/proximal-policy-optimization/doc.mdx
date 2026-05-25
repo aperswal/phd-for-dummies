@@ -2,7 +2,7 @@
 
 _A way to train a policy that gets trust-region reliability from plain gradient steps, by clipping the objective so the reward goes flat once the policy strays too far from where it started._
 
-![A pixel-art dog mid-stride on a taut clay-orange leash held by a hand, the leash ending at an inked stop-bracket beyond which a faint sage ghost dog runs free, showing that a clipped objective keeps an eager learner on a short leash so it cannot bolt too far in one update even when the reward would pull it all the way to the unleashed goal.](/papers/proximal-policy-optimization/hero.webp)
+![A pixel-art dog mid-stride on a taut clay-orange leash held by a hand, the leash ending at an inked stop-bracket beyond which a faint sage ghost dog runs free, showing that a clipped objective keeps an eager learner on a short leash so it cannot bolt too far in one update even when the reward would pull it all the way to the unleashed goal.](https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/proximal-policy-optimization/hero.webp)
 
 ## Read at your level
 
@@ -75,7 +75,7 @@ L^CLIP(θ) = Ê_t[ min( r_t(θ) · Â_t , clip(r_t(θ), 1−ε, 1+ε) · Â_t ) 
 
 with `ε` around 0.2. Read it carefully. The second term clamps the ratio into the band `[1−ε, 1+ε]` before multiplying by the advantage. The outer `min` takes the smaller of the clamped and unclamped terms. That `min` is what makes the clip a one-sided pessimistic bound.
 
-![A pixel hill path that climbs steadily and then levels into a flat plateau with a clay-orange flag planted at the kink, an inked line tracing the slope up and then running flat, showing that the clipped objective rewards the policy for improving up to a fixed point and then goes flat, so there is no gain left from straying further.](/papers/proximal-policy-optimization/clip-surrogate.webp)
+![A pixel hill path that climbs steadily and then levels into a flat plateau with a clay-orange flag planted at the kink, an inked line tracing the slope up and then running flat, showing that the clipped objective rewards the policy for improving up to a fixed point and then goes flat, so there is no gain left from straying further.](https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/proximal-policy-optimization/clip-surrogate.webp)
 
 Walk the two cases. When the advantage is positive, you want to raise the action's probability, so `r` climbs above 1. The objective rewards that climb until `r` hits `1+ε`, then the clipped term caps it and the line goes flat, so there's no gradient pulling `r` higher. When the advantage is negative, you want to lower the probability, so `r` falls below 1, and the objective stops rewarding it past `1−ε`. The `min` adds the crucial asymmetry. If the ratio moves the wrong way past the band, the unclipped term is smaller, so the `min` picks it and the penalty still applies. You only lose the incentive when the move helps, never when it hurts.
 
@@ -150,7 +150,7 @@ L^{CLIP+VF+S}(θ) = Ê_t[ L^CLIP(θ) − c1 (V_θ(s_t) − V^targ_t)^2 + c2 S[π
 
 What happens if you skip the clip is the heart of the paper. The plain `L^CPI = r_t Â_t` keeps paying you to push the ratio further every epoch, so over many epochs on one batch the policy overshoots and the KL blows up.
 
-![Two pixel paths up a hill, a tangled clay-orange greedy path that overshoots the goal and tumbles off a cliff beside a calm sage clipped path that arrives neatly at the goal flag, showing that reusing one batch of experience for many unclipped greedy steps overshoots and collapses while the clipped step stays steady and reaches the goal.](/papers/proximal-policy-optimization/many-epochs.webp)
+![Two pixel paths up a hill, a tangled clay-orange greedy path that overshoots the goal and tumbles off a cliff beside a calm sage clipped path that arrives neatly at the goal flag, showing that reusing one batch of experience for many unclipped greedy steps overshoots and collapses while the clipped step stays steady and reaches the goal.](https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/proximal-policy-optimization/many-epochs.webp)
 
 Load the no-clip preset and watch the sage KL line spike past the band; the clip preset under the same step size keeps it flat. That contrast is the whole argument for the clip.
 

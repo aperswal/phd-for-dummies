@@ -4,6 +4,8 @@ import {
   advance,
   getPreset,
   initialState,
+  isDone,
+  MAX_ITERATIONS,
   MOHEX_ELO,
   readout,
   step,
@@ -93,6 +95,22 @@ describe("cost-sensitive targets", () => {
     });
     const cat = run(catStart, 6).apprentice;
     expect(tpt).toBeGreaterThan(cat);
+  });
+});
+
+describe("terminal state", () => {
+  it("is not done at the start", () => {
+    expect(isDone(initialState("exit"))).toBe(false);
+  });
+
+  it("is done once the run reaches MAX_ITERATIONS", () => {
+    const final = run(initialState("exit"), MAX_ITERATIONS);
+    expect(isDone(final)).toBe(true);
+  });
+
+  it("is not done one step before MAX_ITERATIONS", () => {
+    const penultimate = run(initialState("exit"), MAX_ITERATIONS - 1);
+    expect(isDone(penultimate)).toBe(false);
   });
 });
 

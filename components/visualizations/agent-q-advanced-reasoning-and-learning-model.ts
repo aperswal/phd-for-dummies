@@ -260,8 +260,6 @@ export type Intervention =
   | { type: "setCExp"; value: number }
   | { type: "setAlpha"; value: number }
   | { type: "setThreshold"; value: number }
-  | { type: "setBudget"; value: number }
-  | { type: "setRolloutNoise"; value: number }
   | { type: "poisonNode"; nodeId: number }
   | { type: "killNode"; nodeId: number }
   | { type: "loadPreset"; id: string };
@@ -745,16 +743,6 @@ function applyIntervention(state: SimState, action: Intervention): SimState {
         `threshold -> ${action.value.toFixed(2)}`,
       );
     }
-    case "setBudget":
-      return logged(
-        { ...state, params: { ...state.params, budget: action.value } },
-        `budget -> ${action.value}`,
-      );
-    case "setRolloutNoise":
-      return logged(
-        { ...state, params: { ...state.params, rolloutNoise: action.value } },
-        `rollout noise -> ${action.value.toFixed(2)}`,
-      );
     case "poisonNode": {
       const target = findNode(state, action.nodeId);
       const next = {

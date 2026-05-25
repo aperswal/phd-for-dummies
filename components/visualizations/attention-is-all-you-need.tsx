@@ -129,6 +129,7 @@ export function AttentionFlow() {
   const onReset = useCallback(() => {
     setPlaying(false);
     resetClock();
+    setInspect(null);
     dispatch({ kind: "reset", presetId });
   }, [presetId, resetClock]);
 
@@ -255,10 +256,10 @@ export function AttentionFlow() {
                     x={x + w / 2}
                     y={tokenY - tokenH / 2 - 6}
                     textAnchor="middle"
-                    fill={ACCENT}
+                    className="fill-muted-foreground"
                     style={{ fontSize: 11 }}
                   >
-                    blocked
+                    ✕ masked
                   </text>
                 )}
               </g>
@@ -322,7 +323,7 @@ export function AttentionFlow() {
         />
         <div className="w-40">
           <Slider
-            label="Speed"
+            label="Playback speed — how fast autoplay steps through words"
             value={speed}
             min={0.5}
             max={3}
@@ -371,31 +372,13 @@ export function AttentionFlow() {
             ))}
           </div>
           <Slider
-            label="Score magnitude (grows with dk)"
+            label="Score magnitude — raise with scaling off to saturate softmax onto one word"
             value={params.magnitude}
             min={1}
             max={20}
             step={0.5}
             display={params.magnitude.toFixed(1)}
             onChange={(value) => intervene({ type: "setMagnitude", value })}
-          />
-          <Slider
-            label="Temperature"
-            value={params.temperature}
-            min={0.3}
-            max={3}
-            step={0.05}
-            display={params.temperature.toFixed(2)}
-            onChange={(value) => intervene({ type: "setTemperature", value })}
-          />
-          <Slider
-            label="Seed (nudges the vectors)"
-            value={params.seed}
-            min={0}
-            max={12}
-            step={1}
-            display={params.seed === 0 ? "off" : String(params.seed)}
-            onChange={(value) => intervene({ type: "setSeed", value })}
           />
         </SimPanel>
 
@@ -414,45 +397,49 @@ export function AttentionFlow() {
               spread {result.entropy.toFixed(2)} nats
             </Badge>
           </div>
-          <div className="ring-foreground/10 max-h-44 overflow-y-auto rounded-lg ring-1">
-            <table className="w-full text-left text-xs">
-              <thead className="bg-card text-muted-foreground sticky top-0">
-                <tr>
-                  <th className="px-2 py-1 font-medium">word</th>
-                  <th className="px-2 py-1 text-right font-medium">score</th>
-                  <th className="px-2 py-1 text-right font-medium">logit</th>
-                  <th className="px-2 py-1 text-right font-medium">weight</th>
-                </tr>
-              </thead>
-              <tbody className="font-mono">
-                {tokens.map((token, j) => (
-                  <tr
-                    key={`row-${j}`}
-                    className={
-                      j === inspect
-                        ? "bg-foreground/5"
-                        : j === argmax
-                          ? "text-foreground"
-                          : "text-muted-foreground"
-                    }
-                  >
-                    <td className="px-2 py-1">{token}</td>
-                    <td className="px-2 py-1 text-right">
-                      {(result.rawScores[j] ?? 0).toFixed(2)}
-                    </td>
-                    <td className="px-2 py-1 text-right">
-                      {result.logits[j] !== undefined &&
-                      Number.isFinite(result.logits[j])
-                        ? (result.logits[j] ?? 0).toFixed(2)
-                        : "-inf"}
-                    </td>
-                    <td className="px-2 py-1 text-right">
-                      {percent(result.weights[j] ?? 0)}
-                    </td>
+          <div className="relative">
+            <div className="ring-foreground/10 max-h-44 overflow-y-auto rounded-lg ring-1">
+              <table className="w-full text-left text-xs">
+                <thead className="bg-card text-muted-foreground sticky top-0">
+                  <tr>
+                    <th className="px-2 py-1 font-medium">word</th>
+                    <th className="px-2 py-1 text-right font-medium">score</th>
+                    <th className="px-2 py-1 text-right font-medium">logit</th>
+                    <th className="px-2 py-1 text-right font-medium">weight</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="font-mono">
+                  {tokens.map((token, j) => (
+                    <tr
+                      key={`row-${j}`}
+                      className={
+                        j === inspect
+                          ? "bg-foreground/5"
+                          : j === argmax
+                            ? "text-foreground"
+                            : "text-muted-foreground"
+                      }
+                    >
+                      <td className="px-2 py-1">{token}</td>
+                      <td className="px-2 py-1 text-right">
+                        {(result.rawScores[j] ?? 0).toFixed(2)}
+                      </td>
+                      <td className="px-2 py-1 text-right">
+                        {result.logits[j] !== undefined &&
+                        Number.isFinite(result.logits[j])
+                          ? (result.logits[j] ?? 0).toFixed(2)
+                          : "-inf"}
+                      </td>
+                      <td className="px-2 py-1 text-right">
+                        {percent(result.weights[j] ?? 0)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            {/* Fade mask tells the reader more rows are below the fold */}
+            <div className="from-card pointer-events-none absolute bottom-0 left-0 right-0 h-6 rounded-b-lg bg-gradient-to-t to-transparent" />
           </div>
           <div className="flex flex-col gap-1">
             <span className="text-muted-foreground text-xs font-medium">
@@ -474,12 +461,13 @@ export function AttentionFlow() {
       </div>
 
       <p className="text-muted-foreground text-xs">
-        The attention math here is exactly equation 1, softmax(Q&middot;K /
-        sqrt(dk))&middot;V. The word vectors and the per-head projections are
-        hand-set so the patterns are legible, where a trained model learns those
-        numbers from data. This runs {HEADS.length} illustrative heads over{" "}
+        The attention math is exactly equation 1: softmax(Q&middot;K /
+        sqrt(dk))&middot;V. Word vectors and per-head projections are hand-set
+        so the patterns are legible; a trained model learns those numbers from
+        data. The run is fully deterministic — same preset always produces the
+        same weights. This shows {HEADS.length} illustrative heads over{" "}
         {sentence.tokens.length} words; the paper&apos;s base model runs 8 heads
-        of width 64 over thousands.
+        of width 64 over thousands of tokens.
       </p>
     </div>
   );

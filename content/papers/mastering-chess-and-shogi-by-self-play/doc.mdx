@@ -2,7 +2,7 @@
 
 _One algorithm that knows only the rules teaches itself chess, shogi, and Go from scratch by playing against itself, and beats the best handcrafted programs in each within a day._
 
-![A pixel chessboard sits at the root of forking forest trails, one trail worn clay-orange with heavy footprints while the others stay faint sage green, an ink arrow marking the most-walked branch, showing that the search explores the most promising lines hardest and plays the branch it walked most.](/papers/mastering-chess-and-shogi-by-self-play/hero.webp)
+![A pixel chessboard sits at the root of forking forest trails, one trail worn clay-orange with heavy footprints while the others stay faint sage green, an ink arrow marking the most-walked branch, showing that the search explores the most promising lines hardest and plays the branch it walked most.](https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/mastering-chess-and-shogi-by-self-play/hero.webp)
 
 ## Read at your level
 
@@ -69,7 +69,7 @@ a* = argmax_a [ Q(s, a) + c_puct · P(s, a) · sqrt(Σ_b N(s, b)) / (1 + N(s, a)
 
 Read it as two terms added together. `Q(s, a)` is the mean value backed up from all simulations that tried move `a`, the exploit term, which favors moves that have looked good. The second term is the explore term. `P(s, a)` is the network's prior, `N(s, a)` is how many times move `a` has been tried, and `c_puct` is a knob that sets how curious the search is. A move with a high prior and few visits gets a big bonus, so the search tries it. As visits pile up, that bonus shrinks, and `Q` takes over.
 
-![A pixel hiker at a forked trail weighs three things, a signpost map for the net's hunch, a worn footpath for the move's track record, and a fresh untouched path for the rarely-tried bonus, three ink arrows converging into one clay-orange chosen arrow, showing that each step down the tree balances prior, value, and visit count.](/papers/mastering-chess-and-shogi-by-self-play/puct.webp)
+![A pixel hiker at a forked trail weighs three things, a signpost map for the net's hunch, a worn footpath for the move's track record, and a fresh untouched path for the rarely-tried bonus, three ink arrows converging into one clay-orange chosen arrow, showing that each step down the tree balances prior, value, and visit count.](https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/mastering-chess-and-shogi-by-self-play/puct.webp)
 
 When a simulation reaches a position not yet in the tree, the network evaluates it once, and that value gets backed up the path the simulation took, flipping sign at each ply because a position good for me is bad for my opponent. After all simulations, the search returns a policy `π` proportional to the visit counts. Crucially, `π` is a better policy than the raw prior `p`, because the look-ahead corrected the prior's mistakes.
 
@@ -130,7 +130,7 @@ backup   add v to Q along the path taken, flipping sign each ply
 
 After the budget of simulations (800 during training), the search returns a policy `π` proportional to the root visit counts, and the move played is sampled from `π` during self-play or taken greedily at evaluation. The selection rule is the heart of it: the explore term `c_puct·P·sqrt(ΣN)/(1+N)` is large for high-prior, rarely-tried moves and shrinks as visits accumulate, so early simulations follow the net's hunch and later ones are governed by what actually scored well.
 
-![A ring of three pixel tiles joined by clay-orange arrows, a brain-chip for the neural net, a small search tree, and a scroll of self-play games, showing that search makes the net stronger and the stronger net makes the search smarter, round after round.](/papers/mastering-chess-and-shogi-by-self-play/self-play-loop.webp)
+![A ring of three pixel tiles joined by clay-orange arrows, a brain-chip for the neural net, a small search tree, and a scroll of self-play games, showing that search makes the net stronger and the stronger net makes the search smarter, round after round.](https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/mastering-chess-and-shogi-by-self-play/self-play-loop.webp)
 
 Training rolls all of this into one objective. Self-play games produce, for each position, the search policy `π` and the eventual outcome `z`. The net trains to match both.
 

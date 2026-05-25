@@ -310,7 +310,7 @@ export type Intervention =
   | { type: "setSize"; index: number }
   | { type: "setTemperature"; value: number }
   | { type: "setTopK"; value: number }
-  | { type: "setSeed"; value: number }
+  | { type: "reshuffle" }
   | { type: "toggleHint" }
   | { type: "loadPreset"; id: string }
   | { type: "restore"; params: GenParams; label: string };
@@ -456,12 +456,12 @@ function applyIntervention(state: SimState, action: Intervention): SimState {
         { ...p, topK: action.value },
         `top-k -> ${action.value}`,
       );
-    case "setSeed":
-      return restart(
-        state,
-        { ...p, seed: action.value },
-        `seed -> ${action.value}`,
-      );
+    case "reshuffle": {
+      // Advance the seed by a large prime to get a different sample without
+      // exposing a meaningless slider value to the reader.
+      const nextSeed = (p.seed + 31337) >>> 0;
+      return restart(state, { ...p, seed: nextSeed }, "reshuffle");
+    }
     case "toggleHint": {
       // Toggling the hint does not restart: it changes the task signal for the
       // rest of the run, which is the point of the mid-run ablation.

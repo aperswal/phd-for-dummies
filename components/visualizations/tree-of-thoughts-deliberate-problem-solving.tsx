@@ -63,6 +63,7 @@ interface SliderProps {
   step: number;
   display: string;
   onChange: (value: number) => void;
+  disabled?: boolean;
 }
 
 function Slider({
@@ -73,9 +74,12 @@ function Slider({
   step,
   display,
   onChange,
+  disabled = false,
 }: SliderProps) {
   return (
-    <label className="flex flex-col gap-1 text-xs">
+    <label
+      className={`flex flex-col gap-1 text-xs${disabled ? " opacity-50" : ""}`}
+    >
       <span className="text-muted-foreground flex items-center justify-between">
         <span>{label}</span>
         <span className="text-foreground font-mono">{display}</span>
@@ -86,8 +90,9 @@ function Slider({
         max={max}
         step={step}
         value={value}
+        disabled={disabled}
         onChange={(event) => onChange(Number(event.target.value))}
-        className="h-1.5 w-full cursor-pointer"
+        className={`h-1.5 w-full${disabled ? " cursor-not-allowed" : " cursor-pointer"}`}
         style={{ accentColor: ACCENT }}
       />
     </label>
@@ -147,6 +152,22 @@ function layout(state: SimState, width: number, height: number): Placed[] {
     });
   }
   return placed;
+}
+
+// Pick the small label shown above each non-root node. Misjudged takes
+// priority over pruned so the paper's key failure mode is always named.
+function nodeLabel(node: ThoughtNode): string {
+  if (node.status === "solution") return "solved ✓";
+  if (node.misjudged) return "misjudged ✗";
+  if (node.status === "pruned" || node.status === "dead") return "pruned ✗";
+  return VERDICT_LABEL[node.verdict];
+}
+
+// Pick the color for the above-node label.
+function nodeLabelColor(node: ThoughtNode): string {
+  if (node.status === "solution") return "#2f7d4f";
+  if (node.misjudged) return ACCENT;
+  return SLATE;
 }
 
 export function TreeOfThoughtsSearch() {
@@ -211,7 +232,7 @@ export function TreeOfThoughtsSearch() {
 
   const outcomeBadge =
     outcome === "solved"
-      ? { text: "solved", color: "#2f7d4f" }
+      ? { text: "solved ✓", color: "#2f7d4f" }
       : outcome === "failed"
         ? { text: "failed", color: ACCENT }
         : { text: "searching", color: SLATE };
@@ -241,7 +262,7 @@ export function TreeOfThoughtsSearch() {
           viewBox={`0 0 ${width} ${height}`}
           className="w-full"
           role="img"
-          aria-label={`A tree of partial Game of 24 solutions explored by ${params.algorithm.toUpperCase()}. The search is ${outcomeBadge.text} after visiting ${visited} states.`}
+          aria-label={`A tree of partial Game of 24 solutions explored by ${params.algorithm.toUpperCase()}. The search is ${outcome} after visiting ${visited} states.`}
         >
           {placed.map(({ node, x, y }) => {
             if (node.parentId === null) return null;
@@ -293,7 +314,11 @@ export function TreeOfThoughtsSearch() {
                   fill={STATUS_FILL[node.status]}
                   fillOpacity={dimmed ? 0.3 : 1}
                   stroke={
-                    isInspect ? "#000" : node.misjudged ? ACCENT : "transparent"
+                    isInspect
+                      ? "var(--color-foreground)"
+                      : node.misjudged
+                        ? ACCENT
+                        : "transparent"
                   }
                   strokeWidth={isInspect ? 2 : node.misjudged ? 2 : 0}
                   strokeDasharray={node.misjudged ? "4 2" : undefined}
@@ -323,16 +348,52 @@ export function TreeOfThoughtsSearch() {
                     x={x}
                     y={y - 17}
                     textAnchor="middle"
-                    fill={node.misjudged ? ACCENT : SLATE}
+                    fill={nodeLabelColor(node)}
                     style={{ fontSize: 8.5 }}
                   >
-                    {node.misjudged ? "misjudged" : VERDICT_LABEL[node.verdict]}
+                    {nodeLabel(node)}
                   </text>
                 )}
               </g>
             );
           })}
         </svg>
+      </div>
+
+      {/* Color legend — every color is paired with a word so meaning is never color-alone */}
+      <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs" aria-label="Color legend">
+        <span className="text-muted-foreground flex items-center gap-1.5">
+          <span
+            className="inline-block h-3 w-5 rounded-sm"
+            style={{ backgroundColor: ACCENT }}
+            aria-hidden="true"
+          />
+          kept by search
+        </span>
+        <span className="text-muted-foreground flex items-center gap-1.5">
+          <span
+            className="inline-block h-3 w-5 rounded-sm"
+            style={{ backgroundColor: "#2f7d4f" }}
+            aria-hidden="true"
+          />
+          solution &#x2713;
+        </span>
+        <span className="text-muted-foreground flex items-center gap-1.5">
+          <span
+            className="inline-block h-3 w-5 rounded-sm opacity-30"
+            style={{ backgroundColor: SLATE }}
+            aria-hidden="true"
+          />
+          pruned &#x2717;
+        </span>
+        <span className="text-muted-foreground flex items-center gap-1.5">
+          <span
+            className="inline-block h-3 w-5 rounded-sm border-2 border-dashed"
+            style={{ borderColor: ACCENT }}
+            aria-hidden="true"
+          />
+          misjudged (reachable, called impossible)
+        </span>
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -355,8 +416,9 @@ export function TreeOfThoughtsSearch() {
           )}
         </div>
         <div className="w-36">
+          {/* Speed controls animation pace only — not a paper parameter */}
           <Slider
-            label="Speed"
+            label="Playback speed (animation pace only)"
             value={speed}
             min={0.5}
             max={3}
@@ -401,7 +463,7 @@ export function TreeOfThoughtsSearch() {
             ))}
           </div>
           <Slider
-            label="Beam width b (BFS, states kept per depth)"
+            label="Beam width b — states kept per depth (BFS)"
             value={params.beam}
             min={1}
             max={6}
@@ -410,7 +472,7 @@ export function TreeOfThoughtsSearch() {
             onChange={(value) => intervene({ type: "setBeam", value })}
           />
           <Slider
-            label="Prune threshold v_th (DFS)"
+            label="Prune threshold v_th — value below which DFS backtracks"
             value={params.threshold}
             min={0}
             max={0.95}
@@ -419,7 +481,7 @@ export function TreeOfThoughtsSearch() {
             onChange={(value) => intervene({ type: "setThreshold", value })}
           />
           <Slider
-            label="Evaluator noise (chance it mislabels)"
+            label="Evaluator noise — chance it mislabels a reachable state (disabled when honest)"
             value={params.evalNoise}
             min={0}
             max={1}
@@ -427,6 +489,7 @@ export function TreeOfThoughtsSearch() {
             display={
               params.honest ? "off (honest)" : params.evalNoise.toFixed(2)
             }
+            disabled={params.honest}
             onChange={(value) => intervene({ type: "setNoise", value })}
           />
           <p className="text-muted-foreground text-xs">
@@ -541,10 +604,11 @@ export function TreeOfThoughtsSearch() {
         the paper gives the language model. Game of 24 is small enough that the{" "}
         <span style={{ color: SAGE }}>24 reachable</span> light is exact
         arithmetic, never a guess, so an honest evaluator always finds a route
-        when one exists. The noise knob is what turns the evaluator into a
-        fallible model that prunes good branches, the failure the paper sees on
-        crosswords. This runs one puzzle with a handful of branches; the paper
-        runs GPT-4 over 100 games.
+        when one exists. The evaluator noise knob (active only when the honest
+        toggle is off) is what turns the evaluator into a fallible model that
+        prunes good branches, the failure the paper sees on crosswords. The run
+        is deterministic: same preset, same search every time. This runs one
+        puzzle with a handful of branches; the paper runs GPT-4 over 100 games.
       </p>
     </div>
   );

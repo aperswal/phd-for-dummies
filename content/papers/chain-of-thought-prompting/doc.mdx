@@ -2,7 +2,7 @@
 
 _Show a big language model a few worked examples that spell out their reasoning step by step, and it starts writing its own steps before answering, which lets it solve problems it gets wrong when asked to answer in one shot._
 
-![Two pixel-art notebook pages side by side, the left holding one big crossed-out number labeled blurted answer beside a frowning face, the right holding three small worked lines that flow down an ink arrow into a circled clay-orange final number beside a smiling face, showing that writing out the steps reaches the right answer where blurting one number does not.](/papers/chain-of-thought-prompting/hero.webp)
+![Two pixel-art notebook pages side by side, the left holding one big crossed-out number labeled blurted answer beside a frowning face, the right holding three small worked lines that flow down an ink arrow into a circled clay-orange final number beside a smiling face, showing that writing out the steps reaches the right answer where blurting one number does not.](https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/chain-of-thought-prompting/hero.webp)
 
 ## Read at your level
 
@@ -70,7 +70,7 @@ Why does writing the steps help? A problem like "23 apples, use 20, buy 6" is tw
 
 The honest limitation shows up the moment you try a small model. Below roughly 100B parameters the model writes a fluent chain that contains a wrong step, and a wrong step early ruins everything after it.
 
-![A vertical chain with sound sage-green links at the top, a cracked clay-orange link in the middle labeled false step, and a shattered link below it, showing that one wrong reasoning step poisons every step that follows.](/papers/chain-of-thought-prompting/broken-chain.webp)
+![A vertical chain with sound sage-green links at the top, a cracked clay-orange link in the middle labeled false step, and a shattered link below it, showing that one wrong reasoning step poisons every step that follows.](https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/chain-of-thought-prompting/broken-chain.webp)
 
 In the simulation above, load **Too small to reason** and step through. The chain reads like real reasoning, but one value is off, and because the next step uses that value, the answer comes out wrong. Drag the scale slider up and the slip vanishes. That sharp turn-on with scale is the paper's headline finding, not a side note.
 
@@ -90,7 +90,7 @@ The contribution is showing that multi-step reasoning is elicitable from an off-
 
 The methodological choices are worth scrutiny, and the paper does the work itself through three ablations on the same model and tasks. If the benefit were just emitting the final equation, then prompting for the equation alone should match it; it doesn't on GSM8K, because translating the words into an equation is the hard part. If the benefit were just spending more serial compute, then emitting a row of dots equal to the equation length should match it; it doesn't, scoring like the baseline. If the benefit were just surfacing knowledge from pretraining, then putting the chain after the answer should match it; it doesn't, because the answer is already committed. Together these isolate the cause to sequential natural-language reasoning produced before the answer.
 
-![Two sage-green keys crossed out and labeled false paths fail to fit a lock, while one clay-orange key labeled true reasoning turns and opens the same lock, showing that look-alike shortcuts like emitting only the equation or only filler tokens do not give the boost that real worked reasoning does.](/papers/chain-of-thought-prompting/ablations.webp)
+![Two sage-green keys crossed out and labeled false paths fail to fit a lock, while one clay-orange key labeled true reasoning turns and opens the same lock, showing that look-alike shortcuts like emitting only the equation or only filler tokens do not give the boost that real worked reasoning does.](https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/chain-of-thought-prompting/ablations.webp)
 
 In the simulation, switch among the **Equation only**, **Variable compute (dots)**, and **Reasoning after answer** modes at 540B. None of them solves the problem, which is the point of the ablation made live: only the real chain reaches the answer.
 
@@ -100,7 +100,7 @@ Threats to validity worth probing. The error analysis that explains the scale st
 
 The delta against trained-rationale methods is that you drop the training entirely and put the rationales in the prompt, and the delta against vanilla few-shot is that the in-context examples carry worked reasoning instead of bare answers. The payoff is a method that needs no parameter updates and that turns a flat scaling curve into a sharply rising one on reasoning tasks. Standard prompting's scaling curve is close to flat on GSM8K; chain of thought's climbs steeply past 100B.
 
-![An inked line graph over a row of pixel-art mountains that grow taller from left to right, with a flat low sage curve and a clay-orange curve that hugs it then leaps upward past a marked threshold, showing that reasoning switches on only once a model grows past a certain size.](/papers/chain-of-thought-prompting/emergence.webp)
+![An inked line graph over a row of pixel-art mountains that grow taller from left to right, with a flat low sage curve and a clay-orange curve that hugs it then leaps upward past a marked threshold, showing that reasoning switches on only once a model grows past a certain size.](https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/chain-of-thought-prompting/emergence.webp)
 
 The choices read as deliberate. The three ablations exist to kill the three competing explanations, equation-extraction, raw extra compute, and knowledge-surfacing, and each one fails to reproduce the gain, which is what licenses the claim that the benefit is sequential natural-language reasoning. The robustness checks matter too. Different annotators, different exemplars, and exemplars sampled straight from the training set all beat standard prompting, so the effect doesn't hang on one person's prose style.
 

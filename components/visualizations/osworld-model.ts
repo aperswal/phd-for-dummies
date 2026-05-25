@@ -256,7 +256,7 @@ export type Intervention =
   | { type: "setObservation"; id: string }
   | { type: "setPerturbation"; value: Perturbation }
   | { type: "setBudget"; value: number }
-  | { type: "setSeed"; value: number }
+  | { type: "reshuffle" }
   | { type: "loadPreset"; id: string }
   | { type: "restore"; snapshot: SimState; label: string };
 
@@ -515,11 +515,15 @@ function applyIntervention(
         },
         label: `step budget -> ${action.value}`,
       };
-    case "setSeed":
+    case "reshuffle": {
+      // Cycle the seed so the reader sees a different trajectory without
+      // exposing a numeric dial whose individual values mean nothing.
+      const nextSeed = (state.params.seed + 1) % 100;
       return {
-        state: resetWith({ ...state.params, seed: action.value }, state.log),
-        label: `seed -> ${action.value}`,
+        state: resetWith({ ...state.params, seed: nextSeed }, state.log),
+        label: `new sample (seed ${nextSeed})`,
       };
+    }
     case "loadPreset": {
       const preset = getPreset(action.id);
       return {

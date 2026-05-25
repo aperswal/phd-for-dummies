@@ -58,9 +58,9 @@ function Slider({
 }: SliderProps) {
   return (
     <label className="flex flex-col gap-1 text-xs">
-      <span className="text-muted-foreground flex items-center justify-between">
-        <span>{label}</span>
-        <span className="text-foreground font-mono">{display}</span>
+      <span className="text-muted-foreground flex items-start justify-between gap-2">
+        <span className="leading-snug">{label}</span>
+        <span className="text-foreground shrink-0 font-mono">{display}</span>
       </span>
       <input
         type="range"
@@ -70,6 +70,7 @@ function Slider({
         value={value}
         onChange={(event) => onChange(Number(event.target.value))}
         className="h-1.5 w-full cursor-pointer"
+        aria-label={label}
         style={{ accentColor: ACCENT }}
       />
     </label>
@@ -102,7 +103,6 @@ export function TrainingWithHumanFeedback() {
     initialState("aligned"),
   );
   const [playing, setPlaying] = useState(false);
-  const [speed, setSpeed] = useState(1);
   const [presetId, setPresetId] = useState("aligned");
   const [inspect, setInspect] = useState<number>(0);
 
@@ -141,7 +141,7 @@ export function TrainingWithHumanFeedback() {
     });
   }, []);
 
-  const resetClock = useFixedTimestep(playing, 420 / speed, doTick);
+  const resetClock = useFixedTimestep(playing, 420, doTick);
 
   const reset = useCallback(
     (id: string) => {
@@ -275,7 +275,7 @@ export function TrainingWithHumanFeedback() {
                   rx={4}
                   fill={isTop ? ACCENT : ACCENT_SOFT}
                 />
-                {/* reward-model score, a thin sage tick over the bar */}
+                {/* reward-model score: a thin sage tick above the policy bar */}
                 <line
                   x1={x}
                   x2={x + barW}
@@ -394,30 +394,19 @@ export function TrainingWithHumanFeedback() {
         </svg>
       </div>
 
-      <div className="flex flex-wrap items-center justify-between gap-3">
+      <div className="flex flex-wrap items-center gap-3">
         <PlayPauseStepControls
           playing={playing}
           onPlayPause={onPlayPause}
           onStep={doTick}
           onReset={onReset}
         />
-        <div className="w-40">
-          <Slider
-            label="Speed"
-            value={speed}
-            min={0.5}
-            max={4}
-            step={0.5}
-            display={`${speed.toFixed(1)}x`}
-            onChange={setSpeed}
-          />
-        </div>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
         <SimPanel title="The RL objective (equation 2)">
           <Slider
-            label="KL penalty beta (the leash to SFT)"
+            label="KL penalty beta — how tightly the leash holds the policy near the SFT starting point (drag to 0 on Reward hacking to watch true quality collapse)"
             value={state.params.beta}
             min={0}
             max={0.6}
@@ -426,7 +415,7 @@ export function TrainingWithHumanFeedback() {
             onChange={(value) => intervene({ type: "setBeta", value })}
           />
           <Slider
-            label="Pretraining mix gamma (ptx, 0 = plain PPO)"
+            label="Pretraining mix gamma — how much the original pretraining objective is mixed back in to recover lost capability (0 = plain PPO; raise on Alignment tax preset)"
             value={state.params.gamma}
             min={0}
             max={0.6}
@@ -434,33 +423,13 @@ export function TrainingWithHumanFeedback() {
             display={state.params.gamma.toFixed(2)}
             onChange={(value) => intervene({ type: "setGamma", value })}
           />
-          <Slider
-            label="Step size"
-            value={state.params.learningRate}
-            min={0.4}
-            max={2}
-            step={0.1}
-            display={state.params.learningRate.toFixed(1)}
-            onChange={(value) => intervene({ type: "setLearningRate", value })}
-          />
-          <Slider
-            label="RL noise (PPO estimate variance)"
-            value={state.params.noise}
-            min={0}
-            max={0.6}
-            step={0.05}
-            display={
-              state.params.noise === 0 ? "off" : state.params.noise.toFixed(2)
-            }
-            onChange={(value) => intervene({ type: "setNoise", value })}
-          />
           <div className="flex flex-col gap-1.5">
             <span className="text-muted-foreground text-xs">
               Corrupt the reward model on{" "}
               <span className="text-foreground font-medium">
                 {styles[inspect]?.name}
               </span>{" "}
-              (over-rate it and watch the policy chase it)
+              — over-rate it and watch the policy chase it; undo with under-rate
             </span>
             <div className="flex flex-wrap gap-1.5">
               <Button
@@ -489,7 +458,7 @@ export function TrainingWithHumanFeedback() {
                   })
                 }
               >
-                under-rate -0.2
+                under-rate −0.2
               </Button>
               <Button
                 type="button"
@@ -503,39 +472,46 @@ export function TrainingWithHumanFeedback() {
               </Button>
             </div>
           </div>
-          <Slider
-            label="Seed (reorders the RL noise)"
-            value={state.params.seed}
-            min={0}
-            max={12}
-            step={1}
-            display={String(state.params.seed)}
-            onChange={(value) => intervene({ type: "setSeed", value })}
-          />
         </SimPanel>
 
         <SimPanel title={`Inside the loop (step ${state.step})`}>
           <div className="flex flex-wrap gap-2 text-xs">
-            <Badge style={{ backgroundColor: SAGE, color: "#fff" }}>
+            <Badge
+              style={{
+                backgroundColor: SAGE,
+                color: "var(--color-background, #fff)",
+              }}
+            >
               proxy reward {current.proxyReward.toFixed(2)}
             </Badge>
-            <Badge style={{ backgroundColor: ACCENT, color: "#fff" }}>
+            <Badge
+              style={{
+                backgroundColor: ACCENT,
+                color: "var(--color-background, #fff)",
+              }}
+            >
               true quality {current.trueQuality.toFixed(2)}
             </Badge>
             <Badge variant="outline">KL {current.kl.toFixed(2)}</Badge>
             <Badge variant={hacking > 0.18 ? "destructive" : "outline"}>
-              {hacking > 0.18 ? "reward hacking" : "aligned"} gap{" "}
+              {hacking > 0.18 ? "⚠ reward hacking" : "✓ aligned"} gap{" "}
               {hacking.toFixed(2)}
             </Badge>
           </div>
-          <div className="ring-foreground/10 max-h-44 overflow-y-auto rounded-lg ring-1">
+          <div className="ring-foreground/10 rounded-lg ring-1">
             <table className="w-full text-left text-xs">
-              <thead className="bg-card text-muted-foreground sticky top-0">
+              <thead className="bg-card text-muted-foreground">
                 <tr>
-                  <th className="px-2 py-1 font-medium">style</th>
-                  <th className="px-2 py-1 text-right font-medium">pi</th>
-                  <th className="px-2 py-1 text-right font-medium">RM</th>
-                  <th className="px-2 py-1 text-right font-medium">true</th>
+                  <th className="px-2 py-1.5 font-medium">style</th>
+                  <th className="px-2 py-1.5 text-right font-medium">
+                    policy %
+                  </th>
+                  <th className="px-2 py-1.5 text-right font-medium">
+                    RM score
+                  </th>
+                  <th className="px-2 py-1.5 text-right font-medium">
+                    true quality
+                  </th>
                 </tr>
               </thead>
               <tbody className="font-mono">
@@ -550,14 +526,14 @@ export function TrainingWithHumanFeedback() {
                           : "text-muted-foreground"
                     }
                   >
-                    <td className="px-2 py-1">{style.name}</td>
-                    <td className="px-2 py-1 text-right">
+                    <td className="px-2 py-1.5">{style.name}</td>
+                    <td className="px-2 py-1.5 text-right">
                       {percent(current.pi[i] ?? 0)}
                     </td>
-                    <td className="px-2 py-1 text-right">
+                    <td className="px-2 py-1.5 text-right">
                       {(current.rmScores[i] ?? 0).toFixed(2)}
                     </td>
-                    <td className="px-2 py-1 text-right">
+                    <td className="px-2 py-1.5 text-right">
                       {style.trueQuality.toFixed(2)}
                     </td>
                   </tr>
@@ -574,7 +550,7 @@ export function TrainingWithHumanFeedback() {
             </span>
             <EventLogPanel
               events={state.log.events}
-              emptyHint="Move a slider, corrupt the reward, or load a preset to start the log."
+              emptyHint="Adjust a slider, corrupt the reward, or load a preset to start the log."
               onRestore={(event) =>
                 intervene({
                   type: "restore",
@@ -588,13 +564,15 @@ export function TrainingWithHumanFeedback() {
       </div>
 
       <p className="text-muted-foreground text-xs">
-        Each step runs one update on the paper&apos;s RL objective, proxy reward
-        minus beta times the KL from the SFT model plus gamma times the
-        pretraining term. The response space is collapsed to {styles.length}{" "}
-        named styles so the loop is legible, where the real model optimizes over
-        every possible token sequence with a 6B reward model. True quality is
-        the hidden human preference the reward model only estimates; the gap
-        between the two lines is the reward hacking the paper guards against.
+        Each step runs one closed-form gradient-ascent update on the
+        paper&apos;s RL objective: proxy reward minus beta times the KL from the
+        SFT model plus gamma times the pretraining term. The response space is
+        collapsed to {styles.length} named styles so the loop is legible; the
+        real model optimizes over every possible token sequence with a 6B reward
+        model. True quality is the hidden human preference the reward model only
+        estimates; the gap between the two lines is the reward hacking the paper
+        guards against. The run is deterministic — every preset produces the
+        same trajectory on every load.
       </p>
     </div>
   );

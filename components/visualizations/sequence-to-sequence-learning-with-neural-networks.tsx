@@ -1,6 +1,13 @@
 "use client";
 
-import { useCallback, useMemo, useReducer, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useReducer,
+  useRef,
+  useState,
+} from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -22,6 +29,9 @@ import {
   type SimEvent,
 } from "@/components/visualizations/sequence-to-sequence-learning-with-neural-networks-model";
 
+// Clay-orange marks the currently-active token being processed. Sage marks
+// successfully recovered output words. These two meanings never overlap so the
+// same color is never ambiguous within one view.
 const ACCENT = "#c2683f";
 const ACCENT_SOFT = "#e0b59f";
 const SAGE = "#8a9a6b";
@@ -42,6 +52,7 @@ function percent(value: number): string {
 
 interface SliderProps {
   label: string;
+  ariaLabel: string;
   value: number;
   min: number;
   max: number;
@@ -52,6 +63,7 @@ interface SliderProps {
 
 function Slider({
   label,
+  ariaLabel,
   value,
   min,
   max,
@@ -71,6 +83,7 @@ function Slider({
         max={max}
         step={stepBy}
         value={value}
+        aria-label={ariaLabel}
         onChange={(event) => onChange(Number(event.target.value))}
         className="h-1.5 w-full cursor-pointer"
         style={{ accentColor: ACCENT }}
@@ -116,6 +129,53 @@ function Panel({
   );
 }
 
+// A scroll container that shows a gradient fade at the bottom when there is
+// hidden overflow, so the reader knows more content is below the fold.
+function FadeScroll({
+  className,
+  children,
+  scrollRef,
+}: {
+  className?: string;
+  children: React.ReactNode;
+  scrollRef?: React.RefObject<HTMLDivElement | null>;
+}) {
+  const ownRef = useRef<HTMLDivElement>(null);
+  const ref = scrollRef ?? ownRef;
+  const [hasOverflow, setHasOverflow] = useState(false);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const check = () => setHasOverflow(el.scrollHeight > el.clientHeight + 2);
+    check();
+    const observer = new ResizeObserver(check);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [ref]);
+
+  return (
+    <div className="relative">
+      <div
+        ref={ref}
+        className={`overflow-y-auto ${className ?? ""}`}
+        style={{ scrollbarWidth: "thin" }}
+      >
+        {children}
+      </div>
+      {hasOverflow && (
+        <div
+          className="pointer-events-none absolute right-0 bottom-0 left-0 h-6 rounded-b-lg"
+          style={{
+            background:
+              "linear-gradient(to bottom, transparent, var(--color-card, white))",
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
 function EventLog({
   events,
   onRestore,
@@ -123,8 +183,21 @@ function EventLog({
   events: SimEvent<SeqState["params"]>[];
   onRestore: (event: SimEvent<SeqState["params"]>) => void;
 }) {
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  // Newest events are shown first (reversed list), so when a new event arrives
+  // scroll to top so the reader sees it immediately.
+  useEffect(() => {
+    if (scrollRef.current && events.length > 0) {
+      scrollRef.current.scrollTop = 0;
+    }
+  }, [events.length]);
+
   return (
-    <div className="ring-foreground/10 max-h-28 overflow-y-auto rounded-lg ring-1">
+    <FadeScroll
+      className="ring-foreground/10 max-h-28 rounded-lg ring-1"
+      scrollRef={scrollRef}
+    >
       {events.length === 0 ? (
         <p className="text-muted-foreground px-2 py-1.5 text-xs">
           Flip a control or load a preset to start the log.
@@ -144,7 +217,7 @@ function EventLog({
           ))}
         </ul>
       )}
-    </div>
+    </FadeScroll>
   );
 }
 
@@ -173,9 +246,13 @@ export function Seq2SeqRelay() {
   }, []);
 
   // Fixed-timestep loop built on the shared animation-frame hook, so the run is
-  // frame-rate independent. It advances one cursor step per fixed interval and
-  // stops itself at the end of the run.
+  // frame-rate independent. Stops playback automatically when the run is done
+  // so the terminal state is clearly reached and the play button stops spinning.
   useAnimationFrame(playing, (deltaMs) => {
+    if (view.phase === "done") {
+      setPlaying(false);
+      return;
+    }
     accumulator.current += deltaMs;
     let steps = 0;
     while (accumulator.current >= intervalMs && steps < MAX_STEPS_PER_FRAME) {
@@ -184,6 +261,18 @@ export function Seq2SeqRelay() {
       steps += 1;
     }
   });
+
+  // Scroll the trace table so the row currently being decoded is always visible.
+  const traceScrollRef = useRef<HTMLDivElement>(null);
+  const activeRowRef = useRef<HTMLTableRowElement>(null);
+  useEffect(() => {
+    if (activeRowRef.current && traceScrollRef.current) {
+      activeRowRef.current.scrollIntoView({
+        block: "nearest",
+        behavior: "smooth",
+      });
+    }
+  }, [view.activeDecodeIndex]);
 
   const intervene = useCallback(
     (action: Intervention) => {
@@ -259,7 +348,8 @@ export function Seq2SeqRelay() {
             result.recoveredCount
           } of ${result.target.length} words recovered.`}
         >
-          {/* Source words, in the fed order. The active one is being written now. */}
+          {/* Source words, in the fed order. The active one (clay-orange fill)
+              is being written now; already-written ones fade to soft orange. */}
           {result.fedOrder.map((word, i) => {
             const x = margin + i * srcSlot + 3;
             const w = srcSlot - 6;
@@ -286,8 +376,11 @@ export function Seq2SeqRelay() {
                   x={x + w / 2}
                   y={srcY + 5}
                   textAnchor="middle"
-                  className="fill-foreground"
-                  fill={active ? "#fff" : undefined}
+                  fill={
+                    active
+                      ? "var(--color-primary-foreground, #fff)"
+                      : "var(--color-foreground)"
+                  }
                   style={{
                     fontSize: Math.min(14, srcSlot * 0.4),
                     fontWeight: 500,
@@ -354,8 +447,10 @@ export function Seq2SeqRelay() {
             )}
           </g>
 
-          {/* The decoder's output stream. Each emitted word lights up in turn,
-              green when it recovered the right word, clay-orange when it broke. */}
+          {/* The decoder's output stream. Each emitted word lights up in turn.
+              Sage (green) = recovered correctly. Clay-orange = UNK (failed).
+              Each output token also carries a word label so color is never
+              the only signal distinguishing success from failure. */}
           {result.emitted.map((word, i) => {
             const x = margin + i * outSlot + 3;
             const w = outSlot - 6;
@@ -385,7 +480,9 @@ export function Seq2SeqRelay() {
                   rx={6}
                   fill={done || active ? fill : "var(--color-muted)"}
                   fillOpacity={done || active ? (isEos ? 0.7 : 0.85) : 0.4}
-                  stroke={active ? "#000" : "transparent"}
+                  stroke={
+                    active ? "var(--color-foreground)" : "transparent"
+                  }
                   strokeOpacity={0.4}
                   strokeWidth={1.5}
                 />
@@ -393,8 +490,11 @@ export function Seq2SeqRelay() {
                   x={x + w / 2}
                   y={outY + 5}
                   textAnchor="middle"
-                  fill={(done || active) && !isEos ? "#fff" : undefined}
-                  className={done || active ? undefined : "fill-foreground"}
+                  fill={
+                    (done || active) && !isEos
+                      ? "var(--color-primary-foreground, #fff)"
+                      : "var(--color-foreground)"
+                  }
                   fillOpacity={done || active ? 1 : 0.5}
                   style={{
                     fontSize: Math.min(13, outSlot * 0.4),
@@ -412,7 +512,7 @@ export function Seq2SeqRelay() {
             className="fill-muted-foreground"
             style={{ fontSize: 11 }}
           >
-            decoder output (green = recovered, orange = UNK)
+            decoder output — green = recovered, orange = UNK (lost)
           </text>
         </svg>
       </div>
@@ -427,9 +527,12 @@ export function Seq2SeqRelay() {
         <span className="text-muted-foreground text-xs">
           step {cursor} / {total} &middot; {view.phase}
         </span>
-        <div className="w-40">
+        {/* Speed controls playback pace only — it does not change the model's
+            signal-decay or reversal logic. */}
+        <div className="min-w-32 max-w-48 flex-1">
           <Slider
-            label="Speed"
+            label="Playback speed"
+            ariaLabel="Playback speed — controls how fast the animation steps through the run"
             value={speed}
             min={0.5}
             max={3}
@@ -443,13 +546,15 @@ export function Seq2SeqRelay() {
       <div className="grid gap-4 sm:grid-cols-2">
         <Panel title="Controls">
           <div className="flex flex-wrap gap-1.5">
+            {/* The paper's central trick: reversing the source shrinks the lag
+                for early words, making training easier. */}
             <Toggle
-              label={params.reversed ? "Source: reversed" : "Source: forward"}
+              label={`Source order: ${params.reversed ? "reversed ✓" : "forward"}`}
               active={params.reversed}
               onClick={() => intervene({ type: "toggleReversed" })}
             />
             <Toggle
-              label={params.dropEos ? "Stop token: dropped" : "Stop token: on"}
+              label={`Stop token: ${params.dropEos ? "dropped" : "on ✓"}`}
               active={params.dropEos}
               onClick={() => intervene({ type: "toggleDropEos" })}
             />
@@ -465,8 +570,11 @@ export function Seq2SeqRelay() {
             ))}
           </div>
           <p className="text-muted-foreground text-xs">{sentence.note}</p>
+          {/* Memory tau: how many recurrent steps a signal survives before
+              fading. This is the lag vs. signal tradeoff that reversal shortens. */}
           <Slider
-            label="Memory length (LSTM tau)"
+            label="Memory tau — steps a signal survives"
+            ariaLabel="Memory tau: controls how many recurrent steps a word's signal survives before fading"
             value={params.memory}
             min={1}
             max={30}
@@ -474,23 +582,17 @@ export function Seq2SeqRelay() {
             display={params.memory.toFixed(1)}
             onChange={(value) => intervene({ type: "setMemory", value })}
           />
+          {/* Jar capacity: sentences longer than this attenuate every stored
+              signal, illustrating the fixed-vector bottleneck. */}
           <Slider
-            label="Jar capacity (words)"
+            label="Jar capacity — words before the vector overfills"
+            ariaLabel="Jar capacity: sentences longer than this attenuate all stored signals, showing the fixed-vector bottleneck"
             value={params.capacity}
             min={2}
             max={14}
             stepBy={1}
             display={String(params.capacity)}
             onChange={(value) => intervene({ type: "setCapacity", value })}
-          />
-          <Slider
-            label="Recovery threshold"
-            value={params.threshold}
-            min={0.02}
-            max={0.6}
-            stepBy={0.01}
-            display={params.threshold.toFixed(2)}
-            onChange={(value) => intervene({ type: "setThreshold", value })}
           />
         </Panel>
 
@@ -505,7 +607,11 @@ export function Seq2SeqRelay() {
             <Badge variant="outline">accuracy {percent(result.accuracy)}</Badge>
             {result.runaway && <Badge variant="destructive">never stops</Badge>}
           </div>
-          <div className="ring-foreground/10 max-h-44 overflow-y-auto rounded-lg ring-1">
+          {/* Trace table scrolls to follow the active decode row during playback. */}
+          <FadeScroll
+            className="ring-foreground/10 max-h-44 rounded-lg ring-1"
+            scrollRef={traceScrollRef}
+          >
             <table className="w-full text-left text-xs">
               <thead className="bg-card text-muted-foreground sticky top-0">
                 <tr>
@@ -517,32 +623,39 @@ export function Seq2SeqRelay() {
                 </tr>
               </thead>
               <tbody className="font-mono">
-                {result.traces.map((trace) => (
-                  <tr
-                    key={`row-${trace.targetIndex}`}
-                    className={
-                      trace.recovered
-                        ? "text-foreground"
-                        : "text-muted-foreground"
-                    }
-                  >
-                    <td className="px-2 py-1">{trace.sourceWord}</td>
-                    <td className="px-2 py-1">{trace.targetWord}</td>
-                    <td className="px-2 py-1 text-right">{trace.lag}</td>
-                    <td className="px-2 py-1 text-right">
-                      {trace.signal.toFixed(3)}
-                    </td>
-                    <td
-                      className="px-2 py-1"
-                      style={{ color: trace.recovered ? SAGE : ACCENT }}
+                {result.traces.map((trace) => {
+                  const isActiveRow =
+                    view.activeDecodeIndex === trace.targetIndex;
+                  return (
+                    <tr
+                      key={`row-${trace.targetIndex}`}
+                      ref={isActiveRow ? activeRowRef : null}
+                      className={
+                        trace.recovered
+                          ? "text-foreground"
+                          : "text-muted-foreground"
+                      }
                     >
-                      {trace.emitted}
-                    </td>
-                  </tr>
-                ))}
+                      <td className="px-2 py-1">{trace.sourceWord}</td>
+                      <td className="px-2 py-1">{trace.targetWord}</td>
+                      <td className="px-2 py-1 text-right">{trace.lag}</td>
+                      <td className="px-2 py-1 text-right">
+                        {trace.signal.toFixed(3)}
+                      </td>
+                      {/* emitted column: word label carries the meaning;
+                          color reinforces it but is never the only signal. */}
+                      <td
+                        className="px-2 py-1"
+                        style={{ color: trace.recovered ? SAGE : ACCENT }}
+                      >
+                        {trace.emitted}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
-          </div>
+          </FadeScroll>
           <div className="flex flex-col gap-1">
             <span className="text-muted-foreground text-xs font-medium">
               Event log
@@ -568,7 +681,8 @@ export function Seq2SeqRelay() {
         the source flips the read order, so the first source word is written
         last and its target follows one step later. A trained LSTM learns this
         carrying from data; here the decay law is fixed so the pattern is
-        legible. This runs sentences of up to{" "}
+        legible. The recovery threshold is fixed at 0.12 — a signal must reach
+        at least this level to count as recovered. This runs sentences of up to{" "}
         {SENTENCES.at(-1)?.source.length ?? 9} words; the paper&apos;s LSTM ran
         4 layers of 1000 cells over sentences of any length.
       </p>

@@ -127,25 +127,36 @@ function EventLog({
   onRestore: (event: GeometryEvent) => void;
 }) {
   return (
-    <div className="ring-foreground/10 max-h-28 overflow-y-auto rounded-lg ring-1">
-      {events.length === 0 ? (
-        <p className="text-muted-foreground px-2 py-1.5 text-xs">
-          Step, load a preset, or flip a control to start the log.
-        </p>
-      ) : (
-        <ul className="text-xs">
-          {[...events].reverse().map((event) => (
-            <li key={event.id}>
-              <button
-                type="button"
-                className="text-muted-foreground hover:bg-foreground/5 w-full px-2 py-1 text-left font-mono"
-                onClick={() => onRestore(event)}
-              >
-                {event.id}. {event.label}
-              </button>
-            </li>
-          ))}
-        </ul>
+    // The relative+after approach gives a bottom fade that signals more content
+    // is below without relying on macOS overlay scrollbars being visible.
+    <div className="relative">
+      <div className="ring-foreground/10 max-h-28 overflow-y-auto rounded-lg ring-1 [&:not(:has(+*))]:after:hidden">
+        {events.length === 0 ? (
+          <p className="text-muted-foreground px-2 py-1.5 text-xs">
+            Step, load a preset, or flip a control to start the log.
+          </p>
+        ) : (
+          <ul className="text-xs">
+            {[...events].reverse().map((event) => (
+              <li key={event.id}>
+                <button
+                  type="button"
+                  className="text-muted-foreground hover:bg-foreground/5 w-full px-2 py-1 text-left font-mono"
+                  onClick={() => onRestore(event)}
+                  aria-label={`Rewind to step ${event.id}: ${event.label}`}
+                >
+                  {event.id}. {event.label}
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+      {events.length > 0 && (
+        <div
+          className="from-background pointer-events-none absolute bottom-0 left-0 right-0 h-6 rounded-b-lg bg-gradient-to-t to-transparent"
+          aria-hidden="true"
+        />
       )}
     </div>
   );
@@ -349,14 +360,14 @@ export function GradientGeometry() {
           onStep={onStep}
           onReset={onReset}
         />
-        <div className="w-40">
+        <div className="min-w-0 w-36 shrink-0">
           <Slider
-            label="Speed"
+            label="Playback pace"
             value={speed}
             min={0.5}
             max={3}
             step={0.5}
-            display={`${speed.toFixed(1)}x`}
+            display={`${speed.toFixed(1)}×`}
             onChange={setSpeed}
           />
         </div>
@@ -419,15 +430,6 @@ export function GradientGeometry() {
             display={params.spread.toFixed(2)}
             disabled={isRl}
             onChange={(value) => intervene({ type: "setSpread", value })}
-          />
-          <Slider
-            label="Seed (redraws the cloud)"
-            value={params.seed}
-            min={1}
-            max={60}
-            step={1}
-            display={String(params.seed)}
-            onChange={(value) => intervene({ type: "setSeed", value })}
           />
         </Panel>
 
@@ -501,7 +503,8 @@ export function GradientGeometry() {
         distributions are hand-shaped to match the post&apos;s description of
         each method, and the &quot;safe radius&quot; is a stand-in for the
         largest step that keeps a run stable. The shapes are real; the numbers
-        are illustrative.
+        are illustrative. Play advances a seeded internal draw counter so each
+        frame is deterministic and rewindable via the event log.
       </p>
     </div>
   );

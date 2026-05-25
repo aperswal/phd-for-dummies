@@ -36,6 +36,11 @@ export const MOHEX_ELO = 1100;
 export const MAX_ELO = 1600;
 export const MIN_ELO = -300;
 
+// The run ends here so the chart fills to a consistent endpoint, autoplay
+// stops, and Step is disabled. 60 iterations is enough for ExIt to clear
+// MoHeX and for REINFORCE to demonstrate its instability.
+export const MAX_ITERATIONS = 60;
+
 export type TargetType = "TPT" | "CAT";
 
 export type ExpertMode = "exit" | "reinforce";
@@ -424,4 +429,10 @@ export function readout(state: ExitState): ExitReadout {
     searchGain:
       state.params.mode === "reinforce" ? 0 : searchGain(state.params),
   };
+}
+
+// True once the run has reached its natural end. Autoplay should stop here,
+// Step should be disabled, and the view shows a terminal banner.
+export function isDone(state: ExitState): boolean {
+  return state.iteration >= MAX_ITERATIONS;
 }

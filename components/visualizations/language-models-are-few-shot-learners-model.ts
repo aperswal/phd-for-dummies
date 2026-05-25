@@ -282,7 +282,6 @@ export type Intervention =
   | { type: "toggleDescription" }
   | { type: "corruptExample" }
   | { type: "fixExamples" }
-  | { type: "setSeed"; value: number }
   | { type: "loadPreset"; id: string }
   | { type: "restore"; config: PromptConfig; label: string };
 
@@ -493,11 +492,6 @@ function applyIntervention(
       return {
         config: { ...config, corruptedExamples: 0 },
         label: "examples fixed",
-      };
-    case "setSeed":
-      return {
-        config: { ...config, seed: action.value },
-        label: `seed -> ${action.value}`,
       };
     case "loadPreset": {
       const preset = getPreset(action.id);

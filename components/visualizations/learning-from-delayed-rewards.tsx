@@ -30,8 +30,14 @@ import {
   type SimState,
 } from "@/components/visualizations/learning-from-delayed-rewards-model";
 
+// Clay-orange: the goal's "glow" — positive value flowing back from the reward.
+// Amber-warm: penalty cells — a distinct warning hue that doesn't collide with ACCENT.
+// SAGE is reserved for the "greedy policy optimal" success badge only.
+
 const ACCENT = "#c2683f";
 const SAGE = "#6f7d5f";
+// Penalty cells get a warm amber distinct from ACCENT so hazard ≠ "good value".
+const PENALTY_FILL = "#a0743a";
 const WALL = "#2f2a26";
 
 type ClickMode = "inspect" | "wall" | "goal" | "teleport";
@@ -129,7 +135,6 @@ export function QLearningGrid() {
     initialState("backup"),
   );
   const [playing, setPlaying] = useState(false);
-  const [speed, setSpeed] = useState(4);
   const [presetId, setPresetId] = useState("backup");
   const [clickMode, setClickMode] = useState<ClickMode>("inspect");
   const [inspect, setInspect] = useState<number | null>(null);
@@ -163,7 +168,9 @@ export function QLearningGrid() {
     [],
   );
 
-  const resetClock = useFixedTimestep(playing, 420 / speed, () =>
+  // Fixed playback pace of ~5 steps/s — fast enough to see learning unfold,
+  // slow enough that each Q-update is legible. Speed is not a paper concept.
+  const resetClock = useFixedTimestep(playing, 200, () =>
     dispatch({ kind: "tick" }),
   );
 
@@ -260,7 +267,7 @@ export function QLearningGrid() {
             const value = values[cell] ?? 0;
             const t = value <= 0 ? 0 : Math.min(1, value / vmax);
             const opacity = wall || goal ? 1 : 0.1 + 0.82 * t;
-            const fill = wall ? WALL : penalty ? SAGE : ACCENT;
+            const fill = wall ? WALL : penalty ? PENALTY_FILL : ACCENT;
             const visited = ACTIONS.some((a) => (visits[cell]?.[a] ?? 0) > 0);
             const arrowDir = at(ARROW, greedyPolicyAction(q, cell));
             const cx = centerX(cell);
@@ -392,40 +399,36 @@ export function QLearningGrid() {
         ))}
       </div>
 
-      <div className="flex flex-wrap items-center justify-between gap-3">
+      <div className="flex flex-wrap items-center gap-3">
         <PlayPauseStepControls
           playing={playing}
           onPlayPause={onPlayPause}
           onStep={onStep}
           onReset={onReset}
         />
-        <div className="w-40">
-          <Slider
-            label="Speed"
-            value={speed}
-            min={1}
-            max={12}
-            step={1}
-            display={`${speed}x`}
-            onChange={setSpeed}
-          />
-        </div>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
         <SimPanel title="Controls">
-          <div className="flex flex-wrap gap-1.5">
-            {behaviors.map((b) => (
-              <Toggle
-                key={b.id}
-                label={b.label}
-                active={params.behavior === b.id}
-                onClick={() => intervene({ type: "setBehavior", value: b.id })}
-              />
-            ))}
+          <div className="flex flex-col gap-1">
+            <span className="text-muted-foreground text-xs">
+              Behaviour policy — how the agent moves while it learns
+            </span>
+            <div className="flex flex-wrap gap-1.5">
+              {behaviors.map((b) => (
+                <Toggle
+                  key={b.id}
+                  label={b.label}
+                  active={params.behavior === b.id}
+                  onClick={() =>
+                    intervene({ type: "setBehavior", value: b.id })
+                  }
+                />
+              ))}
+            </div>
           </div>
           <Slider
-            label="alpha (learning rate)"
+            label="alpha — how much each new experience overwrites the old estimate"
             value={params.alpha}
             min={0.05}
             max={1}
@@ -434,7 +437,7 @@ export function QLearningGrid() {
             onChange={(value) => intervene({ type: "setAlpha", value })}
           />
           <Slider
-            label="gamma (discount)"
+            label="gamma — how much a reward one step away is worth vs. right now"
             value={params.gamma}
             min={0}
             max={0.99}
@@ -443,7 +446,7 @@ export function QLearningGrid() {
             onChange={(value) => intervene({ type: "setGamma", value })}
           />
           <Slider
-            label="epsilon (exploration)"
+            label="epsilon — fraction of moves that are random rather than greedy"
             value={params.epsilon}
             min={0}
             max={1}
@@ -452,7 +455,7 @@ export function QLearningGrid() {
             onChange={(value) => intervene({ type: "setEpsilon", value })}
           />
           <Slider
-            label="slip (stochastic floor)"
+            label="slip — chance a move veers sideways instead of going as intended"
             value={params.slip}
             min={0}
             max={0.5}
@@ -460,32 +463,29 @@ export function QLearningGrid() {
             display={params.slip.toFixed(2)}
             onChange={(value) => intervene({ type: "setSlip", value })}
           />
-          <Slider
-            label="step cost"
-            value={params.stepCost}
-            min={-0.2}
-            max={0}
-            step={0.01}
-            display={params.stepCost.toFixed(2)}
-            onChange={(value) => intervene({ type: "setStepCost", value })}
-          />
-          <Slider
-            label="seed (resets learning)"
-            value={state.rng % 1000}
-            min={1}
-            max={40}
-            step={1}
-            display={String(state.rng % 1000)}
-            onChange={(value) => intervene({ type: "setSeed", value })}
-          />
-          <Button
-            type="button"
-            size="sm"
-            variant="secondary"
-            onClick={() => intervene({ type: "resetLearning" })}
-          >
-            Reset Q (keep the world)
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button
+              type="button"
+              size="sm"
+              variant="secondary"
+              onClick={() => intervene({ type: "resetLearning" })}
+            >
+              Reset Q (keep the world)
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              onClick={() =>
+                intervene({
+                  type: "setSeed",
+                  value: (Math.floor(Math.random() * 999) + 1),
+                })
+              }
+            >
+              New random seed
+            </Button>
+          </div>
         </SimPanel>
 
         <SimPanel title="What the agent has learned">
@@ -613,13 +613,18 @@ export function QLearningGrid() {
       </div>
 
       <p className="text-muted-foreground text-xs">
-        The update here is exactly the thesis rule, Q(x,a) &larr; (1 &minus;
-        alpha)Q(x,a) + alpha(r + gamma&middot;max Q(y,&middot;)). The agent
-        never sees the world&apos;s map; the value error and the optimal light
-        compare its learned Q against an optimal policy computed separately by
-        value iteration, shown only for scoring. This is a small discrete grid;
-        the thesis&apos;s own demo used a continuous square, which is the same
-        finite Markov decision process idea at higher resolution.
+        The update rule here is exactly the thesis formula: Q(x,a) &larr; (1
+        &minus; alpha)Q(x,a) + alpha(r + gamma&middot;max Q(y,&middot;)). The
+        agent never sees the world&apos;s map; the value error and the optimal
+        badge compare its learned Q against an optimal policy computed
+        separately by value iteration, used only for scoring. Each preset runs
+        from a fixed random seed so the same preset always produces the same
+        run; &ldquo;New random seed&rdquo; restarts learning from a fresh seed.
+        This is a small discrete grid; the thesis&apos;s own demo used a
+        continuous square, which is the same finite Markov decision process
+        idea at higher resolution. The step cost slider was removed from
+        controls since its effect duplicates gamma in teaching the discount
+        concept; it remains wired in the model at the preset&apos;s value.
       </p>
     </div>
   );

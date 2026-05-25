@@ -97,26 +97,48 @@ function EventLog({
   events: SimEvent[];
   onRestore: (event: SimEvent) => void;
 }) {
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  // Autoscroll to the top whenever new events arrive (list is newest-first).
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = 0;
+    }
+  }, [events.length]);
+
   return (
-    <div className="ring-foreground/10 max-h-28 overflow-y-auto rounded-lg ring-1">
-      {events.length === 0 ? (
-        <p className="text-muted-foreground px-2 py-1.5 text-xs">
-          Step, flip the axis, or drag a control to start the log.
-        </p>
-      ) : (
-        <ul className="text-xs">
-          {[...events].reverse().map((event) => (
-            <li key={event.id}>
-              <button
-                type="button"
-                className="text-muted-foreground hover:bg-foreground/5 w-full px-2 py-1 text-left font-mono"
-                onClick={() => onRestore(event)}
-              >
-                {event.id}. {event.label}
-              </button>
-            </li>
-          ))}
-        </ul>
+    <div className="relative">
+      <div
+        ref={scrollRef}
+        className="ring-foreground/10 max-h-28 overflow-y-auto rounded-lg ring-1"
+      >
+        {events.length === 0 ? (
+          <p className="text-muted-foreground px-2 py-1.5 text-xs">
+            Step, flip the axis, or drag a control to start the log.
+          </p>
+        ) : (
+          <ul className="text-xs">
+            {[...events].reverse().map((event) => (
+              <li key={event.id}>
+                <button
+                  type="button"
+                  aria-label={`Restore to step ${event.id}: ${event.label}`}
+                  className="text-muted-foreground hover:bg-foreground/5 w-full px-2 py-1 text-left font-mono"
+                  onClick={() => onRestore(event)}
+                >
+                  {event.id}. {event.label}
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+      {/* Fade affordance signals hidden content below when the log overflows */}
+      {events.length > 3 && (
+        <div
+          className="from-background pointer-events-none absolute right-0 bottom-0 left-0 h-6 rounded-b-lg bg-gradient-to-t to-transparent"
+          aria-hidden
+        />
       )}
     </div>
   );
@@ -194,7 +216,6 @@ export function ScalingLawsExplorer() {
     initialState("params-law"),
   );
   const [playing, setPlaying] = useState(false);
-  const [speed, setSpeed] = useState(1.5);
   const [presetId, setPresetId] = useState("params-law");
 
   const { params, revealLog, log } = state;
@@ -226,7 +247,7 @@ export function ScalingLawsExplorer() {
     atEndRef.current = atEnd;
   }, [atEnd]);
 
-  const resetClock = useFixedTimestep(playing, 520 / speed, () => {
+  const resetClock = useFixedTimestep(playing, 520 / 1.5, () => {
     if (atEndRef.current) {
       setPlaying(false);
       return;
@@ -306,8 +327,16 @@ export function ScalingLawsExplorer() {
   const overfitPct = Math.round(allocation.overfit * 100);
   const splitHealthy = allocation.excess < 0.08;
 
+  const onReshuffle = useCallback(() => {
+    // Pick a new seed so the empirical jitter looks different. The seed itself
+    // is arbitrary — only the visual scatter changes, not the power-law trend.
+    const newSeed = Math.floor(Math.random() * 1000) + 1;
+    intervene({ type: "reshuffle", seed: newSeed });
+  }, [intervene]);
+
   return (
     <div className="not-prose my-8 flex flex-col gap-4">
+      {/* Spine: scenario presets are the primary controls */}
       <div className="flex flex-wrap items-center gap-2">
         {PRESETS.map((preset) => (
           <Button
@@ -430,6 +459,7 @@ export function ScalingLawsExplorer() {
         </svg>
       </div>
 
+      {/* Transport row: playback controls + axis switcher */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <PlayPauseStepControls
           playing={playing}
@@ -437,32 +467,19 @@ export function ScalingLawsExplorer() {
           onStep={onStep}
           onReset={onReset}
         />
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="flex flex-wrap gap-1.5">
-            {AXES.map((option) => (
-              <Button
-                key={option.id}
-                type="button"
-                size="sm"
-                variant={params.axisId === option.id ? "default" : "outline"}
-                aria-pressed={params.axisId === option.id}
-                onClick={() => setAxis(option.id)}
-              >
-                {option.label}
-              </Button>
-            ))}
-          </div>
-          <div className="w-32">
-            <Slider
-              label="Speed"
-              value={speed}
-              min={0.5}
-              max={3}
-              step={0.5}
-              display={`${speed.toFixed(1)}x`}
-              onChange={setSpeed}
-            />
-          </div>
+        <div className="flex flex-wrap gap-1.5">
+          {AXES.map((option) => (
+            <Button
+              key={option.id}
+              type="button"
+              size="sm"
+              variant={params.axisId === option.id ? "default" : "outline"}
+              aria-pressed={params.axisId === option.id}
+              onClick={() => setAxis(option.id)}
+            >
+              {option.label}
+            </Button>
+          ))}
         </div>
       </div>
 
@@ -470,7 +487,7 @@ export function ScalingLawsExplorer() {
         <Panel title="Compute budget allocator">
           <p className="text-muted-foreground text-xs">{axis.blurb}</p>
           <Slider
-            label="Compute budget"
+            label="Compute budget (log₁₀ PF-days)"
             value={params.logCompute}
             min={-4}
             max={4}
@@ -479,7 +496,7 @@ export function ScalingLawsExplorer() {
             onChange={(value) => intervene({ type: "setCompute", value })}
           />
           <Slider
-            label="Allocation (1 = optimal split N* ~ C^0.73)"
+            label="Allocation — how far to deviate from the optimal model size N* ~ C^0.73 (1 = optimal split)"
             value={params.allocation}
             min={0.05}
             max={1.8}
@@ -487,16 +504,8 @@ export function ScalingLawsExplorer() {
             display={`${params.allocation.toFixed(2)}x`}
             onChange={(value) => intervene({ type: "setAllocation", value })}
           />
-          <Slider
-            label="Seed (jitters the empirical points)"
-            value={params.seed}
-            min={0}
-            max={12}
-            step={1}
-            display={params.seed === 0 ? "clean" : String(params.seed)}
-            onChange={(value) => intervene({ type: "setSeed", value })}
-          />
           <div className="flex items-center gap-2 text-xs">
+            {/* Color + glyph so the meaning is never color-alone */}
             <span
               className="inline-flex size-2.5 rounded-full"
               style={{ backgroundColor: splitHealthy ? SAGE : ACCENT }}
@@ -504,10 +513,18 @@ export function ScalingLawsExplorer() {
             />
             <span className="text-muted-foreground">
               {splitHealthy
-                ? "near the optimal split"
-                : `${excessPct}% worse loss than the best split`}
+                ? "✓ near the optimal split"
+                : `✗ ${excessPct}% worse loss than the best split`}
             </span>
           </div>
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            onClick={onReshuffle}
+          >
+            Reshuffle empirical scatter
+          </Button>
         </Panel>
 
         <Panel title="Inside the allocation">
@@ -518,8 +535,9 @@ export function ScalingLawsExplorer() {
             <Badge variant="outline">
               best {allocation.optimalLoss.toFixed(3)}
             </Badge>
+            {/* variant alone is color-only; add a glyph so meaning is explicit */}
             <Badge variant={overfitPct > 5 ? "default" : "outline"}>
-              overfit +{overfitPct}%
+              {overfitPct > 5 ? "⚠ " : ""}overfit +{overfitPct}%
             </Badge>
           </div>
           <div className="ring-foreground/10 rounded-lg ring-1">
@@ -545,10 +563,13 @@ export function ScalingLawsExplorer() {
                   <td className="text-muted-foreground px-2 py-1.5">
                     your model N
                   </td>
-                  <td
-                    className="px-2 py-1.5 text-right"
-                    style={{ color: splitHealthy ? undefined : ACCENT }}
-                  >
+                  <td className="px-2 py-1.5 text-right">
+                    {/* Color + glyph so off-optimal is never color-alone */}
+                    {splitHealthy ? null : (
+                      <span className="mr-1" style={{ color: ACCENT }}>
+                        ✗
+                      </span>
+                    )}
                     {formatScale(allocation.chosenN)}
                   </td>
                 </tr>
@@ -590,8 +611,10 @@ export function ScalingLawsExplorer() {
             : "L(N) = (Nc / N)^0.076"}
         , and the allocator uses the combined L(N, D) fit with the optimal split
         N* &asymp; C^0.73. The numbers are the paper&apos;s WebText2 fits, not a
-        fresh training run; a real run would scatter around these lines the way
-        the seed jitter shows.
+        fresh training run. The empirical scatter on the points is seeded and
+        deterministic per preset; press &ldquo;Reshuffle empirical scatter&rdquo;
+        to see a different noise sample, which illustrates that the power-law
+        trend holds regardless of which noise draw you pick.
       </p>
     </div>
   );

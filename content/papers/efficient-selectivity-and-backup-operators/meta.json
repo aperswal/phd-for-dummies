@@ -17,28 +17,28 @@
   },
   "images": [
     {
-      "src": "/papers/efficient-selectivity-and-backup-operators/hero.webp",
+      "src": "https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/efficient-selectivity-and-backup-operators/hero.webp",
       "alt": "A small pixel-art tree of nodes grows from a root at the top, with one clay-orange path lit from the root down to a single leaf and a thin ink arrow curling back up the same path, while the other branches stay sage green, showing that the search grows one random playout at a time by descending to a promising leaf and carrying the result back up.",
       "width": 2752,
       "height": 1536,
       "caption": "Each playout descends from the root to a leaf, runs a random game, and carries the result back up the path it walked."
     },
     {
-      "src": "/papers/efficient-selectivity-and-backup-operators/selectivity.webp",
+      "src": "https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/efficient-selectivity-and-backup-operators/selectivity.webp",
       "alt": "Three pixel-art dig sites in a row, two shallow sage holes with a few pebbles and one deeper hole with a glowing clay-orange gem half-buried in dirt, with ink arrows still sending probes into the gem hole, showing that a good move can look bad at first so the search keeps probing it instead of giving up.",
       "width": 2400,
       "height": 1792,
       "caption": "A good move can look bad early, so the search keeps probing every move and never cuts one off completely."
     },
     {
-      "src": "/papers/efficient-selectivity-and-backup-operators/backup-blend.webp",
+      "src": "https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/efficient-selectivity-and-backup-operators/backup-blend.webp",
       "alt": "A hand-inked dial labelled value sits between a pixel-art scale weighing pebbles on the left, labelled average, and a glowing clay-orange gem on a pedestal on the right, labelled best, with the pointer sliding toward the gem, showing that a node's backed-up value starts as the average of its playouts and slides toward the best one as more playouts arrive.",
       "width": 2400,
       "height": 1792,
       "caption": "A node's value starts as the average of its playouts and slides toward the best child as the playout count grows."
     },
     {
-      "src": "/papers/efficient-selectivity-and-backup-operators/prune-trap.webp",
+      "src": "https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/efficient-selectivity-and-backup-operators/prune-trap.webp",
       "alt": "A pixel-art hatchet chops through a green branch marked pruned while a glowing clay-orange gem hangs on that very branch, about to fall away, showing that cutting off a move on a few unlucky early playouts can throw away the move that was secretly best.",
       "width": 2400,
       "height": 1792,

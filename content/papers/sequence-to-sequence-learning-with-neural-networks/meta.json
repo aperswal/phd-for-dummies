@@ -4,35 +4,41 @@
   "headline": "One neural net reads a whole sentence into a single memory vector and a second net unrolls that vector back into the translated sentence, and reversing the input words is what made it learn.",
   "abstract": "Deep Neural Networks (DNNs) are powerful models that have achieved excellent performance on difficult learning tasks. Although DNNs work well whenever large labeled training sets are available, they cannot be used to map sequences to sequences. In this paper, we present a general end-to-end approach to sequence learning that makes minimal assumptions on the sequence structure. Our method uses a multilayered Long Short-Term Memory (LSTM) to map the input sequence to a vector of a fixed dimensionality, and then another deep LSTM to decode the target sequence from the vector. Our main result is that on an English to French translation task from the WMT'14 dataset, the translations produced by the LSTM achieve a BLEU score of 34.8 on the entire test set, where the LSTM's BLEU score was penalized on out-of-vocabulary words. Additionally, the LSTM did not have difficulty on long sentences. For comparison, a phrase-based SMT system achieves a BLEU score of 33.3 on the same dataset. When we used the LSTM to rerank the 1000 hypotheses produced by the aforementioned SMT system, its BLEU score increases to 36.5, which is close to the previous best result on this task. The LSTM also learned sensible phrase and sentence representations that are sensitive to word order and are relatively invariant to the active and the passive voice. Finally, we found that reversing the order of the words in all source sentences (but not target sentences) improved the LSTM's performance markedly, because doing so introduced many short term dependencies between the source and the target sentence which made the optimization problem easier.",
   "date": "2026-05-24",
-  "tags": ["sequence to sequence", "LSTM", "machine translation", "encoder decoder", "deep learning"],
+  "tags": [
+    "sequence to sequence",
+    "LSTM",
+    "machine translation",
+    "encoder decoder",
+    "deep learning"
+  ],
   "source": {
     "name": "arXiv 1409.3215",
     "url": "https://arxiv.org/abs/1409.3215"
   },
   "images": [
     {
-      "src": "/papers/sequence-to-sequence-learning-with-neural-networks/hero.webp",
+      "src": "https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/sequence-to-sequence-learning-with-neural-networks/hero.webp",
       "alt": "Three pixel-art word tiles tip through a clay-orange funnel into one small glowing jar in the middle, then a different set of three word tiles flows back out the other side, showing that one network squeezes a whole sentence into a single memory vector and a second network unrolls it into a new sentence.",
       "width": 2752,
       "height": 1536,
       "caption": "One net pours the whole input sentence into a single jar of memory, and a second net pours a new sentence back out."
     },
     {
-      "src": "/papers/sequence-to-sequence-learning-with-neural-networks/reversal.webp",
+      "src": "https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/sequence-to-sequence-learning-with-neural-networks/reversal.webp",
       "alt": "Top row shows source tiles a, b, c with a long arc reaching across to their matches A, B, C and a wide brace labelled long; the bottom row reverses the source to c, b, a so a short clay-orange arrow hops a small distance to its match with a brace labelled short, showing that reversing the input shortens the gap each signal must travel.",
       "width": 2400,
       "height": 1792,
       "caption": "Reversing the source words leaves the average distance unchanged but shrinks the gap for the first few matches, which is what made training work."
     },
     {
-      "src": "/papers/sequence-to-sequence-learning-with-neural-networks/bottleneck.webp",
+      "src": "https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/sequence-to-sequence-learning-with-neural-networks/bottleneck.webp",
       "alt": "A long row of many blank pixel tiles streams through a clay-orange funnel into one small fixed-size jar of swirling light labelled memory, showing that the encoder must cram a whole variable-length sentence into a single fixed-length vector.",
       "width": 2400,
       "height": 1792,
       "caption": "However long the sentence, the encoder has to fit all of it into one fixed-size vector."
     },
     {
-      "src": "/papers/sequence-to-sequence-learning-with-neural-networks/decoder.webp",
+      "src": "https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/sequence-to-sequence-learning-with-neural-networks/decoder.webp",
       "alt": "A clay-orange jar of swirling light feeds three blank output tiles one at a time with ink arrows and a feedback loop, ending in a clay-orange tile labelled stop, showing that the decoder reads the memory vector and emits one word at a time, feeding each word back, until it produces the end-of-sentence token.",
       "width": 2400,
       "height": 1792,

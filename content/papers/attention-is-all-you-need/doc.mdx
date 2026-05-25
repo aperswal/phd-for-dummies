@@ -2,7 +2,7 @@
 
 _A model that reads every word in a sentence at the same time by letting each word weigh every other word, replacing the slow step-by-step reading that came before._
 
-![A row of pixel-art word tiles sit around a round table, one tile glowing clay-orange while thin ink lines of different thickness fan out from it to every other tile, thickest to the words it cares about most, showing that each word weighs every other word at once.](/papers/attention-is-all-you-need/hero.webp)
+![A row of pixel-art word tiles sit around a round table, one tile glowing clay-orange while thin ink lines of different thickness fan out from it to every other tile, thickest to the words it cares about most, showing that each word weighs every other word at once.](https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/attention-is-all-you-need/hero.webp)
 
 ## Read at your level
 
@@ -63,7 +63,7 @@ Attention(Q, K, V) = softmax( Q Kᵀ / sqrt(d_k) ) V
 
 Read it left to right. `Q Kᵀ` is every query dotted with every key, which gives an `n` by `n` grid of raw match scores. Dividing by `sqrt(d_k)` is the scaling step, and it matters more than it looks. Then softmax turns each row of scores into weights that sum to one. Multiplying by `V` replaces each token with a weighted blend of all the value vectors.
 
-![On the left a single tall clay-orange bar towers over tiny flattened bars while on the right a row of balanced sage bars stands evenly, with a small dial between them marking the scaling step, showing that dividing the scores keeps attention from collapsing onto one word.](/papers/attention-is-all-you-need/scaling.webp)
+![On the left a single tall clay-orange bar towers over tiny flattened bars while on the right a row of balanced sage bars stands evenly, with a small dial between them marking the scaling step, showing that dividing the scores keeps attention from collapsing onto one word.](https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/attention-is-all-you-need/scaling.webp)
 
 Why divide by `sqrt(d_k)`? If the query and key components are independent with mean 0 and variance 1, their dot product has mean 0 and variance `d_k`. So as `d_k` grows, the raw scores swing wider. Feed wide scores into softmax and it saturates, meaning almost all the weight lands on the single largest score and the gradient there goes nearly flat. Dividing by `sqrt(d_k)` rescales the variance back to 1 and keeps the weights spread out enough to learn from. The simulation above makes this concrete. Crank the score magnitude with scaling off and one bar swallows the rest. Turn scaling on and the distribution breathes again.
 
@@ -124,7 +124,7 @@ head_i = Attention(Q Wᵢ_Q, K Wᵢ_K, V Wᵢ_V)
 
 Each head gets its own learned projections into a `d_k = d_v = 64` subspace, attends there, and the eight results are concatenated and projected back. Different heads end up doing different jobs.
 
-![The sentence 'the cat sat on the mat' as pixel word tiles, with three translucent lenses laid over it in different tones, each lens tracing its own pattern of curved arcs between words, showing that several attention heads read the same sentence through different lenses at once.](/papers/attention-is-all-you-need/multi-head.webp)
+![The sentence 'the cat sat on the mat' as pixel word tiles, with three translucent lenses laid over it in different tones, each lens tracing its own pattern of curved arcs between words, showing that several attention heads read the same sentence through different lenses at once.](https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/attention-is-all-you-need/multi-head.webp)
 
 In the simulation, switch between the **Meaning** and **Neighbors** heads on the same sentence. One head links a pronoun to its noun. The other leans on whichever words sit physically close, and it does that just by reading the position stamp, with nobody teaching it to.
 
@@ -135,7 +135,7 @@ PE(pos, 2i)   = sin(pos / 10000^(2i/d_model))
 PE(pos, 2i+1) = cos(pos / 10000^(2i/d_model))
 ```
 
-![Three pixel word tiles labelled every, word, arrives sit above a sine and cosine wave ribbon that touches each tile with a numbered clay-orange stamp, showing that because the words arrive all at once each one gets a wave-shaped position stamp so order is never lost.](/papers/attention-is-all-you-need/positional.webp)
+![Three pixel word tiles labelled every, word, arrives sit above a sine and cosine wave ribbon that touches each tile with a numbered clay-orange stamp, showing that because the words arrive all at once each one gets a wave-shaped position stamp so order is never lost.](https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/attention-is-all-you-need/positional.webp)
 
 Each position gets a unique fingerprint of wave values, and because nearby positions have similar fingerprints, the model can learn to attend by relative position. The neighbor head in the simulation runs on exactly this signal.
 

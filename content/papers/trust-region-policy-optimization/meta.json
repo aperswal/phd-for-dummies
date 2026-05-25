@@ -17,28 +17,28 @@
   },
   "images": [
     {
-      "src": "/papers/trust-region-policy-optimization/hero.webp",
+      "src": "https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/trust-region-policy-optimization/hero.webp",
       "alt": "A pixel hiker standing inside a small clear circle of solid ground while grey fog hides everything beyond it, with a short confident clay-orange step-arrow that stays inside the circle and points uphill labelled trust, beside a long thin arrow that leaps out into the fog and tumbles down labelled risk, showing that you should only step as far as the ground you can actually see is reliable.",
       "width": 2752,
       "height": 1536,
       "caption": "Step only as far as the ground you can trust; a leap into the fog can land you lower than you started."
     },
     {
-      "src": "/papers/trust-region-policy-optimization/surrogate-vs-real.webp",
+      "src": "https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/trust-region-policy-optimization/surrogate-vs-real.webp",
       "alt": "A clay-orange dashed curve labelled surrogate and a sage solid curve labelled true climbing a pixel hill, hugging each other tightly on the left inside a faint shaded band then peeling apart on the right, showing that the local estimate of the improvement matches the real return only while the new policy stays close to the old one.",
       "width": 2400,
       "height": 1792,
       "caption": "The surrogate estimate tracks the true return only near the current policy, then drifts away once the policy moves far."
     },
     {
-      "src": "/papers/trust-region-policy-optimization/trust-region-step.webp",
+      "src": "https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/trust-region-policy-optimization/trust-region-step.webp",
       "alt": "A pixel signpost standing for the current policy with a dashed clay-orange circle drawn around it labelled K L, and a clay-orange arrow from the signpost that points outward and stops exactly at the circle's edge labelled change, showing that the update is the largest step that still keeps the new policy inside a fixed KL-divergence budget.",
       "width": 2048,
       "height": 2048,
       "caption": "The trust region is a fixed budget on how much the policy may change; the step goes right to its edge."
     },
     {
-      "src": "/papers/trust-region-policy-optimization/penalty-vs-constraint.webp",
+      "src": "https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/trust-region-policy-optimization/penalty-vs-constraint.webp",
       "alt": "A muted slate path of many tiny winding stair-steps labelled penalty that crawls only partway up a pixel hill, beside a clay-orange path of a few large confident step-arrows labelled budget that reaches a flag at the summit, showing that a heavy KL penalty forces timid tiny steps while a fixed KL budget allows fast bounded steps that reach the top.",
       "width": 2400,
       "height": 1792,

@@ -4,35 +4,41 @@
   "headline": "A language model big enough learns a brand-new task from a handful of examples typed into its prompt, with no extra training, and the bigger it gets the better it learns this way.",
   "abstract": "Recent work has demonstrated substantial gains on many NLP tasks and benchmarks by pre-training on a large corpus of text followed by fine-tuning on a specific task. While typically task-agnostic in architecture, this method still requires task-specific fine-tuning datasets of thousands or tens of thousands of examples. By contrast, humans can generally perform a new language task from only a few examples or from simple instructions - something which current NLP systems still largely struggle to do. Here we show that scaling up language models greatly improves task-agnostic, few-shot performance, sometimes even reaching competitiveness with prior state-of-the-art fine-tuning approaches. Specifically, we train GPT-3, an autoregressive language model with 175 billion parameters, 10x more than any previous non-sparse language model, and test its performance in the few-shot setting. For all tasks, GPT-3 is applied without any gradient updates or fine-tuning, with tasks and few-shot demonstrations specified purely via text interaction with the model. GPT-3 achieves strong performance on many NLP datasets, including translation, question-answering, and cloze tasks, as well as several tasks that require on-the-fly reasoning or domain adaptation, such as unscrambling words, using a novel word in a sentence, or performing 3-digit arithmetic. At the same time, we also identify some datasets where GPT-3's few-shot learning still struggles, as well as some datasets where GPT-3 faces methodological issues related to training on large web corpora. Finally, we find that GPT-3 can generate samples of news articles which human evaluators have difficulty distinguishing from articles written by humans. We discuss broader societal impacts of this finding and of GPT-3 in general.",
   "date": "2026-05-24",
-  "tags": ["large language models", "in-context learning", "few-shot learning", "GPT-3", "scaling"],
+  "tags": [
+    "large language models",
+    "in-context learning",
+    "few-shot learning",
+    "GPT-3",
+    "scaling"
+  ],
   "source": {
     "name": "arXiv 2005.14165",
     "url": "https://arxiv.org/abs/2005.14165"
   },
   "images": [
     {
-      "src": "/papers/language-models-are-few-shot-learners/hero.webp",
+      "src": "https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/language-models-are-few-shot-learners/hero.webp",
       "alt": "A pixel-art apprentice reads a worn recipe card holding three worked examples, then writes the right answer to a fourth blank line on the same card, while a faint giant brain glows behind it, showing that a big enough language model learns a new task from a few examples in its prompt with no extra training.",
       "width": 2048,
       "height": 1152,
       "caption": "Show the model a few worked examples in its prompt and it finishes the next one, learning the task on the spot without changing a single weight."
     },
     {
-      "src": "/papers/language-models-are-few-shot-learners/learning-curve.webp",
+      "src": "https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/language-models-are-few-shot-learners/learning-curve.webp",
       "alt": "Three rising ink curves climb over a row of pixel example cards, a tall clay-orange curve for the big model climbing steeply, a short sage curve for the small model staying nearly flat, showing that adding more examples to the prompt helps a large model a lot and a small model almost not at all.",
       "width": 2048,
       "height": 1152,
       "caption": "Each example added to the prompt lifts a big model fast and a small model barely at all; scale sets the slope of the curve."
     },
     {
-      "src": "/papers/language-models-are-few-shot-learners/three-settings.webp",
+      "src": "https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/language-models-are-few-shot-learners/three-settings.webp",
       "alt": "Three pixel recipe cards side by side, the first holding only an instruction line, the second an instruction plus one example, the third an instruction plus a stack of examples, all ending in the same blank prompt line, showing zero-shot, one-shot, and few-shot as the same prompt with more worked examples added.",
       "width": 2048,
       "height": 1152,
       "caption": "Zero-shot, one-shot, and few-shot are the same trick with more examples in the prompt, never any weight updates."
     },
     {
-      "src": "/papers/language-models-are-few-shot-learners/context-budget.webp",
+      "src": "https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/language-models-are-few-shot-learners/context-budget.webp",
       "alt": "A pixel scroll with a fixed measuring tape down its edge holds a growing stack of example cards that fills toward a hard line marked full, with one clay-orange card spilling past the edge, showing that the context window is a fixed token budget that caps how many examples can fit in the prompt.",
       "width": 2048,
       "height": 1152,

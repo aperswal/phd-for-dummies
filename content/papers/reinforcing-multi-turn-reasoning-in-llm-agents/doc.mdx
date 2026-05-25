@@ -2,7 +2,7 @@
 
 _Instead of grading a multi-step agent on its final answer alone, score every step it takes, so the reward lands on the exact move that earned it and training stops collapsing._
 
-![Three pixel-art relay runners pass a baton toward a finish line, a clay-orange star floating over each runner instead of one trophy at the end, with an ink arrow labelled credit curving back from the finish to tag each runner, showing that turn-level rewards hand credit to the exact step that earned it.](/papers/reinforcing-multi-turn-reasoning-in-llm-agents/hero.webp)
+![Three pixel-art relay runners pass a baton toward a finish line, a clay-orange star floating over each runner instead of one trophy at the end, with an ink arrow labelled credit curving back from the finish to tag each runner, showing that turn-level rewards hand credit to the exact step that earned it.](https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/reinforcing-multi-turn-reasoning-in-llm-agents/hero.webp)
 
 ## Read at your level
 
@@ -69,7 +69,7 @@ A_i = ( R_i - mean(R_1..R_G) ) / std(R_1..R_G)
 
 Then it applies that one number `A_i` to every token in trajectory `i`. That last step is the flaw. Every turn of trajectory `i` gets the same advantage, so the algorithm can't tell a good search from a bad one inside a trajectory that ended well.
 
-![A two-panel pixel-art comparison: on the left three relay runners share one big clay-orange trophy with credit arrows blurred across all of them, on the right each runner has their own star and arrow, showing trajectory-level credit smears one reward over every step while turn-level credit gives each step its own.](/papers/reinforcing-multi-turn-reasoning-in-llm-agents/credit-split.webp)
+![A two-panel pixel-art comparison: on the left three relay runners share one big clay-orange trophy with credit arrows blurred across all of them, on the right each runner has their own star and arrow, showing trajectory-level credit smears one reward over every step while turn-level credit gives each step its own.](https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/reinforcing-multi-turn-reasoning-in-llm-agents/credit-split.webp)
 
 MT-GRPO fixes it by normalizing turn by turn. For a two-turn agent it samples a group, gets each trajectory's intermediate reward `R^I_i` (how the search turn went) and outcome reward `R^O_i` (how the answer turn went), and normalizes each separately.
 
@@ -136,7 +136,7 @@ R^I_format    = +0.1 if the <think><search><information> format is correct, else
 R^I_search    = -lambda_s * (number of searches so far)
 ```
 
-![A pixel-art balance scale tilting toward a stack of clay-orange reward coins with a plus sign, while a single sage-green weight with a minus sign pulls the other pan, showing that a turn's reward is good moves like tool use and retrieval added up minus a penalty for wasted searches.](/papers/reinforcing-multi-turn-reasoning-in-llm-agents/turn-rewards.webp)
+![A pixel-art balance scale tilting toward a stack of clay-orange reward coins with a plus sign, while a single sage-green weight with a minus sign pulls the other pan, showing that a turn's reward is good moves like tool use and retrieval added up minus a penalty for wasted searches.](https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/reinforcing-multi-turn-reasoning-in-llm-agents/turn-rewards.webp)
 
 The turn-2 (outcome) reward keys off exact match and format.
 

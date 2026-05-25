@@ -27,6 +27,9 @@ import {
 const ACCENT = "#c2683f";
 const SAGE = "#6f7d5f";
 const INK = "#2f2a26";
+// Neutral fill for nodes — keeps ACCENT reserved for error/warning states
+// (wrong-move label, last-path edge) so the two meanings never collide.
+const NODE_NEUTRAL = "var(--color-muted-foreground)";
 
 type ClickMode = "inspect" | "boost" | "lie" | "prune";
 
@@ -320,7 +323,7 @@ export function GoTreeSearch() {
                 ? SAGE
                 : node.parent === null
                   ? "var(--color-foreground)"
-                  : ACCENT;
+                  : NODE_NEUTRAL;
             const opacity = node.pruned
               ? 0.3
               : node.parent === null
@@ -375,7 +378,7 @@ export function GoTreeSearch() {
                     x={x}
                     y={y + 4}
                     textAnchor="middle"
-                    fill="#fff"
+                    fill="var(--color-background)"
                     style={{ fontSize: 11, fontFamily: "var(--font-mono)" }}
                   >
                     {node.visits}
@@ -448,9 +451,9 @@ export function GoTreeSearch() {
           onStep={onStep}
           onReset={onReset}
         />
-        <div className="w-40">
+        <div className="w-48">
           <Slider
-            label="Speed"
+            label="Playback pace — faster means more simulations per second (does not affect search logic)"
             value={speed}
             min={1}
             max={16}
@@ -464,7 +467,7 @@ export function GoTreeSearch() {
       <div className="grid gap-4 sm:grid-cols-2">
         <SimPanel title="Search knobs">
           <Slider
-            label="lambda (rollout vs value net)"
+            label="lambda — how much rollout outcome z mixes into V(s_L) = (1−λ)v_θ + λz; 0 = value only, 1 = rollout only"
             value={state.params.lambda}
             min={0}
             max={1}
@@ -479,7 +482,7 @@ export function GoTreeSearch() {
             onChange={(value) => intervene({ type: "setLambda", value })}
           />
           <Slider
-            label="c_puct (exploration)"
+            label="c_puct — exploration constant; 0 = ride the prior, higher = check more alternatives before trusting it"
             value={state.params.cPuct}
             min={0}
             max={3}
@@ -488,7 +491,7 @@ export function GoTreeSearch() {
             onChange={(value) => intervene({ type: "setCPuct", value })}
           />
           <Slider
-            label="rollout noise"
+            label="rollout noise — spread on the fast playout (0 = exact leaf value, 1 = very noisy single sample)"
             value={state.params.rolloutNoise}
             min={0}
             max={1}
@@ -497,22 +500,13 @@ export function GoTreeSearch() {
             onChange={(value) => intervene({ type: "setRolloutNoise", value })}
           />
           <Slider
-            label="value-net error"
+            label="value-net error — how inaccurate the value network is (0 = perfect, 1 = highly noisy)"
             value={state.params.valueNoise}
             min={0}
             max={1}
             step={0.05}
             display={state.params.valueNoise.toFixed(2)}
             onChange={(value) => intervene({ type: "setValueNoise", value })}
-          />
-          <Slider
-            label="seed (rebuilds the run)"
-            value={state.baseSeed % 1000}
-            min={1}
-            max={40}
-            step={1}
-            display={String(state.baseSeed % 1000)}
-            onChange={(value) => intervene({ type: "setSeed", value })}
           />
         </SimPanel>
 
@@ -634,7 +628,9 @@ export function GoTreeSearch() {
         standing in for one Go position; the real AlphaGo searches a tree with
         roughly 250 moves per position and uses 13-layer networks trained on 30
         million positions. The move played is always the most-visited root
-        child.
+        child. The run is fully deterministic: a fixed seed is used so the same
+        preset and knob positions always reproduce the same sequence of
+        simulations.
       </p>
     </div>
   );

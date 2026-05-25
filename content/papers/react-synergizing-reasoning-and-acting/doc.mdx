@@ -2,7 +2,7 @@
 
 _An agent that thinks and acts in the same breath, writing a reasoning note then taking a real action so each one fixes the other's blind spot._
 
-![A pixel-art open notebook on the left and a sage filing cabinet on the right, joined by a clay-orange loop arrow that circles from one to the other, like a detective who jots a thought then walks to the files to check it, showing that ReAct alternates a reasoning step with a grounded action so each feeds the next.](/papers/react-synergizing-reasoning-and-acting/hero.webp)
+![A pixel-art open notebook on the left and a sage filing cabinet on the right, joined by a clay-orange loop arrow that circles from one to the other, like a detective who jots a thought then walks to the files to check it, showing that ReAct alternates a reasoning step with a grounded action so each feeds the next.](https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/react-synergizing-reasoning-and-acting/hero.webp)
 
 ## Read at your level
 
@@ -43,7 +43,7 @@ ReAct fixes this by letting the model do something besides think. It can also ac
 
 Here's a worked example. The question is "what device, besides the Apple Remote, can control the program the Apple Remote was built for?" A guessing model says "the Apple Remote controls Apple TV, and Apple TV is controlled by your iPhone," and answers iPhone. That's wrong, and it's a guess. ReAct instead searches "Apple Remote," reads that it was built to control a program called Front Row, searches "Front Row," and reads that Front Row is also controlled by the keyboard function keys. So the answer is keyboard function keys, and every step came from a page it actually read.
 
-![Three explorers head for the same flag along three lanes, one wandering off a cliff labelled guess, one stopped at a locked gate labelled stall, and a clay-orange one reaching the flag labelled ground, showing that reasoning alone hallucinates, acting alone gets stuck, and only interleaving the two arrives.](/papers/react-synergizing-reasoning-and-acting/three-paths.webp)
+![Three explorers head for the same flag along three lanes, one wandering off a cliff labelled guess, one stopped at a locked gate labelled stall, and a clay-orange one reaching the flag labelled ground, showing that reasoning alone hallucinates, acting alone gets stuck, and only interleaving the two arrives.](https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/react-synergizing-reasoning-and-acting/three-paths.webp)
 
 Thinking without checking walks off a cliff. Checking without thinking stalls at a gate it can't open. Doing both reaches the flag.
 
@@ -73,7 +73,7 @@ Deployment cost is low, which is the headline. It's a prompting pattern, not a n
 
 The failure mode to plan around is the search. ReAct's quality lives and dies on retrieval. When a search comes back empty or off-topic, it derailed the reasoning in 23% of the error cases, and the agent can get stuck repeating the same thought and action. So the operating envelope is this. Give it a retriever or tool that mostly returns relevant results and it shines. Point it at a flaky tool and it inherits the flakiness, plus a tendency to loop. The paper's own fix is worth copying. When ReAct can't answer within a step budget, fall back to chain-of-thought, and when chain-of-thought isn't confident, fall back to ReAct. The combination beat either alone.
 
-![An explorer beside an open empty filing drawer labelled empty while his clay-orange path arrow that was heading straight bends sharply and trails off, labelled derail, showing that when a search returns nothing the reasoning loses its footing and the agent gets stuck.](/papers/react-synergizing-reasoning-and-acting/dead-search.webp)
+![An explorer beside an open empty filing drawer labelled empty while his clay-orange path arrow that was heading straight bends sharply and trails off, labelled derail, showing that when a search returns nothing the reasoning loses its footing and the agent gets stuck.](https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/react-synergizing-reasoning-and-acting/dead-search.webp)
 
 ## For a PhD candidate
 

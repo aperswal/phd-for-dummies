@@ -4,35 +4,41 @@
   "headline": "A single network learns to play seven Atari games straight from the screen pixels by trying moves, scoring its own guesses about future points, and shuffling a memory of past moments so the learning never spirals out of control.",
   "abstract": "We present the first deep learning model to successfully learn control policies directly from high-dimensional sensory input using reinforcement learning. The model is a convolutional neural network, trained with a variant of Q-learning, whose input is raw pixels and whose output is a value function estimating future rewards. We apply our method to seven Atari 2600 games from the Arcade Learning Environment, with no adjustment of the architecture or learning algorithm. We find that it outperforms all previous approaches on six of the games and surpasses a human expert on three of them.",
   "date": "2026-05-24",
-  "tags": ["reinforcement learning", "deep learning", "Q-learning", "experience replay", "Atari"],
+  "tags": [
+    "reinforcement learning",
+    "deep learning",
+    "Q-learning",
+    "experience replay",
+    "Atari"
+  ],
   "source": {
     "name": "arXiv 1312.5602",
     "url": "https://arxiv.org/abs/1312.5602"
   },
   "images": [
     {
-      "src": "/papers/playing-atari-with-deep-reinforcement-learning/hero.webp",
+      "src": "https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/playing-atari-with-deep-reinforcement-learning/hero.webp",
       "alt": "A pixel-art robot holds a joystick while a clay-orange loop arrow runs from an Atari screen of a blocky paddle-and-ball game into the robot and back out as reward, with a score ticking up, showing that the agent learns to play from nothing but the picture on the screen and the points it earns.",
       "width": 2752,
       "height": 1536,
       "caption": "The agent sees only the screen pixels and the score, picks a move, and learns from the points that come back."
     },
     {
-      "src": "/papers/playing-atari-with-deep-reinforcement-learning/replay.webp",
+      "src": "https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/playing-atari-with-deep-reinforcement-learning/replay.webp",
       "alt": "A wooden box brimming with numbered memory cards while a hand pulls a shuffled handful from the middle and hands it to a practice slate, showing that experience replay studies a random mix of past moments instead of only the very last one.",
       "width": 2400,
       "height": 1792,
       "caption": "Experience replay keeps a memory of past moments and trains on a shuffled handful, not just the last thing that happened."
     },
     {
-      "src": "/papers/playing-atari-with-deep-reinforcement-learning/bellman.webp",
+      "src": "https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/playing-atari-with-deep-reinforcement-learning/bellman.webp",
       "alt": "A bright clay-orange coin labelled now sits beside a fading row of smaller sage coins labelled later, joined by an ink plus sign and brace into one total, showing that the value of a move is the reward you get now plus a discounted guess of all the score still to come.",
       "width": 2400,
       "height": 1792,
       "caption": "The value of a move is the reward right now plus a faded guess of every point still to come."
     },
     {
-      "src": "/papers/playing-atari-with-deep-reinforcement-learning/divergence.webp",
+      "src": "https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/playing-atari-with-deep-reinforcement-learning/divergence.webp",
       "alt": "A sage curve wobbles then settles flat against a target line while a clay-orange curve swings wider and wider and shoots off the top of the page, showing that with experience replay the value estimate stays calm but without it the same learning rate spirals out of control.",
       "width": 2400,
       "height": 1792,

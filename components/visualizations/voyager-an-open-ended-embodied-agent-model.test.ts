@@ -4,8 +4,10 @@ import {
   getPreset,
   highestTier,
   initialState,
+  isTerminal,
   MAX_ROUNDS,
   step,
+  TECH_TREE,
   type Input,
   type SimState,
 } from "./voyager-an-open-ended-embodied-agent-model";
@@ -179,5 +181,43 @@ describe("interventions", () => {
     });
     expect(restored.unlocked).toEqual(event.snapshot.unlocked);
     expect(restored.tick).toBe(event.snapshot.tick);
+  });
+});
+
+describe("terminal state detection", () => {
+  it("is not terminal at the start of a fresh run", () => {
+    const state = initialState("full");
+    expect(isTerminal(state)).toBe(false);
+  });
+
+  it("is terminal when every item is unlocked and no task is active", () => {
+    let state = initialState("full");
+    state = {
+      ...state,
+      unlocked: TECH_TREE.map((item) => item.id),
+      active: null,
+      phase: "idle",
+    };
+    expect(isTerminal(state)).toBe(true);
+  });
+
+  it("is not terminal while a task is still active even if frontier would be empty", () => {
+    let state = initialState("full");
+    const allButLast = TECH_TREE.slice(0, -1).map((item) => item.id);
+    state = {
+      ...state,
+      unlocked: allButLast,
+      active: {
+        itemId: "diamond",
+        label: "Mine Diamond",
+        round: 1,
+        difficulty: 0.85,
+        retrievedSkills: 0,
+        hallucinated: false,
+        lastRoundExecuted: false,
+      },
+      phase: "code",
+    };
+    expect(isTerminal(state)).toBe(false);
   });
 });

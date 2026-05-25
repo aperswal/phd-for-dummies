@@ -412,7 +412,6 @@ export type Intervention =
   | { type: "setMode"; mode: PromptMode }
   | { type: "setProblem"; id: string }
   | { type: "setScale"; value: number }
-  | { type: "setSeed"; value: number }
   | { type: "toggleInjected"; index: number }
   | { type: "loadPreset"; id: string }
   | { type: "restore"; params: Params; label: string };
@@ -534,11 +533,6 @@ function applyIntervention(
       return {
         params: { ...params, scaleB: action.value },
         label: `scale -> ${action.value}B`,
-      };
-    case "setSeed":
-      return {
-        params: { ...params, seed: action.value },
-        label: `seed -> ${action.value}`,
       };
     case "toggleInjected": {
       const has = params.injected.includes(action.index);

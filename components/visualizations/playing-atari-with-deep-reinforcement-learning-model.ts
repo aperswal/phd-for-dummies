@@ -465,7 +465,6 @@ export type Intervention =
   | { type: "setBufferCapacity"; value: number }
   | { type: "setBatchSize"; value: number }
   | { type: "setEpsilon"; value: number }
-  | { type: "setGamma"; value: number }
   | { type: "setLearningRate"; value: number }
   | { type: "setForceColumn"; value: number }
   | { type: "loadPreset"; id: string }
@@ -530,12 +529,6 @@ function applyIntervention(state: SimState, action: Intervention): SimState {
         state,
         { ...state.params, epsilon: action.value },
         `epsilon -> ${action.value.toFixed(2)}`,
-      );
-    case "setGamma":
-      return applyParams(
-        state,
-        { ...state.params, gamma: action.value },
-        `gamma -> ${action.value.toFixed(2)}`,
       );
     case "setLearningRate":
       return applyParams(

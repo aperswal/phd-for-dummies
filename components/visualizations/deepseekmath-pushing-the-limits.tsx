@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -62,6 +62,7 @@ function Slider({
         max={max}
         step={stepSize}
         value={value}
+        aria-label={label}
         onChange={(event) => onChange(Number(event.target.value))}
         className="h-1.5 w-full cursor-pointer"
         style={{ accentColor: ACCENT }}
@@ -72,10 +73,12 @@ function Slider({
 
 function Toggle({
   label,
+  description,
   active,
   onClick,
 }: {
   label: string;
+  description?: string;
   active: boolean;
   onClick: () => void;
 }) {
@@ -85,6 +88,7 @@ function Toggle({
       size="sm"
       variant={active ? "default" : "outline"}
       aria-pressed={active}
+      aria-label={description ?? label}
       onClick={onClick}
     >
       {label}
@@ -185,6 +189,10 @@ export function GroupRelativePolicyOptimization() {
   const accumulator = useRef(0);
   const intervalMs = 420 / speed;
 
+  // Refs for the two scrollable regions so we can autoscroll to the newest entry.
+  const groupTableRef = useRef<HTMLDivElement>(null);
+  const eventLogRef = useRef<HTMLDivElement>(null);
+
   useAnimationFrame(playing, (deltaMs) => {
     accumulator.current += deltaMs;
     let steps = 0;
@@ -194,6 +202,20 @@ export function GroupRelativePolicyOptimization() {
       steps += 1;
     }
   });
+
+  // Scroll the group table to the top when a new group is sampled (newest entry
+  // is always the full latest group, so top = latest).
+  useEffect(() => {
+    const el = groupTableRef.current;
+    if (el) el.scrollTop = 0;
+  }, [state.step]);
+
+  // Scroll the event log to the top when new entries are appended (the list is
+  // rendered newest-first, so top = newest).
+  useEffect(() => {
+    const el = eventLogRef.current;
+    if (el) el.scrollTop = 0;
+  }, [state.log.length]);
 
   const resetClock = useCallback(() => {
     accumulator.current = 0;
@@ -265,7 +287,7 @@ export function GroupRelativePolicyOptimization() {
       </div>
       <p className="text-muted-foreground text-sm">{preset?.blurb}</p>
 
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className="grid gap-4 sm:grid-cols-2">
         <div className="ring-foreground/10 overflow-hidden rounded-xl p-3 ring-1">
           <span className="text-muted-foreground mb-1 block text-xs font-medium">
             Policy over answer kinds
@@ -404,7 +426,7 @@ export function GroupRelativePolicyOptimization() {
         </div>
         <div className="w-36">
           <Slider
-            label="Speed"
+            label="Playback speed (animation pace only, not the paper)"
             value={speed}
             min={0.5}
             max={4}
@@ -416,9 +438,9 @@ export function GroupRelativePolicyOptimization() {
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <Panel title="Knobs">
+        <Panel title="GRPO parameters">
           <Slider
-            label="Group size G"
+            label="G — group size: answers sampled per question to form the group baseline"
             value={params.groupSize}
             min={2}
             max={64}
@@ -427,7 +449,7 @@ export function GroupRelativePolicyOptimization() {
             onChange={(value) => intervene({ type: "setGroupSize", value })}
           />
           <Slider
-            label="KL coefficient (pull to reference)"
+            label="β — KL coefficient: how hard the KL term pulls back toward the frozen reference"
             value={params.klCoef}
             min={0}
             max={0.4}
@@ -436,7 +458,7 @@ export function GroupRelativePolicyOptimization() {
             onChange={(value) => intervene({ type: "setKlCoef", value })}
           />
           <Slider
-            label="Clip epsilon"
+            label="ε — clip epsilon: PPO trust-region width; caps how far one step moves the ratio"
             value={params.clipEps}
             min={0.05}
             max={0.6}
@@ -445,7 +467,7 @@ export function GroupRelativePolicyOptimization() {
             onChange={(value) => intervene({ type: "setClipEps", value })}
           />
           <Slider
-            label="Step size"
+            label="Learning rate: logit step size per group; higher = faster but less stable"
             value={params.learningRate}
             min={0.1}
             max={1.5}
@@ -454,7 +476,7 @@ export function GroupRelativePolicyOptimization() {
             onChange={(value) => intervene({ type: "setLearningRate", value })}
           />
           <Slider
-            label="Reward model noise"
+            label="Reward noise: Gaussian noise added to each score; shows GRPO's sensitivity to noisy signals"
             value={params.rewardNoise}
             min={0}
             max={1}
@@ -462,22 +484,20 @@ export function GroupRelativePolicyOptimization() {
             display={params.rewardNoise.toFixed(2)}
             onChange={(value) => intervene({ type: "setRewardNoise", value })}
           />
-          <div className="flex flex-wrap gap-1.5">
-            <Toggle
-              label="Divide by group std"
-              active={params.normalizeStd}
-              onClick={() => intervene({ type: "toggleNormalizeStd" })}
-            />
+          <div className="flex flex-col gap-1">
+            <div className="flex flex-wrap gap-1.5">
+              <Toggle
+                label="Divide by group std"
+                description="Divide by group std: off subtracts the mean only; on is the full GRPO normalization (Ai = (r_i - mean) / std)"
+                active={params.normalizeStd}
+                onClick={() => intervene({ type: "toggleNormalizeStd" })}
+              />
+            </div>
+            <span className="text-muted-foreground text-[11px]">
+              Off: advantages = reward minus group mean only. On: full GRPO
+              normalization divided by group std.
+            </span>
           </div>
-          <Slider
-            label="Seed"
-            value={state.seed}
-            min={1}
-            max={20}
-            step={1}
-            display={String(state.seed)}
-            onChange={(value) => intervene({ type: "setSeed", value })}
-          />
         </Panel>
 
         <Panel title="Reward model and the sampled group">
@@ -505,7 +525,7 @@ export function GroupRelativePolicyOptimization() {
             </div>
             {params.hackKind >= 0 && (
               <Slider
-                label="Hack bonus"
+                label="Hack bonus: extra reward added to the over-rewarded kind"
                 value={params.hackBonus}
                 min={0}
                 max={3}
@@ -516,108 +536,133 @@ export function GroupRelativePolicyOptimization() {
             )}
           </div>
 
-          <div className="ring-foreground/10 max-h-44 overflow-y-auto rounded-lg ring-1">
-            <table className="w-full text-left text-xs">
-              <thead className="bg-card text-muted-foreground sticky top-0">
-                <tr>
-                  <th className="px-2 py-1 font-medium">kind</th>
-                  <th className="px-2 py-1 text-right font-medium">drawn</th>
-                  <th className="px-2 py-1 text-right font-medium">reward</th>
-                  <th className="px-2 py-1 text-right font-medium">
-                    advantage
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="font-mono">
-                {groupByKind.map((samples, i) => {
-                  if (samples.length === 0) return null;
-                  const avgReward =
-                    samples.reduce((sum, s) => sum + s.reward, 0) /
-                    samples.length;
-                  const avgAdv =
-                    samples.reduce((sum, s) => sum + s.advantage, 0) /
-                    samples.length;
-                  const kind = ANSWER_KINDS[i];
-                  return (
-                    <tr
-                      key={kind?.id ?? i}
-                      className={
-                        kind?.correct
-                          ? "text-foreground"
-                          : "text-muted-foreground"
-                      }
-                    >
-                      <td className="px-2 py-1">
-                        {kind?.label.split(",")[0] ?? "?"}
-                      </td>
-                      <td className="px-2 py-1 text-right">{samples.length}</td>
-                      <td className="px-2 py-1 text-right">
-                        {avgReward.toFixed(2)}
-                      </td>
-                      <td
-                        className="px-2 py-1 text-right"
-                        style={{ color: avgAdv >= 0 ? ACCENT : SAGE }}
+          {/* Gradient fade affordance: tells the reader more rows exist below the fold. */}
+          <div className="relative">
+            <div
+              ref={groupTableRef}
+              className="ring-foreground/10 max-h-44 overflow-y-auto rounded-lg ring-1"
+            >
+              <table className="w-full text-left text-xs">
+                <thead className="bg-card text-muted-foreground sticky top-0">
+                  <tr>
+                    <th className="px-2 py-1 font-medium">kind</th>
+                    <th className="px-2 py-1 text-right font-medium">drawn</th>
+                    <th className="px-2 py-1 text-right font-medium">reward</th>
+                    <th className="px-2 py-1 text-right font-medium">
+                      advantage
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="font-mono">
+                  {groupByKind.map((samples, i) => {
+                    if (samples.length === 0) return null;
+                    const avgReward =
+                      samples.reduce((sum, s) => sum + s.reward, 0) /
+                      samples.length;
+                    const avgAdv =
+                      samples.reduce((sum, s) => sum + s.advantage, 0) /
+                      samples.length;
+                    const kind = ANSWER_KINDS[i];
+                    return (
+                      <tr
+                        key={kind?.id ?? i}
+                        className={
+                          kind?.correct
+                            ? "text-foreground"
+                            : "text-muted-foreground"
+                        }
                       >
-                        {signed(avgAdv)}
+                        <td className="px-2 py-1">
+                          {kind?.label.split(",")[0] ?? "?"}
+                        </td>
+                        <td className="px-2 py-1 text-right">
+                          {samples.length}
+                        </td>
+                        <td className="px-2 py-1 text-right">
+                          {avgReward.toFixed(2)}
+                        </td>
+                        {/* Sage = positive advantage (produce more), clay = negative (produce less). */}
+                        <td
+                          className="px-2 py-1 text-right"
+                          style={{ color: avgAdv >= 0 ? SAGE : ACCENT }}
+                        >
+                          {signed(avgAdv)}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                  {lastGroup.length === 0 && (
+                    <tr className="text-muted-foreground">
+                      <td className="px-2 py-2" colSpan={4}>
+                        Step or play to sample a group.
                       </td>
                     </tr>
-                  );
-                })}
-                {lastGroup.length === 0 && (
-                  <tr className="text-muted-foreground">
-                    <td className="px-2 py-2" colSpan={4}>
-                      Step or play to sample a group.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+                  )}
+                </tbody>
+              </table>
+            </div>
+            {/* Bottom-fade affordance — signals overflow to the reader. */}
+            <div
+              className="from-card pointer-events-none absolute right-0 bottom-0 left-0 h-6 rounded-b-lg bg-gradient-to-t to-transparent"
+              aria-hidden="true"
+            />
           </div>
 
           <div className="flex flex-col gap-1">
             <span className="text-muted-foreground text-xs font-medium">
               Event log
             </span>
-            <div className="ring-foreground/10 max-h-28 overflow-y-auto rounded-lg ring-1">
-              {state.log.length === 0 ? (
-                <p className="text-muted-foreground p-2 text-[11px]">
-                  Step, play, or move a knob to start the log.
-                </p>
-              ) : (
-                <ul className="divide-foreground/5 divide-y text-[11px]">
-                  {[...state.log]
-                    .slice(-12)
-                    .reverse()
-                    .map((entry) => (
-                      <li
-                        key={entry.id}
-                        className="flex items-center justify-between gap-2 px-2 py-1"
-                      >
-                        <span className="text-muted-foreground truncate">
-                          <span className="font-mono">#{entry.step}</span>{" "}
-                          {entry.label}
-                        </span>
-                        <Button
-                          type="button"
-                          size="sm"
-                          variant="ghost"
-                          className="h-5 px-1.5 text-[10px]"
-                          onClick={() => {
-                            setPlaying(false);
-                            resetClock();
-                            intervene({
-                              type: "restore",
-                              snapshot: entry.snapshot,
-                              label: `rewind to step ${entry.step}`,
-                            });
-                          }}
+            {/* Gradient fade affordance for the event log. */}
+            <div className="relative">
+              <div
+                ref={eventLogRef}
+                className="ring-foreground/10 max-h-28 overflow-y-auto rounded-lg ring-1"
+              >
+                {state.log.length === 0 ? (
+                  <p className="text-muted-foreground p-2 text-[11px]">
+                    Step, play, or move a knob to start the log.
+                  </p>
+                ) : (
+                  <ul className="divide-foreground/5 divide-y text-[11px]">
+                    {[...state.log]
+                      .slice(-12)
+                      .reverse()
+                      .map((entry) => (
+                        <li
+                          key={entry.id}
+                          className="flex items-center justify-between gap-2 px-2 py-1"
                         >
-                          rewind
-                        </Button>
-                      </li>
-                    ))}
-                </ul>
-              )}
+                          <span className="text-muted-foreground truncate">
+                            <span className="font-mono">#{entry.step}</span>{" "}
+                            {entry.label}
+                          </span>
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="ghost"
+                            className="h-5 px-1.5 text-[10px]"
+                            onClick={() => {
+                              setPlaying(false);
+                              resetClock();
+                              intervene({
+                                type: "restore",
+                                snapshot: entry.snapshot,
+                                label: `rewind to step ${entry.step}`,
+                              });
+                            }}
+                          >
+                            rewind
+                          </Button>
+                        </li>
+                      ))}
+                  </ul>
+                )}
+              </div>
+              {/* Bottom-fade affordance for the event log. */}
+              <div
+                className="from-card pointer-events-none absolute right-0 bottom-0 left-0 h-5 rounded-b-lg bg-gradient-to-t to-transparent"
+                aria-hidden="true"
+              />
             </div>
           </div>
         </Panel>
@@ -630,7 +675,8 @@ export function GroupRelativePolicyOptimization() {
         advantage is exactly the paper&apos;s group-relative normalization, the
         reward minus the group mean over the group standard deviation. The
         reward model here is a fixed table you can poison; a trained reward
-        model learns its scores from data.
+        model learns its scores from data. The run is deterministic — same
+        preset always produces the same trajectory.
       </p>
     </div>
   );

@@ -471,7 +471,6 @@ export type Intervention =
   | { type: "setReflectionAccuracy"; value: number }
   | { type: "setFalsePositiveRate"; value: number }
   | { type: "setMemoryCapacity"; value: number }
-  | { type: "setSeed"; value: number }
   | { type: "corruptLastReflection" }
   | { type: "addTrap" }
   | { type: "restore"; snapshot: SimState; label: string };
@@ -519,13 +518,6 @@ function intervene(state: SimState, action: Intervention): SimState {
         applyMemoryCapacity(state, action.value),
         `memory window -> ${Math.max(1, Math.min(3, Math.round(action.value)))}`,
       );
-    case "setSeed":
-      return {
-        ...initialState("reflexion"),
-        seed: action.value >>> 0,
-        rng: action.value >>> 0,
-        params: { ...state.params },
-      };
     case "corruptLastReflection": {
       if (!state.lastReflection) return state;
       const id = state.lastReflection.id;

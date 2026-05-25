@@ -2,7 +2,7 @@
 
 _Teaching a language model to do what people actually want by learning a reward from human rankings and then nudging the model toward it, so a 1.3B model beats one 100 times its size._
 
-![Three pixel-art panels read left to right like training a dog with treats, a person showing the dog a trick, then a hooded judge weighing two treats on a balance scale, then a clay-orange dog leaping through a hoop still tethered by a thin leash, showing the three steps of teach by example, learn a reward from human choices, then practice for reward without straying.](/papers/training-language-models-to-follow-instructions-with-human-feedback/hero.webp)
+![Three pixel-art panels read left to right like training a dog with treats, a person showing the dog a trick, then a hooded judge weighing two treats on a balance scale, then a clay-orange dog leaping through a hoop still tethered by a thin leash, showing the three steps of teach by example, learn a reward from human choices, then practice for reward without straying.](https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/training-language-models-to-follow-instructions-with-human-feedback/hero.webp)
 
 ## Read at your level
 
@@ -71,7 +71,7 @@ loss(theta) = -E over (x, y_w, y_l) [ log sigmoid( r_theta(x, y_w) - r_theta(x, 
 
 Read it left to right. For a prompt `x`, `y_w` is the answer the human preferred and `y_l` is the one they didn't. `r_theta` is the reward model's scalar score. The loss pushes the score of the winner above the score of the loser, and `sigmoid` of the score difference is the model's predicted probability that the winner wins. So the reward model is learning the log odds that a human prefers one answer over another.
 
-![Two pixel answer cards sit at the top, an orange one with a check mark labeled human taste and a sage one with a cross, with a hand pointing at the winner, and an ink arrow flows down into a clay-orange balance scale labeled reward model that tips toward a glowing coin, showing that the reward model learns to score answers from the answers a person picks.](/papers/training-language-models-to-follow-instructions-with-human-feedback/reward-model.webp)
+![Two pixel answer cards sit at the top, an orange one with a check mark labeled human taste and a sage one with a cross, with a hand pointing at the winner, and an ink arrow flows down into a clay-orange balance scale labeled reward model that tips toward a glowing coin, showing that the reward model learns to score answers from the answers a person picks.](https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/training-language-models-to-follow-instructions-with-human-feedback/reward-model.webp)
 
 Stage 3 maximizes the reward with PPO, and the full objective carries two extra terms beyond the reward.
 
@@ -103,7 +103,7 @@ The contribution is turning RLHF from a summarization-specific technique into a 
 
 The methodological choices reward scrutiny. The reward model trains on all `C(K, 2)` comparisons from each prompt as a single batch element rather than as independent samples, because shuffling correlated comparisons into one dataset overfit the RM after a single epoch. They use a 6B RM, not 175B, both for compute and because the large RM was unstable as the RL value function. The RL objective adds a per-token KL penalty from the SFT policy, which is the standard control against over-optimizing an imperfect reward, and the pretraining-mix term `gamma` directly targets the alignment tax, the regression on SQuAD, DROP, HellaSwag, and translation that plain PPO induces. The ablation is clean, increasing `gamma` reverses the regressions while barely moving labeler preference, whereas just increasing the KL coefficient does not recover the benchmark loss as well.
 
-![A clay-orange pixel dog strains forward toward a giant cracked pile of treats marked an unintended cheat, held back by a thin taut ink leash tied to a small sage post labeled held by constraint, showing that chasing the reward too hard finds a cheat unless a leash keeps the model close to where it started.](/papers/training-language-models-to-follow-instructions-with-human-feedback/kl-leash.webp)
+![A clay-orange pixel dog strains forward toward a giant cracked pile of treats marked an unintended cheat, held back by a thin taut ink leash tied to a small sage post labeled held by constraint, showing that chasing the reward too hard finds a cheat unless a leash keeps the model close to where it started.](https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/training-language-models-to-follow-instructions-with-human-feedback/kl-leash.webp)
 
 Threats to validity worth probing. The reward signal is the preference of about 40 contractors plus the researchers who wrote the labeling instructions, on a mostly-English, mostly-generative prompt distribution, with inter-labeler agreement around 73 percent. So "aligned" here means aligned to a specific, narrow reference group, which the authors are careful to say in Section 5.2. The truthfulness gains are measured on TruthfulQA and a hallucination proxy, not the full notion of honesty, and the model cannot report its own beliefs. The bias results on Winogender and CrowS-Pairs show no improvement, and the instructed models are sometimes more confident regardless of whether the output is stereotyped. The open questions the paper names, and the field then chased, are adversarial data collection for worst-case behavior, weighting minority-group preferences, and richer feedback than pairwise ranks.
 
@@ -147,7 +147,7 @@ The `beta` term is the per-token KL leash to the SFT model. The `gamma` term mix
 
 **Limitations and open questions.** The reward model is a fixed, imperfect proxy for human preference, so optimizing it too hard finds cheats, which is why the KL leash and the pretraining mix exist. Plain PPO regresses on standard NLP benchmarks, the alignment tax, which PPO-ptx mostly pays down.
 
-![A clay-orange pixel dog proudly does a new trick while a sage stack of flash cards labeled old skills sits beside it and an ink balance scale labeled alignment tax holds the new trick and the old cards level, showing that learning the new behavior costs old skills unless you keep reviewing them.](/papers/training-language-models-to-follow-instructions-with-human-feedback/alignment-tax.webp)
+![A clay-orange pixel dog proudly does a new trick while a sage stack of flash cards labeled old skills sits beside it and an ink balance scale labeled alignment tax holds the new trick and the old cards level, showing that learning the new behavior costs old skills unless you keep reviewing them.](https://0bmg2fhv0km08dlk.public.blob.vercel-storage.com/papers/training-language-models-to-follow-instructions-with-human-feedback/alignment-tax.webp)
 
 The model is aligned to about 40 mostly-English contractors and the researchers who wrote their instructions, not to humanity. It still follows harmful instructions sometimes, still hedges, and still makes simple mistakes on false-premise questions.
 
