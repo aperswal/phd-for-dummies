@@ -1,3 +1,4 @@
+import { Analytics } from "@vercel/analytics/next";
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 
@@ -50,6 +51,7 @@ export default async function RootLayout({
             <main className="min-w-0 flex-1">{children}</main>
           </div>
         </TooltipProvider>
+        <Analytics />
       </body>
     </html>
   );
