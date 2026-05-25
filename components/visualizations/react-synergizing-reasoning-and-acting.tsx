@@ -285,11 +285,11 @@ export function ReActLoop() {
 
       <div className="grid gap-4 lg:grid-cols-[1.5fr_1fr]">
         <Panel title="Trajectory">
-          <div className="relative">
+          <div className="relative lg:min-h-[24rem] lg:flex-1">
             <div
               ref={trajRef}
               onScroll={updateTrajEdges}
-              className="flex max-h-[24rem] flex-col gap-1.5 overflow-y-auto pr-1"
+              className="flex max-h-[24rem] flex-col gap-1.5 overflow-y-auto pr-1 lg:absolute lg:inset-0 lg:max-h-none"
             >
               {state.steps.map((s) => (
                 <StepRow key={s.index} step={s} />
