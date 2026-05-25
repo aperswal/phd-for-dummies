@@ -14,7 +14,7 @@ That last part is the one most sites fake. They slap the word interactive on a s
 
 The belief under all of this is plain. Understanding is not a thing you have or don't. It comes in heights. A good explanation meets you where you stand and hands you a way up. Most explanations pick one height and strand everyone else. This one refuses to pick.
 
-Right now it holds 34 papers, from the reinforcement learning roots of the 1980s through the transformer, the large language models, and the agent work of the last few years. Each one ran the same path. Read the paper. Find the single idea everything hangs on. Draw it. Explain it in layers. Build a model of it you can play with.
+Right now it holds 34 papers, from the reinforcement learning roots of the 1980s through the transformer, the large language models, and the agent work of the last few years. None of it is handwritten. Every word, every diagram, and every simulation is produced by an agent working from the paper's PDF, each one running the same fixed path. Read the paper. Find the single idea everything hangs on. Draw it. Explain it in layers. Build a model of it you can play with. The repo is really that harness, with its output checked in beside it.
 
 ## Run it locally
 
@@ -33,4 +33,23 @@ pnpm lint && pnpm typecheck && pnpm test && pnpm build
 
 One thing the repo leaves out is the diagrams. They are large image files, so they stay out of git. Clone this and the pages still explain and still run their demos, but the diagram spots come up blank until the images get regenerated. A separate offline tool draws them and is not part of this repo.
 
-A new paper starts as a PDF and one command, `/add-paper papers/your-paper.pdf`. The skills that drive that, from reading the paper to drawing it to building the demo, sit in `.claude/skills/`.
+## How every page is built
+
+Nothing on this site is written by hand. Each entry is produced by an agent running a fixed pipeline of skills over the paper's PDF, and the repo is that harness with its output checked in beside it. You drop a PDF into `papers/` and run one command:
+
+```bash
+/add-paper papers/your-paper.pdf
+```
+
+From there the agent reads the paper, finds the one idea everything hangs on, designs and generates the diagrams, writes the layered explainer, builds a real interactive model of the mechanism and tests it, reviews that model against a strict rubric, wires it into the page, and runs the build. What comes out is a finished, searchable entry in the sidebar with a working page. No step is mocked and no prose is pre-written.
+
+The pipeline is six skills in `.claude/skills/`, each with one job:
+
+- **add-paper** orchestrates the whole run, eleven steps from PDF to a passing build.
+- **paper-analyst** reads the paper in figures-first order and breaks it into the headline, the summary, and the one core mechanism.
+- **clear-thinking-writing** reasons through the paper and writes every sentence of the explainer in one plain voice, from the 5-year-old layer up to the peer-researcher one.
+- **paper-images** designs and generates the 2K diagrams, one idea each, fused with the explainer's running analogy.
+- **paper-simulation** builds the interactive as a deterministic, headless model with unit tests, then a client view on a shared transport, so the demo runs the paper's real rules.
+- **simulation-review** audits that model against a UI, legibility, and correctness rubric and fixes what falls short.
+
+What keeps unattended generation honest is the gates. Every simulation is a pure model with a test file beside it, every entry has to pass `pnpm lint && pnpm typecheck && pnpm test && pnpm build` before it counts as done, and a mismatched slug fails the build instead of shipping a broken page.
